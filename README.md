@@ -10,9 +10,9 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 ## 🔧 Technische Fähigkeiten
 
-- **Programmierung:** Grundlagen informatischer Problemlösung, erste Erfahrungen mit Computergrafik
-- **Mathematik:** Starker Hintergrund in diskreten Strukturen und linearer Algebra
-- **Tools & Technologien:** [Hier könntest du spezifische Programmiersprachen, Frameworks oder Tools ergänzen]
+- **Programmierung:** Objektoriebtierte und prozedurale Programmierung mit zusätzlichen Kenntnissen in der Computergrafik und Visualisierung
+- **Mathematik:** Starker Hintergrund in diskreten Strukturen, linearer Algebra und Analysis
+- **Tools & Technologien:** C, C++, C#, Java, Python, OpenGL, Unity, React
 
 ## 🎯 Interessen
 
@@ -46,5 +46,3 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 - **Instagram:** jan.vogt06
 
 ---
-
-*"Was wir wissen, ist ein Tropfen, was wir nicht wissen, ein Ozean." - Isaac Newton*
