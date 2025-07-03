@@ -1,4 +1,4 @@
-# Jan Vogt - GitHub Profile
+# Jan Vogt
 
 ## 👋 Über mich
 
