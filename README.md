@@ -6,11 +6,10 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 - 🎓 B.Sc. Informatik (seit Oktober 2024)
 - 🏠 Bad Berka, Thüringen
-- 💡 Auf der Suche nach spannenden Projekten und Lernmöglichkeiten
 
 ## 🔧 Technische Fähigkeiten
 
-- **Programmierung:** Objektoriebtierte und prozedurale Programmierung mit zusätzlichen Kenntnissen in der Computergrafik und Visualisierung
+- **Programmierung:** Objektorientierte und prozedurale Programmierung mit zusätzlichen Kenntnissen in der Computergrafik und Visualisierung
 - **Mathematik:** Starker Hintergrund in diskreten Strukturen, linearer Algebra und Analysis
 - **Tools & Technologien:** C, C++, C#, Java, Python, OpenGL, Unity, React
 
@@ -30,8 +29,6 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 ## 🌱 Aktuelle Projekte
 
-- [Projekt 1: Studienplaner]
-- [Projekt 2: Unity-Datenanalyse]
 
 ## 📚 Weitere Engagements
 
