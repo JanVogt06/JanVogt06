@@ -34,6 +34,7 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 ## 🌱 Aktuelle Projekte
 ### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
 **Technologien:** Unity, C#, Cesium, WebGL
+
 Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus mit Unity & Cesium. Features:
 - 🌍 Echtzeit-Visualisierung von Satellitenpositionen auf einem 3D-Globus
 - 🔥 Heatmap-Darstellung zur Visualisierung der Satellitendichte
@@ -44,6 +45,7 @@ Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf ein
 
 ### 🖼️ [PicHunter – Web Image Downloader](https://github.com/JanVogt06/PicHunter)
 **Technologien:** Python, BeautifulSoup4, Threading, Requests
+
 Ein leistungsstarkes Python-Tool zum automatisierten Herunterladen aller Bilder von Webseiten mit intelligenter Duplikaterkennung.
 **Features:**
 - 🚀 Parallele Downloads mit konfigurierbarem Thread-Pool
