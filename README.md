@@ -35,7 +35,8 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 ### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
 **Technologien:** Unity, C#, Cesium, WebGL
 
-Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus mit Unity & Cesium. Features:
+Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus mit Unity & Cesium.
+**Features:**
 - 🌍 Echtzeit-Visualisierung von Satellitenpositionen auf einem 3D-Globus
 - 🔥 Heatmap-Darstellung zur Visualisierung der Satellitendichte
 - 🌓 Dynamischer Tag/Nacht-Zyklus
