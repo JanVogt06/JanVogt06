@@ -5,9 +5,19 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 - 🏠 Bad Berka, Thüringen
 
 ## 🔧 Technische Fähigkeiten
-- **Programmierung:** Objektorientierte und prozedurale Programmierung mit zusätzlichen Kenntnissen in der Computergrafik und Visualisierung
-- **Mathematik:** Starker Hintergrund in diskreten Strukturen, linearer Algebra und Analysis
-- **Tools & Technologien:** C, C++, C#, Java, Python, OpenGL, Unity, React
+### Programmiersprachen
+![C](https://img.shields.io/badge/C-00599C?style=flat-square&logo=c&logoColor=white)
+![C++](https://img.shields.io/badge/C++-00599C?style=flat-square&logo=c%2B%2B&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-239120?style=flat-square&logo=c-sharp&logoColor=white)
+![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+
+### Frameworks & Tools
+![Unity](https://img.shields.io/badge/Unity-100000?style=flat-square&logo=unity&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![OpenGL](https://img.shields.io/badge/OpenGL-FFFFFF?style=flat-square&logo=opengl)
+![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)
 
 ## 🎯 Interessen
 - 💻 Softwareentwicklung
@@ -23,6 +33,7 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 ## 🌱 Aktuelle Projekte
 ### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
+**Technologien:** Unity, C#, Cesium, WebGL
 Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus mit Unity & Cesium. Features:
 - 🌍 Echtzeit-Visualisierung von Satellitenpositionen auf einem 3D-Globus
 - 🔥 Heatmap-Darstellung zur Visualisierung der Satellitendichte
@@ -31,14 +42,33 @@ Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf ein
 - 🚀 Detaillierte Modellansicht besonderer Satelliten
 - 📊 Interaktive Bedienelemente und Informationsanzeigen
 
+### 🖼️ [PicHunter – Web Image Downloader](https://github.com/JanVogt06/PicHunter)
+**Technologien:** Python, BeautifulSoup4, Threading, Requests
+Ein leistungsstarkes Python-Tool zum automatisierten Herunterladen aller Bilder von Webseiten mit intelligenter Duplikaterkennung.
+**Features:**
+- 🚀 Parallele Downloads mit konfigurierbarem Thread-Pool
+- 🔍 Umfassende Bilderkennung (img, srcset, picture, CSS backgrounds)
+- 🛡️ MD5-basierte Duplikaterkennung
+- 📊 Echtzeit-Fortschrittsanzeige mit tqdm
+- 📁 Automatische Organisation nach Domains
+- 📝 Detaillierte Logging- und Berichtsfunktionen
+
 ## 📚 Weitere Engagements
 - ⚽ Schiedsrichter (Mitglied des Elite-Kaders Thüringen & "Schiedsrichter des Jahres 2022")
 - 📝 Redaktionsmitglied für "Die Wurzel" (Zeitschrift für Mathematik)
 - 🏛️ Aktiv in der lokalen Stadtentwicklung Bad Berka
 
 ## 📫 Kontakt
-- **GitHub:** JanVogt06
-- **E-Mail:** jan.vogt@uni-jena.de
-- **Instagram:** jan.vogt06
+<a href="https://github.com/JanVogt06">
+  <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" />
+</a>
+<a href="mailto:jan.vogt@uni-jena.de">
+  <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
+</a>
+<a href="https://instagram.com/jan.vogt06">
+  <img src="https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white" />
+</a>
 
 ---
+
+![Visitor Count](https://visitor-badge.laobi.icu/badge?page_id=JanVogt06.JanVogt06)
