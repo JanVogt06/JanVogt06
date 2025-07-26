@@ -45,6 +45,22 @@ Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf ein
 - 🚀 Detaillierte Modellansicht besonderer Satelliten
 - 📊 Interaktive Bedienelemente und Informationsanzeigen
 
+### ⚡ [SolarFlow – Intelligentes Energie-Management für Photovoltaik-Anlagen](https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement)
+
+**Technologien:** Python, SQLite, Fronius API, CSV-Logging, Geräte-Steuerung
+
+SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer von Photovoltaik-Anlagen mit Fronius Wechselrichtern entwickelt wurde. Es maximiert den Eigenverbrauch und senkt dadurch effektiv die Stromkosten durch eine intelligente Steuerung elektrischer Verbraucher.
+
+**Kernfunktionen:**
+
+* 🌞 **Echtzeit-Monitoring:** Permanente Überwachung aller Energieflüsse der Solaranlage
+* 🤖 **Intelligente Gerätesteuerung:** Automatisches Ein- und Ausschalten von Verbrauchern abhängig vom Solarüberschuss
+* 🎯 **Prioritätsmanagement:** Geräte werden nach frei konfigurierbarer Priorität gesteuert
+* 💰 **Kostenoptimierung:** Detaillierte Berechnung von Einsparungen und Amortisationszeit
+* 📊 **Umfassendes Logging:** Lückenlose Dokumentation aller Energiedaten und Schaltvorgänge in CSV-Dateien
+
+SolarFlow sorgt dafür, dass Verbraucher wie Warmwasserboiler, Poolpumpen oder Ladestationen bevorzugt dann eingeschaltet werden, wenn ausreichend Solarstrom zur Verfügung steht. So wird Ihre selbst erzeugte Energie optimal genutzt.
+
 ### 🖼️ [PicHunter – Web Image Downloader](https://github.com/JanVogt06/PicHunter)
 **Technologien:** Python, BeautifulSoup4, Threading, Requests
 
