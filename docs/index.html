@@ -2,7 +2,15 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Viewport für Mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
+
+    <!-- Mobile Web App fähig -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
     <title>Jan Vogt - Portfolio</title>
     <link rel="stylesheet" href="styles/main.css">
 </head>
@@ -245,6 +253,81 @@
                 Weitere Projekte auf GitHub
                 <i data-lucide="arrow-right" class="more-link__icon"></i>
             </a>
+        </div>
+    </div>
+</section>
+
+<!-- Contact Section -->
+<section class="contact" id="contact">
+    <div class="contact__background">
+        <div class="shape shape--9"></div>
+        <div class="shape shape--10"></div>
+    </div>
+
+    <div class="contact__container">
+        <h2 class="section__title">Kontakt</h2>
+
+        <div class="contact__content">
+            <div class="contact__card">
+                <p class="contact__intro">
+                    Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?
+                </p>
+
+                <div class="contact__methods">
+                    <!-- Email -->
+                    <a href="mailto:jan.vogt06@web.de" class="contact__method">
+                        <div class="contact__method-icon">
+                            <i data-lucide="mail"></i>
+                        </div>
+                        <div class="contact__method-info">
+                            <h3>E-Mail</h3>
+                            <p>jan.vogt06@web.de</p>
+                        </div>
+                    </a>
+
+                    <!-- GitHub -->
+                    <a href="https://github.com/JanVogt06" target="_blank" class="contact__method">
+                        <div class="contact__method-icon">
+                            <i data-lucide="github"></i>
+                        </div>
+                        <div class="contact__method-info">
+                            <h3>GitHub</h3>
+                            <p>@JanVogt06</p>
+                        </div>
+                    </a>
+
+                    <!-- Instagram -->
+                    <a href="https://instagram.com/jan.vogt06" target="_blank" class="contact__method">
+                        <div class="contact__method-icon">
+                            <i data-lucide="instagram"></i>
+                        </div>
+                        <div class="contact__method-info">
+                            <h3>Instagram</h3>
+                            <p>@jan.vogt06</p>
+                        </div>
+                    </a>
+
+                    <!-- Location -->
+                    <a href="https://www.google.com/maps/search/?api=1&query=Bad+Berka+Thüringen"
+                       target="_blank"
+                       class="contact__method">
+                        <div class="contact__method-icon">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <div class="contact__method-info">
+                            <h3>Standort</h3>
+                            <p>Bad Berka, Thüringen</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="contact__cta">
+                    <a href="mailto:jan.vogt06@web.de" class="contact__button">
+                        <i data-lucide="send"></i>
+                        Nachricht senden
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
