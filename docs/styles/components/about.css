@@ -190,3 +190,86 @@
     margin: 0;
     font-size: 0.95rem;
 }
+
+/* Mobile Anpassungen */
+@media screen and (max-width: 768px) {
+    .about {
+        padding: 3rem 1rem;
+    }
+
+    .section__title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .about__content {
+        gap: 1.5rem;
+    }
+
+    .about__card {
+        padding: 1.5rem;
+        border-radius: 15px;
+    }
+
+    .about__heading {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .about__icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    /* Timeline Anpassungen */
+    .timeline {
+        padding-left: 1.5rem;
+    }
+
+    .timeline__item::before {
+        left: -1.9rem;
+    }
+
+    .timeline__content h4 {
+        font-size: 1.1rem;
+    }
+
+    .timeline__content p {
+        font-size: 0.9rem;
+    }
+
+    .timeline__note {
+        font-size: 0.85rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    /* Awards Anpassungen */
+    .award {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+
+    .award__year {
+        min-width: auto;
+        font-size: 0.9rem;
+    }
+
+    .award__name {
+        font-size: 0.95rem;
+    }
+
+    /* Engagement Anpassungen */
+    .engagement__item h4 {
+        font-size: 1rem;
+    }
+
+    .engagement__item p {
+        font-size: 0.9rem;
+    }
+
+    .engagement__icon {
+        width: 20px;
+        height: 20px;
+    }
+}

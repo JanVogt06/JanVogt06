@@ -151,6 +151,49 @@
     height: 32px;
 }
 
+/* Mobile Anpassungen */
+@media screen and (max-width: 768px) {
+    .hero__content {
+        padding: 1rem;
+    }
+
+    .glass-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .hero__title {
+        font-size: 2rem;
+    }
+
+    .hero__subtitle {
+        font-size: 1.2rem;
+    }
+
+    .hero__description {
+        font-size: 1rem;
+    }
+
+    /* Kleinere Shapes für Mobile */
+    .shape--1 {
+        width: 250px;
+        height: 250px;
+        top: -125px;
+        left: -125px;
+    }
+
+    .shape--2 {
+        width: 200px;
+        height: 200px;
+        bottom: -100px;
+        right: -100px;
+    }
+
+    .shape--3 {
+        width: 150px;
+        height: 150px;
+    }
+}
+
 @keyframes bounce {
     0%, 20%, 50%, 80%, 100% {
         transform: translateX(-50%) translateY(0);
