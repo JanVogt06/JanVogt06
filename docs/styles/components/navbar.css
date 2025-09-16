@@ -15,6 +15,16 @@
     transition: all 0.3s ease;
 }
 
+/* NEU: Sliding Indicator */
+.navbar__indicator {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 0;
+    pointer-events: none;
+}
+
 /* Dark Mode */
 .navbar--dark {
     background: rgba(255, 255, 255, 0.7);
@@ -24,11 +34,18 @@
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 }
 
+/* Dark Mode Indicator */
+.navbar--dark .navbar__indicator {
+    background: rgba(102, 126, 234, 0.2);
+}
+
 .navbar__list {
     display: flex;
     gap: 2rem;
     list-style: none;
     align-items: center;
+    position: relative; /* NEU: für z-index */
+    z-index: 1; /* NEU: über dem Indicator */
 }
 
 .navbar__item {
@@ -47,13 +64,12 @@
 }
 
 .navbar__link:hover {
-    background: rgba(255, 255, 255, 0.2);
     color: white;
     transform: translateY(-2px);
 }
 
+/* Active Link ohne Background (Indicator übernimmt das) */
 .navbar__link--active {
-    background: rgba(255, 255, 255, 0.15);
     color: white;
 }
 
@@ -63,12 +79,10 @@
 }
 
 .navbar--dark .navbar__link:hover {
-    background: rgba(102, 126, 234, 0.1);
     color: #667eea;
     transform: translateY(-2px);
 }
 
 .navbar--dark .navbar__link--active {
-    background: rgba(102, 126, 234, 0.2);
     color: #667eea;
 }

@@ -9,6 +9,7 @@
 <body>
 <!-- Navbar -->
 <nav class="navbar">
+    <div class="navbar__indicator"></div> <!-- NEU: Der sliding background -->
     <ul class="navbar__list">
         <li class="navbar__item">
             <a href="#home" class="navbar__link navbar__link--active">Home</a>
@@ -39,7 +40,7 @@
             <h1 class="hero__title">Hi, ich bin Jan Vogt</h1>
             <p class="hero__subtitle">Informatikstudent & Developer</p>
             <p class="hero__description">
-                B.Sc. Informatik @ FSU Jena · Begeistert für Mathematik, Physik & Clean Code
+                B.Sc. Informatik @ FSU Jena · Begeistert für Informatik, Mathematik & Physik
             </p>
 
             <!-- Social Links mit Lucide -->
@@ -171,20 +172,38 @@
     // Icons initialisieren
     lucide.createIcons();
 
-    // Navbar Funktionalität
+    // Navbar Elemente
     const navbar = document.querySelector('.navbar');
+    const indicator = document.querySelector('.navbar__indicator');
+    const navLinks = document.querySelectorAll('.navbar__link');
     const heroSection = document.querySelector('.hero');
 
-    // Navbar Style-Wechsel beim Scrollen
+    // Funktion zum Updaten der Indicator Position
+    function updateIndicator(activeLink) {
+        if (!activeLink) return;
+
+        const linkRect = activeLink.getBoundingClientRect();
+        const navbarRect = navbar.getBoundingClientRect();
+
+        indicator.style.width = `${linkRect.width}px`;
+        indicator.style.height = `${linkRect.height}px`;
+        indicator.style.left = `${linkRect.left - navbarRect.left}px`;
+        indicator.style.top = `${linkRect.top - navbarRect.top}px`;
+    }
+
+    // Initial Position setzen
+    const initialActive = document.querySelector('.navbar__link--active');
+    updateIndicator(initialActive);
+
+    // Navbar Funktionalität beim Scrollen
     window.addEventListener('scroll', () => {
         const sections = document.querySelectorAll('section');
-        const navLinks = document.querySelectorAll('.navbar__link');
 
         // Check ob wir über den Hero-Bereich hinaus sind
         const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        const scrollPosition = window.scrollY + 100; // 100px offset für frühere Aktivierung
+        const scrollPosition = window.scrollY + 100;
 
-        // Dark Mode aktivieren wenn über Hero hinaus
+        // Dark Mode aktivieren
         if (scrollPosition > heroBottom) {
             navbar.classList.add('navbar--dark');
         } else {
@@ -206,8 +225,24 @@
             link.classList.remove('navbar__link--active');
             if (link.getAttribute('href').slice(1) === current) {
                 link.classList.add('navbar__link--active');
+                updateIndicator(link);
             }
         });
+    });
+
+    // Click Handler für sofortige Animation
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            navLinks.forEach(l => l.classList.remove('navbar__link--active'));
+            this.classList.add('navbar__link--active');
+            updateIndicator(this);
+        });
+    });
+
+    // Resize Handler
+    window.addEventListener('resize', () => {
+        const activeLink = document.querySelector('.navbar__link--active');
+        updateIndicator(activeLink);
     });
 </script>
 </body>
