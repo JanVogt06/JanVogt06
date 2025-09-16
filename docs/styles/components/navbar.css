@@ -1,0 +1,46 @@
+/* Navbar mit Glassmorphism */
+.navbar {
+    position: fixed;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 100px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+}
+
+.navbar__list {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    align-items: center;
+}
+
+.navbar__item {
+    position: relative;
+}
+
+.navbar__link {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.navbar__link:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.navbar__link--active {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}

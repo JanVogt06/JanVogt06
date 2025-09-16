@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jan Vogt - Portfolio</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar">
+    <ul class="navbar__list">
+        <li class="navbar__item">
+            <a href="#home" class="navbar__link navbar__link--active">Home</a>
+        </li>
+        <li class="navbar__item">
+            <a href="#about" class="navbar__link">Über mich</a>
+        </li>
+        <li class="navbar__item">
+            <a href="#projects" class="navbar__link">Projekte</a>
+        </li>
+        <li class="navbar__item">
+            <a href="#contact" class="navbar__link">Kontakt</a>
+        </li>
+    </ul>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" id="home">
+    <div class="hero__background">
+        <!-- Floating Shapes für den Liquid-Effekt -->
+        <div class="shape shape--1"></div>
+        <div class="shape shape--2"></div>
+        <div class="shape shape--3"></div>
+    </div>
+
+    <div class="hero__content">
+        <div class="glass-card">
+            <h1 class="hero__title">Hi, ich bin Jan Vogt</h1>
+            <p class="hero__subtitle">Informatikstudent & Developer</p>
+            <p class="hero__description">
+                B.Sc. Informatik @ FSU Jena · Begeistert für Mathematik, Physik & Clean Code
+            </p>
+
+            <!-- Social Links mit Lucide -->
+            <div class="hero__socials">
+                <a href="https://github.com/JanVogt06" class="social-link" aria-label="GitHub" target="_blank">
+                    <i data-lucide="github" class="social-icon"></i>
+                </a>
+                <a href="mailto:jan.vogt@uni-jena.de" class="social-link" aria-label="E-Mail">
+                    <i data-lucide="mail" class="social-icon"></i>
+                </a>
+                <a href="https://instagram.com/jan.vogt06" class="social-link" aria-label="Instagram" target="_blank">
+                    <i data-lucide="instagram" class="social-icon"></i>
+                </a>
+                <a href="#projects" class="social-link" aria-label="Projekte">
+                    <i data-lucide="code-2" class="social-icon"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Optional: Scroll Indicator -->
+        <div class="hero__scroll-indicator">
+            <i data-lucide="chevron-down" class="scroll-icon"></i>
+        </div>
+    </div>
+</section>
+
+<!-- About Section -->
+<section class="about" id="about">
+    <div class="about__container">
+        <h2 class="section__title">Über mich</h2>
+
+        <div class="about__content">
+            <!-- Bildung Card -->
+            <div class="about__card">
+                <h3 class="about__heading">
+                    <i data-lucide="graduation-cap" class="about__icon"></i>
+                    Bildung
+                </h3>
+                <div class="timeline">
+                    <div class="timeline__item">
+                        <span class="timeline__date">seit 10/2024</span>
+                        <div class="timeline__content">
+                            <h4>B.Sc. Informatik</h4>
+                            <p>Friedrich-Schiller-Universität Jena</p>
+                            <span class="timeline__note">Notendurchschnitt: 1,7</span>
+                        </div>
+                    </div>
+                    <div class="timeline__item">
+                        <span class="timeline__date">2024</span>
+                        <div class="timeline__content">
+                            <h4>Abitur</h4>
+                            <p>Marie-Curie-Gymnasium Bad Berka</p>
+                            <span class="timeline__note">Jahrgangsbester • Note: 1,1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auszeichnungen Card -->
+            <div class="about__card">
+                <h3 class="about__heading">
+                    <i data-lucide="trophy" class="about__icon"></i>
+                    Auszeichnungen
+                </h3>
+                <div class="awards">
+                    <div class="award">
+                        <span class="award__year">2024</span>
+                        <span class="award__name">DMV-Abiturpreis Mathematik</span>
+                    </div>
+                    <div class="award">
+                        <span class="award__year">2024</span>
+                        <span class="award__name">DPG-Abiturpreis Physik</span>
+                    </div>
+                    <div class="award">
+                        <span class="award__year">2024</span>
+                        <span class="award__name">Pierre-de-Coubertin-Preis</span>
+                    </div>
+                    <div class="award">
+                        <span class="award__year">2022</span>
+                        <span class="award__name">Marie-Curie-Preis</span>
+                    </div>
+                    <div class="award">
+                        <span class="award__year">2022</span>
+                        <span class="award__name">Schiedsrichter des Jahres</span>
+                    </div>
+                    <div class="award">
+                        <span class="award__year">2016-2024</span>
+                        <span class="award__name">Mehrfache Preise bei Physik- & Mathematikolympiaden</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engagement Card -->
+            <div class="about__card">
+                <h3 class="about__heading">
+                    <i data-lucide="users" class="about__icon"></i>
+                    Engagement
+                </h3>
+                <div class="engagement">
+                    <div class="engagement__item">
+                        <i data-lucide="flag" class="engagement__icon"></i>
+                        <div>
+                            <h4>Elite-Kader Thüringen</h4>
+                            <p>Schiedsrichter Thüringenliga & B-Junioren-Bundesliga</p>
+                        </div>
+                    </div>
+                    <div class="engagement__item">
+                        <i data-lucide="pen-tool" class="engagement__icon"></i>
+                        <div>
+                            <h4>Redaktionsmitglied</h4>
+                            <p>"Die Wurzel" - Zeitschrift für Mathematik</p>
+                        </div>
+                    </div>
+                    <div class="engagement__item">
+                        <i data-lucide="building" class="engagement__icon"></i>
+                        <div>
+                            <h4>Jugendvertretung Bad Berka</h4>
+                            <p>Stadtentwicklung & ISEK-Workshops</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Vor dem schließenden body tag -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script>
+    // Icons initialisieren
+    lucide.createIcons();
+
+    // Navbar Active State beim Scrollen
+    window.addEventListener('scroll', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.navbar__link');
+
+        let current = '';
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.clientHeight;
+            if (scrollY >= sectionTop - 100) {
+                current = section.getAttribute('id');
+            }
+        });
+
+        navLinks.forEach(link => {
+            link.classList.remove('navbar__link--active');
+            if (link.getAttribute('href').slice(1) === current) {
+                link.classList.add('navbar__link--active');
+            }
+        });
+    });
+</script>
+</body>
+</html>

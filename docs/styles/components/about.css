@@ -1,0 +1,192 @@
+/* About Section */
+.about {
+    padding: 5rem 2rem;
+    background: linear-gradient(180deg,
+    rgba(102, 126, 234, 0.1) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+    );
+    min-height: 100vh;
+}
+
+.about__container {
+    margin: 0 auto;
+    width: 100%;
+}
+
+.section__title {
+    font-size: 3rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.about__content {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    gap: 2rem;
+}
+
+/* Einzelne Cards */
+.about__card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    padding: 2.5rem 3rem;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about__card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
+}
+
+.about__heading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1.5rem;
+}
+
+.about__icon {
+    width: 28px;
+    height: 28px;
+    color: #667eea;
+}
+
+/* Timeline für Bildung */
+.timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+}
+
+.timeline__item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline__item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline__item::before {
+    content: '';
+    position: absolute;
+    left: -2.4rem;
+    top: 0.5rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #667eea;
+    border: 2px solid white;
+}
+
+.timeline__date {
+    font-size: 0.9rem;
+    color: #667eea;
+    font-weight: 600;
+}
+
+.timeline__content h4 {
+    font-size: 1.2rem;
+    color: #333;
+    margin: 0.5rem 0 0.25rem;
+}
+
+.timeline__content p {
+    color: #666;
+    margin: 0;
+}
+
+.timeline__note {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 20px;
+    font-size: 0.9rem;
+    color: #667eea;
+}
+
+/* Awards */
+.awards {
+    display: grid;
+    gap: 1rem;
+}
+
+.award {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+.award:hover {
+    transform: translateX(5px);
+    background: rgba(102, 126, 234, 0.1);
+}
+
+.award__year {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 80px;
+}
+
+.award__name {
+    color: #333;
+}
+
+/* Engagement */
+.engagement {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.engagement__item {
+    display: flex;
+    gap: 1rem;
+    align-items: start;
+}
+
+.engagement__icon {
+    width: 24px;
+    height: 24px;
+    color: #667eea;
+    margin-top: 0.25rem;
+    flex-shrink: 0;
+}
+
+.engagement__item h4 {
+    font-size: 1.1rem;
+    color: #333;
+    margin: 0 0 0.25rem;
+}
+
+.engagement__item p {
+    color: #666;
+    margin: 0;
+    font-size: 0.95rem;
+}
