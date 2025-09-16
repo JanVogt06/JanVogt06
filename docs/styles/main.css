@@ -1,6 +1,6 @@
 /* Alle Styles importieren */
 @import 'base/reset.css';
-@import 'components/hero.css';
+@import 'components/home.css';
 @import 'components/navbar.css';
 @import 'components/about.css';
 @import 'components/projects.css';
