@@ -32,6 +32,7 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 - 🥉 3. Platz Thüringer Physikolympiade (Klasse 12)
 
 ## 🌱 Aktuelle Projekte
+
 ### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
 **Technologien:** Unity, C#, Cesium, WebGL
 
@@ -52,27 +53,17 @@ Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf ein
 SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer von Photovoltaik-Anlagen mit Fronius Wechselrichtern entwickelt wurde. Es maximiert den Eigenverbrauch und senkt dadurch effektiv die Stromkosten durch eine intelligente Steuerung elektrischer Verbraucher.
 
 **Kernfunktionen:**
-
 * 🌞 **Echtzeit-Monitoring:** Permanente Überwachung aller Energieflüsse der Solaranlage
 * 🤖 **Intelligente Gerätesteuerung:** Automatisches Ein- und Ausschalten von Verbrauchern abhängig vom Solarüberschuss
 * 🎯 **Prioritätsmanagement:** Geräte werden nach frei konfigurierbarer Priorität gesteuert
 * 💰 **Kostenoptimierung:** Detaillierte Berechnung von Einsparungen und Amortisationszeit
-* 📊 **Umfassendes Logging:** Lückenlose Dokumentation aller Energiedaten und Schaltvorgänge in CSV-Dateien
+* 📊 **Umfassendes Logging:** Lückenlose Dokumentation aller Energiedaten und Schaltvorgänge
 
 SolarFlow sorgt dafür, dass Verbraucher wie Warmwasserboiler, Poolpumpen oder Ladestationen bevorzugt dann eingeschaltet werden, wenn ausreichend Solarstrom zur Verfügung steht. So wird Ihre selbst erzeugte Energie optimal genutzt.
 
-### 🖼️ [PicHunter – Web Image Downloader](https://github.com/JanVogt06/PicHunter)
-**Technologien:** Python, BeautifulSoup4, Threading, Requests
-
-Ein leistungsstarkes Python-Tool zum automatisierten Herunterladen aller Bilder von Webseiten mit intelligenter Duplikaterkennung.
-
-**Features:**
-- 🚀 Parallele Downloads mit konfigurierbarem Thread-Pool
-- 🔍 Umfassende Bilderkennung (img, srcset, picture, CSS backgrounds)
-- 🛡️ MD5-basierte Duplikaterkennung
-- 📊 Echtzeit-Fortschrittsanzeige mit tqdm
-- 📁 Automatische Organisation nach Domains
-- 📝 Detaillierte Logging- und Berichtsfunktionen
+### 📦 Weitere Tools
+- **[PicHunter](https://github.com/JanVogt06/PicHunter)** - Python-Tool zum automatisierten Download von Bildern von Webseiten mit Duplikaterkennung
+- Weitere kleine Projekte und Experimente findest du in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
 
 ## 📚 Weitere Engagements
 - ⚽ Schiedsrichter (Mitglied des Elite-Kaders Thüringen & "Schiedsrichter des Jahres 2022")
