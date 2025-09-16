@@ -48,7 +48,7 @@ Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf ein
 
 ### ⚡ [SolarFlow – Intelligentes Energie-Management für Photovoltaik-Anlagen](https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement)
 
-**Technologien:** Python, SQLite, Fronius API, CSV-Logging, Geräte-Steuerung
+**Technologien:** Python, SQLite, Fronius API, CSV-Logging, Hue-Geräte-Steuerung, FastAPI, HTML, CSS, JS
 
 SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer von Photovoltaik-Anlagen mit Fronius Wechselrichtern entwickelt wurde. Es maximiert den Eigenverbrauch und senkt dadurch effektiv die Stromkosten durch eine intelligente Steuerung elektrischer Verbraucher.
 
