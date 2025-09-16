@@ -256,14 +256,14 @@
     .shape--11 {
         width: 200px;
         height: 200px;
-        top: -100px;
-        left: -100px;
+        top: -50px;
+        left: -50px;
     }
 
     .shape--12 {
         width: 250px;
         height: 250px;
-        bottom: -125px;
-        right: -125px;
+        bottom: -75px;
+        right: -75px;
     }
 }
