@@ -18,7 +18,7 @@
     z-index: 0;
 }
 
-.shape--4 {
+.shape--7 {
     position: absolute;
     width: 500px;
     height: 500px;
@@ -31,7 +31,7 @@
     animation: float 28s infinite ease-in-out;
 }
 
-.shape--5 {
+.shape--8 {
     position: absolute;
     width: 400px;
     height: 400px;
@@ -197,4 +197,86 @@
 
 .more-link:hover .more-link__icon {
     transform: translateX(5px);
+}
+
+/* Mobile Anpassungen */
+@media screen and (max-width: 768px) {
+    .projects {
+        padding: 3rem 1rem;
+    }
+
+    /* Grid responsive machen! */
+    .projects__grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .project-card {
+        padding: 1.5rem;
+        border-radius: 15px;
+    }
+
+    .project-card__header {
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .project-card__icon {
+        width: 24px;
+        height: 24px;
+    }
+
+    .project-card__title {
+        font-size: 1.4rem;
+    }
+
+    .project-card__subtitle {
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .project-card__description {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    /* Tech Tags kleiner */
+    .project-card__tech {
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .tech-tag {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    /* Project Links anpassen */
+    .project-link {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .project-link__icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* More Link */
+    .more-link {
+        font-size: 1rem;
+    }
+
+    /* Kleinere Shapes */
+    .shape--7 {
+        width: 250px;
+        height: 250px;
+        right: -125px;
+    }
+
+    .shape--8 {
+        width: 200px;
+        height: 200px;
+        bottom: -50px;
+    }
 }

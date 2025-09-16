@@ -86,3 +86,33 @@
 .navbar--dark .navbar__link--active {
     color: #667eea;
 }
+
+/* Mobile Anpassungen */
+@media screen and (max-width: 768px) {
+    .navbar {
+        top: 1rem;
+        padding: 0.5rem 0.75rem;
+        width: calc(100% - 2rem);
+        max-width: 400px;
+    }
+
+    .navbar__list {
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .navbar__link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Hover-Effekt auf Mobile deaktivieren */
+    .navbar__link:hover {
+        transform: none;
+    }
+
+    /* Indicator auf Mobile anpassen */
+    .navbar__indicator {
+        border-radius: 25px;
+    }
+}
