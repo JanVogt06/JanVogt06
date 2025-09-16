@@ -75,6 +75,7 @@
     text-align: center;
     width: 100%;
     max-width: 1000px;
+    height: fit-content;
     transition: transform 0.3s ease;
 }
 
@@ -82,6 +83,68 @@
     transform: translateY(-5px);
     box-shadow: 0 15px 40px 0 rgba(31, 38, 135, 0.5);
     background: rgba(255, 255, 255, 0.15);
+}
+
+/* Home Inner Container für Layout */
+.home__inner {
+    display: flex;
+    align-items: center;
+    gap: 3rem;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Profilbild Styles */
+.home__image-wrapper {
+    flex: 0 0 auto;
+}
+
+.home__image-container {
+    position: relative;
+    width: 280px;
+    height: 280px;
+}
+
+.home__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 2;
+}
+
+/* Animierter Gradient-Rahmen bleibt gleich */
+.home__image-border {
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+    border-radius: 23px;
+    z-index: 1;
+    animation: gradient-rotation 4s linear infinite;
+    background-size: 300% 300%;
+}
+
+@keyframes gradient-rotation {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Glass Card anpassen */
+.home__inner .glass-card {
+    flex: 1;
 }
 
 .home__title {
@@ -157,8 +220,28 @@
         padding: 1rem;
     }
 
+    .home__inner {
+        flex-direction: column;
+        gap: 2rem;
+        padding-top: 2rem;
+        align-items: center;
+    }
+
+    .home__image-wrapper {
+        align-self: auto;
+    }
+
+    .home__image-container {
+        width: 180px;  /* Feste Größe auf Mobile */
+        height: 180px;
+        aspect-ratio: unset;
+        margin: 0 auto;
+    }
+
     .glass-card {
         padding: 2rem 1.5rem;
+        width: 100%;
+        max-width: none;
     }
 
     .home__title {
