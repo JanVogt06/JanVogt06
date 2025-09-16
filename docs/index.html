@@ -166,17 +166,32 @@
     </div>
 </section>
 
-<!-- Vor dem schließenden body tag -->
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script>
     // Icons initialisieren
     lucide.createIcons();
 
-    // Navbar Active State beim Scrollen
+    // Navbar Funktionalität
+    const navbar = document.querySelector('.navbar');
+    const heroSection = document.querySelector('.hero');
+
+    // Navbar Style-Wechsel beim Scrollen
     window.addEventListener('scroll', () => {
         const sections = document.querySelectorAll('section');
         const navLinks = document.querySelectorAll('.navbar__link');
 
+        // Check ob wir über den Hero-Bereich hinaus sind
+        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+        const scrollPosition = window.scrollY + 100; // 100px offset für frühere Aktivierung
+
+        // Dark Mode aktivieren wenn über Hero hinaus
+        if (scrollPosition > heroBottom) {
+            navbar.classList.add('navbar--dark');
+        } else {
+            navbar.classList.remove('navbar--dark');
+        }
+
+        // Active Link Update
         let current = '';
 
         sections.forEach(section => {

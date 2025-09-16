@@ -1,4 +1,4 @@
-/* Navbar mit Glassmorphism */
+/* Navbar */
 .navbar {
     position: fixed;
     top: 2rem;
@@ -12,6 +12,16 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 0.75rem 1.5rem;
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+    transition: all 0.3s ease;
+}
+
+/* Dark Mode */
+.navbar--dark {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 }
 
 .navbar__list {
@@ -25,6 +35,7 @@
     position: relative;
 }
 
+/* Light Mode Links (Standard) */
 .navbar__link {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
@@ -38,9 +49,26 @@
 .navbar__link:hover {
     background: rgba(255, 255, 255, 0.2);
     color: white;
+    transform: translateY(-2px);
 }
 
 .navbar__link--active {
     background: rgba(255, 255, 255, 0.15);
     color: white;
+}
+
+/* Dark Mode Links */
+.navbar--dark .navbar__link {
+    color: #333;
+}
+
+.navbar--dark .navbar__link:hover {
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    transform: translateY(-2px);
+}
+
+.navbar--dark .navbar__link--active {
+    background: rgba(102, 126, 234, 0.2);
+    color: #667eea;
 }
