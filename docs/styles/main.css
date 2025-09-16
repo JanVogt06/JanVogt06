@@ -3,6 +3,7 @@
 @import 'components/hero.css';
 @import 'components/navbar.css';
 @import 'components/about.css';
+@import 'components/projects.css';
 
 /* CSS Variablen für konsistentes Design */
 :root {

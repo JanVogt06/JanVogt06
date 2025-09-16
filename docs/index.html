@@ -48,7 +48,7 @@
                 <a href="https://github.com/JanVogt06" class="social-link" aria-label="GitHub" target="_blank">
                     <i data-lucide="github" class="social-icon"></i>
                 </a>
-                <a href="mailto:jan.vogt@uni-jena.de" class="social-link" aria-label="E-Mail">
+                <a href="mailto:jan.vogt06@web.de" class="social-link" aria-label="E-Mail">
                     <i data-lucide="mail" class="social-icon"></i>
                 </a>
                 <a href="https://instagram.com/jan.vogt06" class="social-link" aria-label="Instagram" target="_blank">
@@ -166,6 +166,88 @@
         </div>
     </div>
 </section>
+<!-- Projects Section -->
+<section class="projects" id="projects">
+    <div class="projects__background">
+        <div class="shape shape--4"></div>
+        <div class="shape shape--5"></div>
+    </div>
+
+    <div class="projects__container">
+        <h2 class="section__title">Projekte</h2>
+
+        <div class="projects__grid">
+            <!-- SatTrak Project -->
+            <div class="project-card">
+                <div class="project-card__header">
+                    <i data-lucide="satellite" class="project-card__icon"></i>
+                    <h3 class="project-card__title">SatTrak</h3>
+                </div>
+
+                <p class="project-card__subtitle">3D Satellitenvisualisierung</p>
+
+                <p class="project-card__description">
+                    Interaktive Echtzeit-Verfolgung von über 12.000 Satelliten
+                    auf einem virtuellen Globus. Mit Heatmap-Darstellung,
+                    Tag/Nacht-Zyklus und Zeitsteuerung für historische Ansichten.
+                </p>
+
+                <div class="project-card__tech">
+                    <span class="tech-tag">Unity</span>
+                    <span class="tech-tag">C#</span>
+                    <span class="tech-tag">Cesium</span>
+                </div>
+
+                <div class="project-card__links">
+                    <a href="https://github.com/JanVogt06/SatTrak-SatelliteVisualization"
+                       class="project-link" target="_blank">
+                        <i data-lucide="github" class="project-link__icon"></i>
+                        Code
+                    </a>
+                </div>
+            </div>
+
+            <!-- SolarFlow Project -->
+            <div class="project-card">
+                <div class="project-card__header">
+                    <i data-lucide="zap" class="project-card__icon"></i>
+                    <h3 class="project-card__title">SolarFlow</h3>
+                </div>
+
+                <p class="project-card__subtitle">Smart Energy Management</p>
+
+                <p class="project-card__description">
+                    Intelligentes Energie-Management-System für Photovoltaik-Anlagen.
+                    Maximiert den Eigenverbrauch durch automatische Steuerung von
+                    Verbrauchern basierend auf Solarüberschuss.
+                </p>
+
+                <div class="project-card__tech">
+                    <span class="tech-tag">Python</span>
+                    <span class="tech-tag">FastAPI</span>
+                    <span class="tech-tag">SQLite</span>
+                    <span class="tech-tag">JavaScript</span>
+                </div>
+
+                <div class="project-card__links">
+                    <a href="https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement"
+                       class="project-link" target="_blank">
+                        <i data-lucide="github" class="project-link__icon"></i>
+                        Code
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link zu mehr Projekten -->
+        <div class="projects__more">
+            <a href="https://github.com/JanVogt06?tab=repositories" class="more-link" target="_blank">
+                Weitere Projekte auf GitHub
+                <i data-lucide="arrow-right" class="more-link__icon"></i>
+            </a>
+        </div>
+    </div>
+</section>
 
 <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 <script>
@@ -176,7 +258,10 @@
     const navbar = document.querySelector('.navbar');
     const indicator = document.querySelector('.navbar__indicator');
     const navLinks = document.querySelectorAll('.navbar__link');
-    const heroSection = document.querySelector('.hero');
+
+    // Sections definieren - welche sind dunkel, welche hell
+    const darkSections = ['home', 'projects']; // Sections mit dunklem Hintergrund
+    const lightSections = ['about', 'contact']; // Sections mit hellem Hintergrund
 
     // Funktion zum Updaten der Indicator Position
     function updateIndicator(activeLink) {
@@ -199,18 +284,7 @@
     window.addEventListener('scroll', () => {
         const sections = document.querySelectorAll('section');
 
-        // Check ob wir über den Hero-Bereich hinaus sind
-        const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
-        const scrollPosition = window.scrollY + 100;
-
-        // Dark Mode aktivieren
-        if (scrollPosition > heroBottom) {
-            navbar.classList.add('navbar--dark');
-        } else {
-            navbar.classList.remove('navbar--dark');
-        }
-
-        // Active Link Update
+        // Active Section finden
         let current = '';
 
         sections.forEach(section => {
@@ -221,6 +295,14 @@
             }
         });
 
+        // Navbar Mode basierend auf aktueller Section
+        if (lightSections.includes(current)) {
+            navbar.classList.add('navbar--dark');
+        } else {
+            navbar.classList.remove('navbar--dark');
+        }
+
+        // Active Link Update
         navLinks.forEach(link => {
             link.classList.remove('navbar__link--active');
             if (link.getAttribute('href').slice(1) === current) {
