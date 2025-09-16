@@ -353,7 +353,7 @@
     </div>
 </section>
 
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="scripts/lucide.js"></script>
 <script>
     // Icons initialisieren
     lucide.createIcons();
@@ -417,7 +417,7 @@
 
     // Click Handler für sofortige Animation
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function() {
             navLinks.forEach(l => l.classList.remove('navbar__link--active'));
             this.classList.add('navbar__link--active');
             updateIndicator(this);
