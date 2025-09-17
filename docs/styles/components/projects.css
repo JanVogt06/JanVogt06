@@ -27,7 +27,8 @@
     filter: blur(60px);
     opacity: 0.6;
     top: 50%;
-    right: -250px;
+    right: 0;
+    transform: translateX(40%);
     animation: float 28s infinite ease-in-out;
 }
 

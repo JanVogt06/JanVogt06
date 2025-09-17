@@ -44,8 +44,9 @@
     border-radius: 50%;
     filter: blur(40px);
     opacity: 0.7;
-    bottom: -250px;
-    right: -250px;
+    bottom: 0;
+    right: 0;
+    transform: translate(40%, 40%);
     animation: float 30s infinite ease-in-out reverse;
 }
 
