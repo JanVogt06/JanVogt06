@@ -5,7 +5,7 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-radius: 100px;
@@ -17,17 +17,25 @@
 
 .navbar__indicator {
     position: absolute;
-    background: rgba(255, 255, 255, 0.15);
     border-radius: 50px;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smoothere Kurve */
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     z-index: 0;
     pointer-events: none;
-    will-change: transform, width; /* Performance-Optimierung */
+    will-change: transform, width;
+    overflow: hidden;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.25) 0%,
+        rgba(255, 255, 255, 0.15) 50%,
+        rgba(255, 255, 255, 0.25) 100%
+    );
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Dark Mode */
 .navbar--dark {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.8);
@@ -36,7 +44,13 @@
 
 /* Dark Mode Indicator */
 .navbar--dark .navbar__indicator {
-    background: rgba(102, 126, 234, 0.2);
+    background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.2) 0%,
+        rgba(102, 126, 234, 0.1) 50%,
+        rgba(102, 126, 234, 0.2) 100%
+    );
+    border: 1px solid rgba(102, 126, 234, 0.3);
 }
 
 .navbar__list {
