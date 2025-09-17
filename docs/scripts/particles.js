@@ -8,7 +8,7 @@ class ParticleSystem {
         this.particles = [];
         this.mouseX = 0;
         this.mouseY = 0;
-        this.particleCount = window.innerWidth > 768 ? 125 : 40; // Weniger Partikel auf Mobile
+        this.particleCount = window.innerWidth > 768 ? 125 : 0; // Entferne Partikel auf Mobile
 
         this.init();
         this.setupEventListeners();
