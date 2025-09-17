@@ -363,9 +363,12 @@
     const indicator = document.querySelector('.navbar__indicator');
     const navLinks = document.querySelectorAll('.navbar__link');
 
-    // Sections definieren - welche sind dunkel, welche hell
-    const darkSections = ['home', 'projects']; // Sections mit dunklem Hintergrund
-    const lightSections = ['about', 'contact']; // Sections mit hellem Hintergrund
+    // Sections definieren
+    const darkSections = ['home', 'projects'];
+    const lightSections = ['about', 'contact'];
+
+    // Flag für Click-Animation
+    let isClicking = false;
 
     // Funktion zum Updaten der Indicator Position
     function updateIndicator(activeLink) {
@@ -384,16 +387,33 @@
     const initialActive = document.querySelector('.navbar__link--active');
     updateIndicator(initialActive);
 
-    // Navbar Funktionalität beim Scrollen
-    window.addEventListener('scroll', () => {
-        const sections = document.querySelectorAll('section');
+    // Throttle-Funktion für bessere Performance
+    function throttle(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-        // Active Section finden
+    // Scroll-Handler
+    const handleScroll = throttle(() => {
+        // Skip wenn gerade geklickt wurde
+        if (isClicking) return;
+
+        const sections = document.querySelectorAll('section');
         let current = '';
 
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            if (scrollY >= sectionTop - 100) {
+            const sectionHeight = section.offsetHeight;
+            const scrollPosition = window.scrollY + 100;
+
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
                 current = section.getAttribute('id');
             }
         });
@@ -413,14 +433,45 @@
                 updateIndicator(link);
             }
         });
-    });
+    }, 50);
 
-    // Click Handler für sofortige Animation
+    // Scroll Event Listener
+    window.addEventListener('scroll', handleScroll);
+
+    // Click Handler mit smooth scroll
     navLinks.forEach(link => {
-        link.addEventListener('click', function() {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Flag setzen
+            isClicking = true;
+
+            // Sofort aktiv setzen
             navLinks.forEach(l => l.classList.remove('navbar__link--active'));
             this.classList.add('navbar__link--active');
             updateIndicator(this);
+
+            // Ziel-Section holen
+            const targetId = this.getAttribute('href').slice(1);
+            const targetSection = document.getElementById(targetId);
+
+            // Navbar-Farbe sofort anpassen
+            if (lightSections.includes(targetId)) {
+                navbar.classList.add('navbar--dark');
+            } else {
+                navbar.classList.remove('navbar--dark');
+            }
+
+            // Smooth scroll zur Section
+            targetSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+
+            // Flag nach Animation zurücksetzen
+            setTimeout(() => {
+                isClicking = false;
+            }, 800); // Dauer der Scroll-Animation
         });
     });
 
