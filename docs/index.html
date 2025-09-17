@@ -75,7 +75,7 @@
                     <a href="https://github.com/JanVogt06" class="social-link" aria-label="GitHub" target="_blank">
                         <i data-lucide="github" class="social-icon"></i>
                     </a>
-                    <a href="mailto:jan.vogt06@web.de" class="social-link" aria-label="E-Mail">
+                    <a href="#" class="social-link email-link" aria-label="E-Mail">
                         <i data-lucide="mail" class="social-icon"></i>
                     </a>
                     <a href="https://instagram.com/jan.vogt06" class="social-link" aria-label="Instagram" target="_blank">
@@ -118,7 +118,6 @@
                         <div class="timeline__content">
                             <h4>B.Sc. Informatik</h4>
                             <p>Friedrich-Schiller-Universität Jena</p>
-                            <span class="timeline__note">Notendurchschnitt: 1,7</span>
                         </div>
                     </div>
                     <div class="timeline__item">
@@ -126,7 +125,6 @@
                         <div class="timeline__content">
                             <h4>Abitur</h4>
                             <p>Marie-Curie-Gymnasium Bad Berka</p>
-                            <span class="timeline__note">Jahrgangsbester • Note: 1,1</span>
                         </div>
                     </div>
                 </div>
@@ -157,7 +155,7 @@
                     </div>
                     <div class="award">
                         <span class="award__year">2022</span>
-                        <span class="award__name">Schiedsrichter des Jahres</span>
+                        <span class="award__name">Schiedsrichter des Jahres Kreissportbund Weimarer Land e.V.</span>
                     </div>
                     <div class="award">
                         <span class="award__year">2016-2024</span>
@@ -177,7 +175,7 @@
                         <i data-lucide="flag" class="engagement__icon"></i>
                         <div>
                             <h4>Elite-Kader Thüringen</h4>
-                            <p>Schiedsrichter Thüringenliga & B-Junioren-Bundesliga</p>
+                            <p>Fußball-Schiedsrichter Thüringenliga & Junioren-Bundesliga</p>
                         </div>
                     </div>
                     <div class="engagement__item">
@@ -305,13 +303,13 @@
 
                 <div class="contact__methods">
                     <!-- Email -->
-                    <a href="mailto:jan.vogt06@web.de" class="contact__method">
+                    <a href="#" class="contact__method email-link">
                         <div class="contact__method-icon">
                             <i data-lucide="mail"></i>
                         </div>
                         <div class="contact__method-info">
                             <h3>E-Mail</h3>
-                            <p>jan.vogt06@web.de</p>
+                            <p class="email-text"></p>
                         </div>
                     </a>
 
@@ -352,7 +350,7 @@
                 </div>
 
                 <div class="contact__cta">
-                    <a href="mailto:jan.vogt06@web.de" class="contact__button">
+                    <a href="#" class="contact__button email-link">
                         <i data-lucide="send"></i>
                         Nachricht senden
                     </a>
@@ -364,8 +362,26 @@
 
 <script src="scripts/lucide.js"></script>
 <script>
-    // Icons initialisieren
-    lucide.createIcons();
+    const EMAIL_ADDRESS = 'jan.vogt.portfolio@web.de';
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Alle E-Mail-Links mit der Klasse 'email-link' aktualisieren
+        const emailLinks = document.querySelectorAll('.email-link');
+        emailLinks.forEach(link => {
+            link.href = `mailto:${EMAIL_ADDRESS}`;
+        });
+
+        // E-Mail-Text im Kontaktbereich setzen
+        const emailTextElements = document.querySelectorAll('.email-text');
+        emailTextElements.forEach(element => {
+            element.textContent = EMAIL_ADDRESS;
+        });
+
+        // Icons initialisieren
+        lucide.createIcons();
+    });
+
 
     // Navbar Elemente
     const navbar = document.querySelector('.navbar');
