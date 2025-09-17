@@ -26,7 +26,7 @@
 <body>
 <!-- Navbar -->
 <nav class="navbar">
-    <div class="navbar__indicator"></div> <!-- NEU: Der sliding background -->
+    <div class="navbar__indicator"></div>
     <ul class="navbar__list">
         <li class="navbar__item">
             <a href="#home" class="navbar__link navbar__link--active">Home</a>
@@ -43,9 +43,12 @@
     </ul>
 </nav>
 
-<!-- home Section -->
+<!-- Home Section mit Partikeln -->
 <section class="home" id="home">
     <div class="home__background">
+        <!-- Canvas für Partikel-System -->
+        <canvas id="particles-canvas"></canvas>
+
         <!-- Floating Shapes für den Liquid-Effekt -->
         <div class="shape shape--1"></div>
         <div class="shape shape--2"></div>
@@ -197,6 +200,7 @@
         </div>
     </div>
 </section>
+
 <!-- Projects Section -->
 <section class="projects" id="projects">
     <div class="projects__background">
@@ -360,10 +364,11 @@
     </div>
 </section>
 
-<script src="scripts/lucide.js"></script>
+<!-- Scripts -->
+<script src="scripts/locally_stored/lucide.js"></script>
+<script src="scripts/particles.js"></script>
 <script>
     const EMAIL_ADDRESS = 'jan.vogt.portfolio@web.de';
-
 
     document.addEventListener('DOMContentLoaded', function() {
         // Alle E-Mail-Links mit der Klasse 'email-link' aktualisieren
@@ -381,7 +386,6 @@
         // Icons initialisieren
         lucide.createIcons();
     });
-
 
     // Navbar Elemente
     const navbar = document.querySelector('.navbar');
