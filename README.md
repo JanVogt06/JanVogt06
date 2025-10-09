@@ -62,7 +62,8 @@ SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer 
 SolarFlow sorgt dafür, dass Verbraucher wie Warmwasserboiler, Poolpumpen oder Ladestationen bevorzugt dann eingeschaltet werden, wenn ausreichend Solarstrom zur Verfügung steht. So wird Ihre selbst erzeugte Energie optimal genutzt.
 
 ### 📦 Weitere Tools
-- **[PicHunter](https://github.com/JanVogt06/PicHunter)** - Python-Tool zum automatisierten Download von Bildern von Webseiten mit Duplikaterkennung
+- **[PicHunter](https://github.com/JanVogt06/PicHunter)** - Python-Tool zum automatisierten Download von Bildern von Webseiten mit Duplikaterkennung.
+- **[code-merge-tools](https://github.com/JanVogt06/code-merge-tools)** - Bash-Skripte zum Zusammenführen von Source-Code-Dateien.
 - Weitere kleine Projekte und Experimente findest du in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
 
 ## 📚 Weitere Engagements
