@@ -91,9 +91,17 @@
             </div>
         </div>
 
-        <!-- Optional: Scroll Indicator -->
+        <!-- Scroll Indicator -->
         <div class="home__scroll-indicator">
             <i data-lucide="chevron-down" class="scroll-icon"></i>
+        </div>
+
+        <!-- Terminal Hint -->
+        <div class="terminal-hint">
+            <div class="terminal-hint__content">
+                <i data-lucide="terminal" class="terminal-hint__icon"></i>
+                <span class="terminal-hint__text">Drücke <kbd>Ctrl</kbd> + <kbd>K</kbd> für Terminal</span>
+            </div>
         </div>
     </div>
 </section>
@@ -405,9 +413,48 @@
     </div>
 </section>
 
+
+<!-- Terminal Overlay -->
+<div id="terminal" class="terminal">
+    <div class="terminal__window">
+        <div class="terminal__header">
+            <div class="terminal__buttons">
+                <button class="terminal__btn terminal__btn--close" aria-label="Close">
+                    <i data-lucide="x"></i>
+                </button>
+                <button class="terminal__btn terminal__btn--minimize" aria-label="Minimize">
+                    <i data-lucide="minus"></i>
+                </button>
+                <button class="terminal__btn terminal__btn--maximize" aria-label="Maximize">
+                    <i data-lucide="maximize-2"></i>
+                </button>
+            </div>
+            <span class="terminal__title">jan@portfolio — zsh — 80×24</span>
+            <div class="terminal__spacer"></div>
+        </div>
+        <div class="terminal__body">
+            <div class="terminal__output" id="terminal-output">
+                <div class="terminal__line">Last login: Thu Oct 16 22:45:12 on ttys001</div>
+                <div class="terminal__line"></div>
+            </div>
+            <div class="terminal__input-line">
+                <span class="terminal__prompt">jan@portfolio ~ %</span>
+                <input
+                        type="text"
+                        class="terminal__input"
+                        id="terminal-input"
+                        autocomplete="off"
+                        spellcheck="false"
+                >
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Scripts -->
 <script src="scripts/locally_stored/lucide.js"></script>
 <script src="scripts/particles.js"></script>
+<script src="scripts/terminal.js"></script>
 <script>
     const EMAIL_ADDRESS = 'jan.vogt.portfolio@web.de';
 
