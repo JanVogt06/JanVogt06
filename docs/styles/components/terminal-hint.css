@@ -42,6 +42,10 @@
     white-space: nowrap;
 }
 
+.terminal-hint__text .key-symbol {
+    margin-right: 0.25rem;
+}
+
 .terminal-hint__text kbd {
     display: inline-block;
     padding: 0.15rem 0.4rem;
@@ -70,10 +74,11 @@
     }
 }
 
-/* Fade out wenn Terminal aktiv */
-.terminal--active ~ .home .terminal-hint {
+/* Versteckt Klasse */
+.terminal-hint--hidden {
     opacity: 0;
     pointer-events: none;
+    transition: opacity 0.3s ease;
 }
 
 /* Mobile */
