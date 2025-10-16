@@ -196,6 +196,7 @@
     font-size: 13px;
     line-height: 1.7;
     margin-bottom: 0.1rem;
+    white-space: pre-wrap;  /* behält Zeilenumbrüche bei */
 }
 
 /* Input Line */
