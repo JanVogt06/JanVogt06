@@ -81,30 +81,9 @@
     transition: opacity 0.3s ease;
 }
 
-/* Mobile */
+/* Mobile - Terminal komplett ausblenden */
 @media screen and (max-width: 768px) {
     .terminal-hint {
-        bottom: 6rem;
-        right: 1rem;
-        left: 1rem;
-        display: flex;
-        justify-content: center;
-    }
-
-    .terminal-hint__content {
-        padding: 0.6rem 1rem;
-    }
-
-    .terminal-hint__text {
-        font-size: 0.85rem;
-    }
-
-    @keyframes floatAround {
-        0%, 100% {
-            transform: translate(0, 0);
-        }
-        50% {
-            transform: translate(0, -15px);
-        }
+        display: none !important;
     }
 }
