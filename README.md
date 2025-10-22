@@ -61,6 +61,22 @@ SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer 
 
 SolarFlow sorgt dafür, dass Verbraucher wie Warmwasserboiler, Poolpumpen oder Ladestationen bevorzugt dann eingeschaltet werden, wenn ausreichend Solarstrom zur Verfügung steht. So wird Ihre selbst erzeugte Energie optimal genutzt.
 
+### ⚔️ [Cryptborne – 3D Dungeon Crawler](https://github.com/JanVogt06/Cryptborne)
+
+**Technologien:** Unity 6, C#
+
+Cryptborne ist ein mittelalterlicher Fantasy-Dungeon-Crawler mit prozeduraler Level-Generierung und intensivem wave-basierten Kampfsystem. Das Spiel läuft direkt im Browser (WebGL) und bietet actiongeladenes Gameplay in atmosphärischen, zufallsgenerierten Dungeons.
+
+**Kernfeatures:**
+* 🏰 **Prozedurale Dungeon-Generierung:** Jeder Durchgang bietet eine einzigartige Dungeon-Struktur mit modularem Raumsystem
+* ⚔️ **Vielfältiges Waffensystem:** Unterschiedliche Waffentypen (Maschinengewehr, Schrotflinte, Sniper, magischer Stab) mit individuellen Schussmustern und Verhaltensweisen
+* 🎯 **Intelligente Gegner-KI:** State-Machine-basierte Gegner mit Wahrnehmungssystem und taktischem Verhalten
+* 🌊 **Wave-basiertes Gameplay:** Fortschreitende Schwierigkeitsstufen mit Upgrade-System zwischen den Runden
+* ✨ **Visuelle Effekte:** Muzzle Flash, Partikelsysteme, Schadenszahlen und modernes UI-Design mit Glassmorphismus
+* 🎮 **WebGL-optimiert:** Performance-optimiert für flüssiges Gameplay im Browser mit Object Pooling und effizienter Ressourcenverwaltung
+
+Das Projekt demonstriert fortgeschrittene Unity-Entwicklung mit Fokus auf sauberer Architektur, modularen Systemen und Web-Performance.
+
 ### 📦 Weitere Tools
 - **[PicHunter](https://github.com/JanVogt06/PicHunter)** - Python-Tool zum automatisierten Download von Bildern von Webseiten mit Duplikaterkennung.
 - **[code-merge-tools](https://github.com/JanVogt06/code-merge-tools)** - Bash-Skripte zum Zusammenführen von Source-Code-Dateien.
