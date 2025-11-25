@@ -36,7 +36,7 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 ## 🌱 Aktuelle Projekte
 
-### ⚽ TFV Spesen Generator
+### ⚽ [TFV Spesen Generator](https://github.com/JanVogt06/dfb-spesen-generator)
 **Technologien:** Python, FastAPI, React, TypeScript, Playwright, Docker
 
 Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Das System scrapt Spielansetzungen aus DFBnet und generiert Word-Dokumente für die Spesenabrechnung – vollautomatisch und mehrbenutzerfähig.
