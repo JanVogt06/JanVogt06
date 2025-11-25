@@ -1,6 +1,6 @@
 # Jan Vogt
 ## 👋 Über mich
-Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Schiller-Universität Jena mit Interesse an Mathematik, Physik und Softwareentwicklung. 
+Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Schiller-Universität Jena mit Interesse an Mathematik, Physik und Softwareentwicklung.
 - 🎓 B.Sc. Informatik (seit Oktober 2024)
 - 🏠 Bad Berka, Thüringen
 
@@ -12,12 +12,15 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 ![Java](https://img.shields.io/badge/Java-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 
 ### Frameworks & Tools
 ![Unity](https://img.shields.io/badge/Unity-100000?style=flat-square&logo=unity&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
 ![OpenGL](https://img.shields.io/badge/OpenGL-FFFFFF?style=flat-square&logo=opengl)
 ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 
 ## 🎯 Interessen
 - 💻 Softwareentwicklung
@@ -33,41 +36,28 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 
 ## 🌱 Aktuelle Projekte
 
+### ⚽ TFV Spesen Generator
+**Technologien:** Python, FastAPI, React, TypeScript, Playwright, Docker
+
+Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Das System scrapt Spielansetzungen aus DFBnet und generiert Word-Dokumente für die Spesenabrechnung – vollautomatisch und mehrbenutzerfähig.
+
 ### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
 **Technologien:** Unity, C#, Cesium
 
-Interaktives Projekt zur Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus mit Unity & Cesium.
+Echtzeit-Visualisierung von über 12.000 Satelliten auf einem 3D-Globus mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische sowie zukünftige Positionen.
 
-**Features:**
-- 🌍 Echtzeit-Visualisierung von Satellitenpositionen auf einem 3D-Globus
-- 🔥 Heatmap-Darstellung zur Visualisierung der Satellitendichte
-- 🌓 Dynamischer Tag/Nacht-Zyklus
-- ⏰ Zeitsteuerung für historische und zukünftige Darstellungen
-- 🚀 Detaillierte Modellansicht besonderer Satelliten
-- 📊 Interaktive Bedienelemente und Informationsanzeigen
+### ⚡ [SolarFlow – Intelligentes Energie-Management](https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement)
+**Technologien:** Python, SQLite, FastAPI, Fronius API
 
-### ⚡ [SolarFlow – Intelligentes Energie-Management für Photovoltaik-Anlagen](https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement)
-
-**Technologien:** Python, SQLite, Fronius API, CSV-Logging, Hue-Geräte-Steuerung, FastAPI, HTML, CSS, JS
-
-SolarFlow ist ein smartes Energie-Management-System, das speziell für Besitzer von Photovoltaik-Anlagen mit Fronius Wechselrichtern entwickelt wurde. Es maximiert den Eigenverbrauch und senkt dadurch effektiv die Stromkosten durch eine intelligente Steuerung elektrischer Verbraucher.
-
-**Kernfunktionen:**
-* 🌞 **Echtzeit-Monitoring:** Permanente Überwachung aller Energieflüsse der Solaranlage
-* 🤖 **Intelligente Gerätesteuerung:** Automatisches Ein- und Ausschalten von Verbrauchern abhängig vom Solarüberschuss
-* 🎯 **Prioritätsmanagement:** Geräte werden nach frei konfigurierbarer Priorität gesteuert
-* 💰 **Kostenoptimierung:** Detaillierte Berechnung von Einsparungen und Amortisationszeit
-* 📊 **Umfassendes Logging:** Lückenlose Dokumentation aller Energiedaten und Schaltvorgänge
-
-SolarFlow sorgt dafür, dass Verbraucher wie Warmwasserboiler, Poolpumpen oder Ladestationen bevorzugt dann eingeschaltet werden, wenn ausreichend Solarstrom zur Verfügung steht. So wird Ihre selbst erzeugte Energie optimal genutzt.
+Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius Wechselrichtern. Maximiert den Eigenverbrauch durch intelligente, prioritätsbasierte Steuerung von Verbrauchern bei Solarüberschuss.
 
 ### 📦 Weitere Tools
-- **[PicHunter](https://github.com/JanVogt06/PicHunter)** - Python-Tool zum automatisierten Download von Bildern von Webseiten mit Duplikaterkennung.
-- **[code-merge-tools](https://github.com/JanVogt06/code-merge-tools)** - Bash-Skripte zum Zusammenführen von Source-Code-Dateien.
-- Weitere kleine Projekte und Experimente findest du in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
+- **[PicHunter](https://github.com/JanVogt06/PicHunter)** – Automatisierter Bild-Download mit Duplikaterkennung
+- **[code-merge-tools](https://github.com/JanVogt06/code-merge-tools)** – Bash-Skripte zum Zusammenführen von Source-Code
+- Weitere Projekte in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
 
 ## 📚 Weitere Engagements
-- ⚽ Schiedsrichter (Mitglied des Elite-Kaders Thüringen & "Schiedsrichter des Jahres 2022")
+- ⚽ Schiedsrichter (Elite-Kader Thüringen & "Schiedsrichter des Jahres 2022")
 - 📝 Redaktionsmitglied für "Die Wurzel" (Zeitschrift für Mathematik)
 - 🏛️ Aktiv in der lokalen Stadtentwicklung Bad Berka
 
