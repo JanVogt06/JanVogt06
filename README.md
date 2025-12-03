@@ -65,7 +65,7 @@ Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius Wechselrichtern
 <a href="https://github.com/JanVogt06">
   <img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" />
 </a>
-<a href="mailto:jan.vogt@uni-jena.de">
+<a href="mailto:contact@jan-vogt.dev">
   <img src="https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
 </a>
 <a href="https://instagram.com/jan.vogt06">
