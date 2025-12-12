@@ -4,8 +4,8 @@ import About from './components/About'
 function App() {
     return (
         <>
-            <Hero />
-            <About />
+            <Hero/>
+            <About/>
         </>
     )
 }
