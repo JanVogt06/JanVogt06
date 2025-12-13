@@ -29,10 +29,34 @@ const cssAnimations = `
 `;
 
 const cards = [
-    {icon: GraduationCap, text: "B.Sc. Informatik", subtext: "FSU Jena", color: "text-cyan-400", gradient: "from-cyan-500 to-blue-600"},
-    {icon: Sparkles, text: "Elite-Kader", subtext: "Schiedsrichter", color: "text-pink-400", gradient: "from-pink-500 to-purple-600"},
-    {icon: Coffee, text: "Die Wurzel", subtext: "Redaktion", color: "text-purple-400", gradient: "from-purple-500 to-pink-600"},
-    {icon: MapPin, text: "Bad Berka", subtext: "Thüringen", color: "text-emerald-400", gradient: "from-emerald-500 to-teal-600"},
+    {
+        icon: GraduationCap,
+        text: "B.Sc. Informatik",
+        subtext: "FSU Jena",
+        color: "text-cyan-400",
+        gradient: "from-cyan-500 to-blue-600"
+    },
+    {
+        icon: Sparkles,
+        text: "Elite-Kader",
+        subtext: "Schiedsrichter",
+        color: "text-pink-400",
+        gradient: "from-pink-500 to-purple-600"
+    },
+    {
+        icon: Coffee,
+        text: "Die Wurzel",
+        subtext: "Redaktion",
+        color: "text-purple-400",
+        gradient: "from-purple-500 to-pink-600"
+    },
+    {
+        icon: MapPin,
+        text: "Bad Berka",
+        subtext: "Thüringen",
+        color: "text-emerald-400",
+        gradient: "from-emerald-500 to-teal-600"
+    },
 ];
 
 const Hero = () => {
@@ -43,9 +67,13 @@ const Hero = () => {
 
                 {/* Animated gradient background */}
                 <div className="absolute inset-0">
-                    <div className="absolute -left-1/4 top-0 h-[800px] w-[800px] rounded-full bg-purple-600/20 blur-[150px] animate-pulse"/>
-                    <div className="absolute -right-1/4 bottom-0 h-[600px] w-[600px] rounded-full bg-pink-600/20 blur-[150px] animate-pulse" style={{animationDelay: '1s'}}/>
-                    <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[100px]"/>
+                    <div
+                        className="absolute -left-1/4 top-0 h-[800px] w-[800px] rounded-full bg-purple-600/20 blur-[150px] animate-pulse"/>
+                    <div
+                        className="absolute -right-1/4 bottom-0 h-[600px] w-[600px] rounded-full bg-pink-600/20 blur-[150px] animate-pulse"
+                        style={{animationDelay: '1s'}}/>
+                    <div
+                        className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[100px]"/>
                 </div>
 
                 {/* Grid pattern overlay */}
@@ -73,7 +101,8 @@ const Hero = () => {
                 </div>
 
                 {/* Content Overlay */}
-                <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
+                <div
+                    className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
 
                     {/* Left Side: Name & CTA */}
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
@@ -104,7 +133,8 @@ const Hero = () => {
                                 animate={{opacity: 1, x: 0}}
                                 transition={{duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1]}}
                             >
-                                <span className="bg-linear-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent">
+                                <span
+                                    className="bg-linear-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent">
                                     VOGT
                                 </span>
                             </motion.h1>

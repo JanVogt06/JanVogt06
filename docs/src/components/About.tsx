@@ -100,9 +100,26 @@ const About = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section className="relative bg-linear-to-b from-white via-gray-50 to-white py-16 md:py-24">
+            <section id="about" className="relative overflow-hidden bg-[#080b14] py-16 md:py-24">
 
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                {/* Background Elements - Blue/Cyan tinted */}
+                <div className="absolute inset-0">
+                    <div
+                        className="absolute -right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-cyan-600/10 blur-[150px]"/>
+                    <div
+                        className="absolute -left-1/4 bottom-0 h-[500px] w-[500px] rounded-full bg-blue-600/10 blur-[150px]"/>
+                </div>
+
+                {/* Subtle dot pattern */}
+                <div
+                    className="absolute inset-0 opacity-[0.02]"
+                    style={{
+                        backgroundImage: 'radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px)',
+                        backgroundSize: '30px 30px'
+                    }}
+                />
+
+                <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                     {/* Section Header */}
                     <motion.div
@@ -112,10 +129,11 @@ const About = () => {
                         viewport={{once: true, margin: "-100px"}}
                         transition={{duration: 0.6}}
                     >
-                        <h2 className="mb-3 text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-                            Über mich
+                        <h2 className="mb-3 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                            Über <span
+                            className="bg-linear-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">mich</span>
                         </h2>
-                        <p className="mx-auto max-w-2xl text-lg text-gray-600 sm:text-xl">
+                        <p className="mx-auto max-w-2xl text-lg text-white/60 sm:text-xl">
                             Student, Entwickler & Schiedsrichter mit Leidenschaft für Technologie
                         </p>
                     </motion.div>
@@ -125,7 +143,7 @@ const About = () => {
 
                         {/* Portrait - Mobile */}
                         <motion.div
-                            className="flex items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-linear-to-br from-blue-50 to-purple-50 shadow-sm"
+                            className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
                             initial={{opacity: 0, scale: 0.9}}
                             whileInView={{opacity: 1, scale: 1}}
                             viewport={{once: true, margin: "-50px"}}
@@ -140,40 +158,43 @@ const About = () => {
 
                         {/* Bildung - Mobile */}
                         <motion.div
-                            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                             initial={{opacity: 0, x: -30}}
                             whileInView={{opacity: 1, x: 0}}
                             viewport={{once: true, margin: "-50px"}}
                             transition={{duration: 0.6}}
                         >
-                            <h3 className="mb-5 text-2xl font-bold text-gray-900">Bildung</h3>
+                            <h3 className="mb-5 text-2xl font-bold text-white">Bildung</h3>
 
-                            <div className="relative space-y-6 border-l-2 border-purple-200 pl-6">
+                            <div className="relative space-y-6 border-l-2 border-cyan-500/30 pl-6">
                                 {/* B.Sc. */}
                                 <div className="relative">
-                                    <div className="absolute -left-8 top-1 h-3 w-3 rounded-full border-4 border-white bg-purple-500 shadow"/>
-                                    <span className="mb-1.5 inline-block rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-semibold text-purple-700">
+                                    <div
+                                        className="absolute -left-8 top-1 h-3 w-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"/>
+                                    <span
+                                        className="mb-1.5 inline-block rounded-full bg-cyan-500/20 px-2.5 py-0.5 text-xs font-semibold text-cyan-400">
                                         seit 10/2024
                                     </span>
-                                    <h4 className="mb-0.5 text-lg font-semibold text-gray-900">B.Sc. Informatik</h4>
-                                    <p className="text-sm text-gray-600">Friedrich-Schiller-Universität Jena</p>
+                                    <h4 className="mb-0.5 text-lg font-semibold text-white">B.Sc. Informatik</h4>
+                                    <p className="text-sm text-white/60">Friedrich-Schiller-Universität Jena</p>
                                 </div>
 
                                 {/* Abitur */}
                                 <div className="relative">
-                                    <div className="absolute -left-8 top-1 h-3 w-3 rounded-full border-4 border-white bg-gray-400 shadow"/>
-                                    <span className="mb-1.5 inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-semibold text-gray-700">
+                                    <div className="absolute -left-8 top-1 h-3 w-3 rounded-full bg-white/30"/>
+                                    <span
+                                        className="mb-1.5 inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/70">
                                         2024
                                     </span>
-                                    <h4 className="mb-0.5 text-lg font-semibold text-gray-900">Abitur</h4>
-                                    <p className="text-sm text-gray-600">Marie-Curie-Gymnasium Bad Berka</p>
+                                    <h4 className="mb-0.5 text-lg font-semibold text-white">Abitur</h4>
+                                    <p className="text-sm text-white/60">Marie-Curie-Gymnasium Bad Berka</p>
                                 </div>
                             </div>
                         </motion.div>
 
                         {/* Referee Image - Mobile */}
                         <motion.div
-                            className="flex items-end justify-center overflow-hidden rounded-2xl bg-linear-to-br from-purple-100 to-pink-100 p-4 pb-0"
+                            className="flex items-end justify-center overflow-hidden rounded-2xl bg-linear-to-br from-purple-900/30 to-pink-900/30 p-4 pb-0"
                             style={{minHeight: '300px'}}
                             initial={{opacity: 0, y: 30}}
                             whileInView={{opacity: 1, y: 0}}
@@ -190,27 +211,46 @@ const About = () => {
                         {/* Engagement - Mobile */}
                         <div
                             ref={engagementCardRef.ref}
-                            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                             style={{
                                 opacity: 0,
                                 animation: engagementCardRef.isInView ? 'fadeInUp 0.6s linear forwards' : 'none'
                             }}
                         >
-                            <h3 className="mb-5 text-2xl font-bold text-gray-900">Engagement</h3>
+                            <h3 className="mb-5 text-2xl font-bold text-white">Engagement</h3>
 
                             <div className="space-y-3">
                                 {[
-                                    {icon: Users, color: "bg-purple-100 text-purple-600", title: "Elite-Kader Thüringen", desc: "Fußball-Schiedsrichter Thüringenliga & Junioren-Bundesliga"},
-                                    {icon: BookOpen, color: "bg-pink-100 text-pink-600", title: "Redaktionsmitglied", desc: "\"Die Wurzel\" - Zeitschrift für Mathematik"},
-                                    {icon: GraduationCap, color: "bg-blue-100 text-blue-600", title: "Jugendvertretung Bad Berka", desc: "Stadtentwicklung & ISEK-Workshops"},
+                                    {
+                                        icon: Users,
+                                        gradient: "from-purple-500 to-pink-600",
+                                        color: "text-purple-400",
+                                        title: "Elite-Kader Thüringen",
+                                        desc: "Fußball-Schiedsrichter Thüringenliga & Junioren-Bundesliga"
+                                    },
+                                    {
+                                        icon: BookOpen,
+                                        gradient: "from-pink-500 to-rose-600",
+                                        color: "text-pink-400",
+                                        title: "Redaktionsmitglied",
+                                        desc: "\"Die Wurzel\" - Zeitschrift für Mathematik"
+                                    },
+                                    {
+                                        icon: GraduationCap,
+                                        gradient: "from-cyan-500 to-blue-600",
+                                        color: "text-cyan-400",
+                                        title: "Jugendvertretung Bad Berka",
+                                        desc: "Stadtentwicklung & ISEK-Workshops"
+                                    },
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                                        <div className={`rounded-lg p-2 ${item.color}`}>
-                                            <item.icon className="h-4 w-4"/>
+                                    <div key={i}
+                                         className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all duration-300 hover:border-white/10 hover:bg-white/10">
+                                        <div className={`rounded-lg bg-linear-to-br ${item.gradient} p-2`}>
+                                            <item.icon className="h-4 w-4 text-white"/>
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-gray-900">{item.title}</h4>
-                                            <p className="text-sm text-gray-600">{item.desc}</p>
+                                            <h4 className={`font-semibold ${item.color}`}>{item.title}</h4>
+                                            <p className="text-sm text-white/60">{item.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -220,13 +260,13 @@ const About = () => {
                         {/* Awards - Mobile */}
                         <div
                             ref={awardsCardRef.ref}
-                            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                             style={{
                                 opacity: 0,
                                 animation: awardsCardRef.isInView ? 'fadeInUp 0.5s linear forwards' : 'none'
                             }}
                         >
-                            <h3 className="mb-4 flex items-center gap-2 text-xl font-bold text-gray-900">
+                            <h3 className="mb-4 flex items-center gap-2 text-xl font-bold text-white">
                                 <Award className="h-5 w-5 text-yellow-500"/>
                                 Auszeichnungen
                             </h3>
@@ -242,10 +282,10 @@ const About = () => {
                                 ].map((award, i) => (
                                     <div
                                         key={i}
-                                        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
+                                        className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:border-yellow-500/30 hover:bg-yellow-500/5"
                                     >
-                                        <span className="text-sm font-semibold text-purple-600">{award.year}</span>
-                                        <span className="text-xs text-gray-700">{award.text}</span>
+                                        <span className="text-sm font-semibold text-yellow-500">{award.year}</span>
+                                        <span className="text-xs text-white/70">{award.text}</span>
                                     </div>
                                 ))}
                             </div>
@@ -256,17 +296,17 @@ const About = () => {
                     {/* Desktop Layout (12-column grid) */}
                     <div className="relative hidden grid-cols-12 gap-6 lg:grid">
 
-                        {/* Bildung */}
+                        {/* Bildung - col-span-7 */}
                         <motion.div
-                            className="col-span-7 rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+                            className="col-span-7 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
                             initial={{opacity: 0, x: -50}}
                             whileInView={{opacity: 1, x: 0}}
                             viewport={{once: true, margin: "-100px"}}
                             transition={{duration: 0.6, delay: 0.1}}
                         >
-                            <h3 className="mb-6 text-3xl font-bold text-gray-900">Bildung</h3>
+                            <h3 className="mb-6 text-3xl font-bold text-white">Bildung</h3>
 
-                            <div className="relative space-y-8 border-l-2 border-purple-200 pl-8">
+                            <div className="relative space-y-8 border-l-2 border-cyan-500/30 pl-8">
 
                                 {/* Current - B.Sc. */}
                                 <motion.div
@@ -277,14 +317,14 @@ const About = () => {
                                     transition={{duration: 0.5, delay: 0.3}}
                                 >
                                     <div
-                                        className="absolute -left-10.25 top-1 h-4 w-4 rounded-full border-4 border-white bg-purple-500 shadow"/>
+                                        className="absolute -left-10.25 top-1 h-4 w-4 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"/>
 
                                     <span
-                                        className="mb-2 inline-block rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">
+                                        className="mb-2 inline-block rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-semibold text-cyan-400">
                                         seit 10/2024
                                     </span>
-                                    <h4 className="mb-1 text-xl font-semibold text-gray-900">B.Sc. Informatik</h4>
-                                    <p className="text-gray-600">Friedrich-Schiller-Universität Jena</p>
+                                    <h4 className="mb-1 text-xl font-semibold text-white">B.Sc. Informatik</h4>
+                                    <p className="text-white/60">Friedrich-Schiller-Universität Jena</p>
                                 </motion.div>
 
                                 {/* Abitur */}
@@ -295,22 +335,21 @@ const About = () => {
                                     viewport={{once: true}}
                                     transition={{duration: 0.5, delay: 0.4}}
                                 >
-                                    <div
-                                        className="absolute -left-10.25 top-1 h-4 w-4 rounded-full border-4 border-white bg-gray-400 shadow"/>
+                                    <div className="absolute -left-10.25 top-1 h-4 w-4 rounded-full bg-white/30"/>
 
                                     <span
-                                        className="mb-2 inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700">
+                                        className="mb-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70">
                                         2024
                                     </span>
-                                    <h4 className="mb-1 text-xl font-semibold text-gray-900">Abitur</h4>
-                                    <p className="text-gray-600">Marie-Curie-Gymnasium Bad Berka</p>
+                                    <h4 className="mb-1 text-xl font-semibold text-white">Abitur</h4>
+                                    <p className="text-white/60">Marie-Curie-Gymnasium Bad Berka</p>
                                 </motion.div>
                             </div>
                         </motion.div>
 
-                        {/* Portrait */}
+                        {/* Portrait - col-span-5 */}
                         <motion.div
-                            className="col-span-5 flex items-center justify-center overflow-hidden rounded-3xl border border-gray-200 bg-linear-to-br from-blue-50 to-purple-50 shadow-sm"
+                            className="col-span-5 flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
                             initial={{opacity: 0, scale: 0.9}}
                             whileInView={{opacity: 1, scale: 1}}
                             viewport={{once: true, margin: "-100px"}}
@@ -323,9 +362,9 @@ const About = () => {
                             />
                         </motion.div>
 
-                        {/* Referee */}
+                        {/* Referee - col-span-4 */}
                         <motion.div
-                            className="col-span-4 flex items-end justify-center overflow-visible rounded-3xl bg-linear-to-br from-purple-100 to-pink-100 p-6 pb-0"
+                            className="col-span-4 flex items-end justify-center overflow-visible rounded-3xl bg-linear-to-br from-purple-900/30 to-pink-900/30 p-6 pb-0"
                             style={{minHeight: '600px'}}
                             initial={{opacity: 0, x: -50}}
                             whileInView={{opacity: 1, x: 0}}
@@ -339,31 +378,31 @@ const About = () => {
                             />
                         </motion.div>
 
-                        {/* Engagement + Awards */}
+                        {/* Engagement + Awards - col-span-8 */}
                         <div className="col-span-8 space-y-6">
 
                             {/* Engagement Card */}
                             <AnimatedCard
-                                className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+                                className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
                                 animation="slideInFromRight"
                                 duration="0.6s"
                             >
-                                <h3 className="mb-6 text-3xl font-bold text-gray-900">Engagement</h3>
+                                <h3 className="mb-6 text-3xl font-bold text-white">Engagement</h3>
 
                                 <div className="space-y-4">
                                     {/* Elite-Kader */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-[transform,background-color,box-shadow] duration-200 hover:translate-x-1 hover:bg-gray-100 hover:shadow-md"
+                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className="rounded-lg bg-purple-100 p-2">
-                                                <Users className="h-5 w-5 text-purple-600"/>
+                                            <div className="rounded-lg bg-linear-to-br from-purple-500 to-pink-600 p-2">
+                                                <Users className="h-5 w-5 text-white"/>
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-gray-900">Elite-Kader Thüringen</h4>
-                                                <p className="text-sm text-gray-600">Fußball-Schiedsrichter
+                                                <h4 className="font-semibold text-purple-400">Elite-Kader Thüringen</h4>
+                                                <p className="text-sm text-white/60">Fußball-Schiedsrichter
                                                     Thüringenliga & Junioren-Bundesliga</p>
                                             </div>
                                         </div>
@@ -371,17 +410,17 @@ const About = () => {
 
                                     {/* Redaktionsmitglied */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-[transform,background-color,box-shadow] duration-200 hover:translate-x-1 hover:bg-gray-100 hover:shadow-md"
+                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className="rounded-lg bg-pink-100 p-2">
-                                                <BookOpen className="h-5 w-5 text-pink-600"/>
+                                            <div className="rounded-lg bg-linear-to-br from-pink-500 to-rose-600 p-2">
+                                                <BookOpen className="h-5 w-5 text-white"/>
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-gray-900">Redaktionsmitglied</h4>
-                                                <p className="text-sm text-gray-600">"Die Wurzel" - Zeitschrift für
+                                                <h4 className="font-semibold text-pink-400">Redaktionsmitglied</h4>
+                                                <p className="text-sm text-white/60">"Die Wurzel" - Zeitschrift für
                                                     Mathematik</p>
                                             </div>
                                         </div>
@@ -389,18 +428,18 @@ const About = () => {
 
                                     {/* Jugendvertretung */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition-[transform,background-color,box-shadow] duration-200 hover:translate-x-1 hover:bg-gray-100 hover:shadow-md"
+                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <div className="rounded-lg bg-blue-100 p-2">
-                                                <GraduationCap className="h-5 w-5 text-blue-600"/>
+                                            <div className="rounded-lg bg-linear-to-br from-cyan-500 to-blue-600 p-2">
+                                                <GraduationCap className="h-5 w-5 text-white"/>
                                             </div>
                                             <div>
-                                                <h4 className="font-semibold text-gray-900">Jugendvertretung Bad
+                                                <h4 className="font-semibold text-cyan-400">Jugendvertretung Bad
                                                     Berka</h4>
-                                                <p className="text-sm text-gray-600">Stadtentwicklung &
+                                                <p className="text-sm text-white/60">Stadtentwicklung &
                                                     ISEK-Workshops</p>
                                             </div>
                                         </div>
@@ -410,11 +449,11 @@ const About = () => {
 
                             {/* Auszeichnungen Card */}
                             <AnimatedCard
-                                className="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm"
+                                className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
                                 animation="fadeInUp"
                                 duration="0.5s"
                             >
-                                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-gray-900">
+                                <h3 className="mb-4 flex items-center gap-2 text-2xl font-bold text-white">
                                     <Award className="h-5 w-5 text-yellow-500"/>
                                     Auszeichnungen
                                 </h3>
@@ -430,23 +469,19 @@ const About = () => {
                                     ].map((award, i) => (
                                         <AnimatedCard
                                             key={i}
-                                            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 transition-[transform,background-color,box-shadow] duration-200 hover:scale-105 hover:bg-gray-100 hover:shadow-md"
+                                            className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:scale-105 hover:border-yellow-500/30 hover:bg-yellow-500/5"
                                             animation="slideInFromBottom"
                                             duration="0.4s"
                                         >
-                                            <span className="text-sm font-semibold text-purple-600">{award.year}</span>
-                                            <span className="text-xs text-gray-700">{award.text}</span>
+                                            <span className="text-sm font-semibold text-yellow-500">{award.year}</span>
+                                            <span className="text-xs text-white/70">{award.text}</span>
                                         </AnimatedCard>
                                     ))}
                                 </div>
                             </AnimatedCard>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </section>
         </>
     );

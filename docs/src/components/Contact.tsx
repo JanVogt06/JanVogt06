@@ -75,7 +75,7 @@ const contactMethods = [
 ];
 
 // Contact Method Card Component
-const ContactMethod = ({method, index}: {method: typeof contactMethods[0], index: number}) => {
+const ContactMethod = ({method, index}: { method: typeof contactMethods[0], index: number }) => {
     const {ref, isInView} = useInView<HTMLAnchorElement>();
     const Icon = method.icon;
 
@@ -91,7 +91,8 @@ const ContactMethod = ({method, index}: {method: typeof contactMethods[0], index
                 animation: isInView ? `slideInFromBottom 0.5s linear ${index * 0.1}s forwards` : 'none'
             }}
         >
-            <div className={`rounded-lg bg-linear-to-br ${method.gradient} p-2.5 shadow-lg transition-transform duration-300 group-hover:scale-110 sm:rounded-xl sm:p-3`}>
+            <div
+                className={`rounded-lg bg-linear-to-br ${method.gradient} p-2.5 shadow-lg transition-transform duration-300 group-hover:scale-110 sm:rounded-xl sm:p-3`}>
                 <Icon className="h-4 w-4 text-white sm:h-5 sm:w-5"/>
             </div>
             <div>
@@ -111,8 +112,11 @@ const Contact = () => {
             <section id="contact" className="relative overflow-hidden bg-[#0c0515] py-16 md:py-24">
 
                 {/* Background Blobs - matching Hero */}
-                <div className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-purple-600/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
-                <div className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-pink-600/20 blur-[150px] md:h-[600px] md:w-[600px]" style={{animationDelay: '1s'}}/>
+                <div
+                    className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-purple-600/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
+                <div
+                    className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-pink-600/20 blur-[150px] md:h-[600px] md:w-[600px]"
+                    style={{animationDelay: '1s'}}/>
 
                 <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
@@ -133,7 +137,8 @@ const Contact = () => {
                     </motion.div>
 
                     {/* Contact Card */}
-                    <div className="rounded-2xl border border-purple-500/20 bg-purple-950/20 p-5 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8">
+                    <div
+                        className="rounded-2xl border border-purple-500/20 bg-purple-950/20 p-5 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8">
 
                         {/* Contact Methods Grid */}
                         <div className="mb-6 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mb-8">
@@ -155,7 +160,8 @@ const Contact = () => {
                                 href="mailto:contact@jan-vogt.dev"
                                 className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-pink-500 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-pink-600 hover:to-purple-700 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] sm:gap-3 sm:px-8 sm:py-4 sm:text-lg"
                             >
-                                <Send className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-5 sm:w-5"/>
+                                <Send
+                                    className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-5 sm:w-5"/>
                                 Nachricht senden
                             </a>
                         </div>

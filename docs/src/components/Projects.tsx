@@ -14,17 +14,6 @@ const cssAnimations = `
     transform: translateY(0);
   }
 }
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
 `;
 
 // Hook for intersection observer
@@ -55,9 +44,10 @@ const projects = [
     {
         icon: Satellite,
         iconGradient: "from-cyan-500 to-blue-600",
+        glowColor: "cyan",
         title: "SatTrak",
         subtitle: "3D Satellitenvisualisierung",
-        description: "Interaktive Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus. Mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische Ansichten.",
+        description: "Interaktive Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus. Mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung.",
         tech: ["Unity", "C#", "Cesium"],
         links: {
             github: "https://github.com/JanVogt06/SatTrak-SatelliteVisualization"
@@ -66,9 +56,10 @@ const projects = [
     {
         icon: Zap,
         iconGradient: "from-yellow-500 to-orange-600",
+        glowColor: "yellow",
         title: "SolarFlow",
         subtitle: "Smart Energy Management",
-        description: "Intelligentes Energie-Management-System für Photovoltaik-Anlagen. Maximiert den Eigenverbrauch durch automatische Steuerung von Verbrauchern basierend auf Solarüberschuss.",
+        description: "Intelligentes Energie-Management-System für Photovoltaik-Anlagen. Maximiert den Eigenverbrauch durch automatische Steuerung von Verbrauchern.",
         tech: ["Python", "FastAPI", "SQLite", "JavaScript"],
         links: {
             github: "https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement",
@@ -78,9 +69,10 @@ const projects = [
     {
         icon: Receipt,
         iconGradient: "from-green-500 to-emerald-600",
+        glowColor: "green",
         title: "TFV Spesen Generator",
         subtitle: "Automatisierte Spesenabrechnung",
-        description: "Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Scrapt Spielansetzungen aus DFBnet und generiert professionelle Word-Dokumente.",
+        description: "Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Scrapt Spielansetzungen und generiert Word-Dokumente.",
         tech: ["Python", "FastAPI", "React", "TypeScript", "Docker"],
         links: {
             github: "https://github.com/JanVogt06/dfb-spesen-generator",
@@ -90,6 +82,7 @@ const projects = [
     {
         icon: Sword,
         iconGradient: "from-purple-500 to-pink-600",
+        glowColor: "purple",
         title: "Cryptborne",
         subtitle: "3D Dungeon-Crawler",
         description: "Prozedural generierter Dungeon-Crawler im mittelalterlichen Fantasy-Setting. Mit variantenreichem Waffensystem und intelligenter Enemy-AI.",
@@ -102,103 +95,100 @@ const projects = [
 ];
 
 // Project Card Component
-const ProjectCard = ({project, index}: {project: typeof projects[0], index: number}) => {
+const ProjectCard = ({project, index}: { project: typeof projects[0], index: number }) => {
     const {ref, isInView} = useInView<HTMLDivElement>();
     const Icon = project.icon;
 
     return (
         <div
             ref={ref}
-            className="group relative rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl sm:p-6"
+            className="group relative rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10"
             style={{
                 opacity: 0,
-                animation: isInView ? `slideInFromBottom 0.6s linear ${index * 0.15}s forwards` : 'none'
+                animation: isInView ? `slideInFromBottom 0.6s ease-out ${index * 0.1}s forwards` : 'none'
             }}
         >
-            {/* Header */}
-            <div className="mb-3 flex items-center gap-3 sm:mb-4">
-                <div className={`rounded-xl bg-linear-to-br ${project.iconGradient} p-2.5 shadow-lg transition-transform duration-300 group-hover:scale-110 sm:p-3`}>
-                    <Icon className="h-5 w-5 text-white sm:h-6 sm:w-6"/>
+            {/* Glow effect on hover */}
+            <div
+                className={`absolute -inset-px rounded-2xl bg-linear-to-r ${project.iconGradient} opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-20`}/>
+
+            <div className="relative">
+                {/* Header */}
+                <div className="mb-4 flex items-center gap-4">
+                    <div className={`rounded-xl bg-linear-to-br ${project.iconGradient} p-3 shadow-lg`}>
+                        <Icon className="h-6 w-6 text-white"/>
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">{project.title}</h3>
+                        <p className="text-sm text-white/50">{project.subtitle}</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-bold text-gray-900 sm:text-xl">{project.title}</h3>
-                    <p className="text-sm text-gray-500">
-                        {project.subtitle}
-                    </p>
+
+                {/* Description */}
+                <p className="mb-5 text-sm leading-relaxed text-white/60">
+                    {project.description}
+                </p>
+
+                {/* Tech Stack */}
+                <div className="mb-5 flex flex-wrap gap-2">
+                    {project.tech.map((tech, i) => (
+                        <span
+                            key={i}
+                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70"
+                        >
+                            {tech}
+                        </span>
+                    ))}
+                </div>
+
+                {/* Links */}
+                <div className="flex flex-wrap gap-2">
+                    {project.links.github && (
+                        <a
+                            href={project.links.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                        >
+                            <Github className="h-4 w-4"/>
+                            Code
+                        </a>
+                    )}
+                    {project.links.website && (
+                        <a
+                            href={project.links.website}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        >
+                            <Globe className="h-4 w-4"/>
+                            Website
+                        </a>
+                    )}
+                    {project.links.app && (
+                        <a
+                            href={project.links.app}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        >
+                            <Globe className="h-4 w-4"/>
+                            Zur App
+                        </a>
+                    )}
+                    {project.links.play && (
+                        <a
+                            href={project.links.play}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        >
+                            <Gamepad2 className="h-4 w-4"/>
+                            Play Now
+                        </a>
+                    )}
                 </div>
             </div>
-
-            {/* Description */}
-            <p className="mb-4 text-sm leading-relaxed text-gray-600 sm:mb-5">
-                {project.description}
-            </p>
-
-            {/* Tech Stack */}
-            <div className="mb-4 flex flex-wrap gap-1.5 sm:mb-5 sm:gap-2">
-                {project.tech.map((tech, i) => (
-                    <span
-                        key={i}
-                        className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 sm:px-3"
-                    >
-                        {tech}
-                    </span>
-                ))}
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-                {project.links.github && (
-                    <a
-                        href={project.links.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-100 sm:gap-2 sm:px-4"
-                    >
-                        <Github className="h-4 w-4"/>
-                        Code
-                    </a>
-                )}
-                {project.links.website && (
-                    <a
-                        href={project.links.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
-                    >
-                        <Globe className="h-4 w-4"/>
-                        Website
-                    </a>
-                )}
-                {project.links.app && (
-                    <a
-                        href={project.links.app}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
-                    >
-                        <Globe className="h-4 w-4"/>
-                        Zur App
-                    </a>
-                )}
-                {project.links.play && (
-                    <a
-                        href={project.links.play}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
-                    >
-                        <Gamepad2 className="h-4 w-4"/>
-                        Play Now
-                    </a>
-                )}
-            </div>
-
-            {/* Hover Glow Effect - Hidden on mobile */}
-            <div className="pointer-events-none absolute inset-0 hidden rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:block"
-                 style={{
-                     background: 'radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(147, 51, 234, 0.06), transparent 40%)'
-                 }}
-            />
         </div>
     );
 };
@@ -207,32 +197,46 @@ const Projects = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section id="projects" className="relative overflow-hidden bg-linear-to-b from-gray-50 via-white to-gray-50 py-16 md:py-24">
+            <section id="projects" className="relative overflow-hidden bg-[#0a0a12] py-20 md:py-28">
 
-                {/* Background Decoration */}
-                <div className="absolute -right-40 top-20 h-60 w-60 rounded-full bg-purple-100/50 blur-3xl md:h-80 md:w-80"/>
-                <div className="absolute -left-40 bottom-20 h-60 w-60 rounded-full bg-pink-100/50 blur-3xl md:h-80 md:w-80"/>
+                {/* Background - Grid pattern with purple tint */}
+                <div className="absolute inset-0">
+                    <div
+                        className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-600/10 blur-[150px]"/>
+                    <div
+                        className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-pink-600/10 blur-[150px]"/>
+                </div>
 
-                <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                {/* Grid lines */}
+                <div
+                    className="absolute inset-0 opacity-[0.03]"
+                    style={{
+                        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+                        backgroundSize: '60px 60px'
+                    }}
+                />
+
+                <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
 
                     {/* Section Header */}
                     <motion.div
-                        className="mb-10 text-center md:mb-16"
+                        className="mb-16 text-center"
                         initial={{opacity: 0, y: 30}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true, margin: "-100px"}}
                         transition={{duration: 0.6}}
                     >
-                        <h2 className="mb-3 text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
-                            Projekte
+                        <h2 className="mb-4 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
+                            Meine <span
+                            className="bg-linear-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Projekte</span>
                         </h2>
-                        <p className="mx-auto max-w-2xl text-lg text-gray-600 sm:text-xl">
+                        <p className="mx-auto max-w-2xl text-lg text-white/60">
                             Eine Auswahl meiner Projekte aus verschiedenen Bereichen
                         </p>
                     </motion.div>
 
                     {/* Projects Grid */}
-                    <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+                    <div className="grid gap-6 md:grid-cols-2">
                         {projects.map((project, index) => (
                             <ProjectCard key={project.title} project={project} index={index}/>
                         ))}
@@ -240,23 +244,22 @@ const Projects = () => {
 
                     {/* More Projects Link */}
                     <motion.div
-                        className="mt-10 text-center md:mt-12"
+                        className="mt-12 text-center"
                         initial={{opacity: 0, y: 20}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true}}
-                        transition={{duration: 0.5, delay: 0.6}}
+                        transition={{duration: 0.5, delay: 0.4}}
                     >
                         <a
                             href="https://github.com/JanVogt06?tab=repositories"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-2 text-base font-medium text-purple-600 transition-colors hover:text-purple-700 sm:text-lg"
+                            className="group inline-flex items-center gap-2 text-lg font-medium text-purple-400 transition-colors hover:text-purple-300"
                         >
                             Weitere Projekte auf GitHub
-                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"/>
+                            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1"/>
                         </a>
                     </motion.div>
-
                 </div>
             </section>
         </>
