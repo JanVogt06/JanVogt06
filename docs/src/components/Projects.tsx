@@ -207,7 +207,7 @@ const Projects = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section className="relative overflow-hidden bg-linear-to-b from-gray-50 via-white to-gray-50 py-16 md:py-24">
+            <section id="projects" className="relative overflow-hidden bg-linear-to-b from-gray-50 via-white to-gray-50 py-16 md:py-24">
 
                 {/* Background Decoration */}
                 <div className="absolute -right-40 top-20 h-60 w-60 rounded-full bg-purple-100/50 blur-3xl md:h-80 md:w-80"/>

@@ -108,11 +108,11 @@ const Contact = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section className="relative overflow-hidden bg-linear-to-br from-[#1a0b2e] via-[#2d1b4e] to-[#1a0b2e] py-16 md:py-24">
+            <section id="contact" className="relative overflow-hidden bg-[#0c0515] py-16 md:py-24">
 
-                {/* Background Blobs */}
-                <div className="absolute -left-40 top-20 h-64 w-64 animate-pulse rounded-full bg-purple-600/20 blur-3xl md:h-96 md:w-96"/>
-                <div className="absolute -right-40 bottom-20 h-64 w-64 animate-pulse rounded-full bg-pink-600/20 blur-3xl md:h-96 md:w-96" style={{animationDelay: '1s'}}/>
+                {/* Background Blobs - matching Hero */}
+                <div className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-purple-600/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
+                <div className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-pink-600/20 blur-[150px] md:h-[600px] md:w-[600px]" style={{animationDelay: '1s'}}/>
 
                 <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
