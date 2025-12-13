@@ -2,31 +2,51 @@ import {Button} from "@/components/ui/button"
 import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin} from "lucide-react"
 import {motion} from "framer-motion"
 import portraitImage from "@/assets/images/portrait.png"
+import NebulaWebGL from "./NebulaWebGL"
 
-// CSS Animations
-const cssAnimations = `
+// ============================================
+// CSS STYLES & ANIMATIONS
+// ============================================
+
+const styles = `
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
 @keyframes slideInFromRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.animate-gradient-shift {
+    animation: gradient-shift 6s ease infinite;
+    background-size: 200% 200%;
+}
+
+.animate-pulse-glow {
+    animation: pulse-glow 4s ease-in-out infinite;
 }
 `;
+
+// ============================================
+// CARD DATA
+// ============================================
 
 const cards = [
     {
@@ -59,50 +79,83 @@ const cards = [
     },
 ];
 
+// ============================================
+// ADDITIONAL BACKGROUND ELEMENTS
+// ============================================
+
+// Light glow behind portrait
+const PortraitGlow = () => {
+    return (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center overflow-hidden pointer-events-none">
+            <div
+                className="absolute bottom-0 h-[70vh] w-[50vw] animate-pulse-glow"
+                style={{
+                    background: `
+                        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(139, 92, 246, 0.4) 0%, transparent 50%),
+                        radial-gradient(ellipse 40% 40% at 50% 100%, rgba(236, 72, 153, 0.3) 0%, transparent 40%)
+                    `,
+                }}
+            />
+        </div>
+    );
+};
+
+// ============================================
+// MAIN HERO COMPONENT
+// ============================================
+
 const Hero = () => {
     return (
         <>
-            <style>{cssAnimations}</style>
+            <style>{styles}</style>
             <section className="relative min-h-screen w-full overflow-hidden bg-[#0c0515]">
 
-                {/* Animated gradient background */}
+                {/* === LAYERED BACKGROUND === */}
                 <div className="absolute inset-0">
+                    {/* Base gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#0c0515] via-[#1a0a2e] to-[#0c0515]"/>
+
+                    {/* WebGL Nebula */}
+                    <NebulaWebGL/>
+
+                    {/* Grid pattern */}
                     <div
-                        className="absolute -left-1/4 top-0 h-[800px] w-[800px] rounded-full bg-purple-600/20 blur-[150px] animate-pulse"/>
+                        className="absolute inset-0 opacity-[0.03]"
+                        style={{
+                            backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+                            backgroundSize: '50px 50px'
+                        }}
+                    />
+
+                    {/* Subtle noise texture */}
                     <div
-                        className="absolute -right-1/4 bottom-0 h-[600px] w-[600px] rounded-full bg-pink-600/20 blur-[150px] animate-pulse"
-                        style={{animationDelay: '1s'}}/>
-                    <div
-                        className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/10 blur-[100px]"/>
+                        className="absolute inset-0 opacity-[0.015] pointer-events-none"
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+                        }}
+                    />
                 </div>
 
-                {/* Grid pattern overlay */}
-                <div
-                    className="absolute inset-0 opacity-[0.03]"
-                    style={{
-                        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-                        backgroundSize: '50px 50px'
-                    }}
-                />
+                {/* Portrait glow */}
+                <PortraitGlow/>
 
-                {/* Centered Portrait - Anchored to Bottom */}
+                {/* === PORTRAIT === */}
                 <div className="absolute inset-x-0 bottom-0 z-0 flex justify-center">
                     <motion.div
-                        initial={{opacity: 0, y: 50}}
-                        animate={{opacity: 1, y: 0}}
-                        transition={{duration: 1, delay: 0.2, ease: "easeOut"}}
+                        initial={{opacity: 0, y: 80, scale: 0.95}}
+                        animate={{opacity: 1, y: 0, scale: 1}}
+                        transition={{duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1]}}
                     >
                         <img
                             src={portraitImage}
                             alt="Jan Vogt"
-                            className="h-[50vh] w-auto object-cover object-bottom opacity-40 sm:h-[60vh] sm:opacity-50 lg:h-[85vh] lg:opacity-100"
+                            className="h-[50vh] w-auto object-cover object-bottom opacity-40 drop-shadow-[0_0_80px_rgba(139,92,246,0.3)] sm:h-[60vh] sm:opacity-50 lg:h-[85vh] lg:opacity-100"
                         />
                     </motion.div>
                 </div>
 
-                {/* Content Overlay */}
-                <div
-                    className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
+                {/* === CONTENT OVERLAY === */}
+                <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
 
                     {/* Left Side: Name & CTA */}
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
@@ -121,27 +174,26 @@ const Hero = () => {
                         <div className="relative">
                             <motion.h1
                                 className="text-7xl font-black leading-[0.85] tracking-tighter text-white sm:text-8xl lg:text-9xl"
-                                initial={{opacity: 0, x: -80}}
-                                animate={{opacity: 1, x: 0}}
+                                initial={{opacity: 0, x: -80, filter: "blur(8px)"}}
+                                animate={{opacity: 1, x: 0, filter: "blur(0px)"}}
                                 transition={{duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1]}}
                             >
                                 JAN
                             </motion.h1>
                             <motion.h1
                                 className="text-7xl font-black leading-[0.85] tracking-tighter sm:text-8xl lg:text-9xl"
-                                initial={{opacity: 0, x: -80}}
-                                animate={{opacity: 1, x: 0}}
+                                initial={{opacity: 0, x: -80, filter: "blur(8px)"}}
+                                animate={{opacity: 1, x: 0, filter: "blur(0px)"}}
                                 transition={{duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1]}}
                             >
-                                <span
-                                    className="bg-linear-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent">
+                                <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent animate-gradient-shift">
                                     VOGT
                                 </span>
                             </motion.h1>
 
                             {/* Decorative line */}
                             <motion.div
-                                className="mt-4 h-1 w-24 rounded-full bg-linear-to-r from-purple-500 to-pink-500 lg:w-32"
+                                className="mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 lg:w-32"
                                 initial={{scaleX: 0, originX: 0}}
                                 animate={{scaleX: 1}}
                                 transition={{duration: 0.8, delay: 0.7}}
@@ -169,11 +221,15 @@ const Hero = () => {
                         >
                             <Button
                                 size="lg"
-                                className="group rounded-full bg-linear-to-r from-purple-500 to-pink-500 px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+                                className="group relative overflow-hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
                                 onClick={() => document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}
                             >
-                                Kontakt aufnehmen
-                                <span className="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                                {/* Shimmer effect */}
+                                <span
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-[shimmer_0.75s_ease]"
+                                />
+                                <span className="relative">Kontakt aufnehmen</span>
+                                <span className="relative ml-2 transition-transform group-hover:translate-x-1">→</span>
                             </Button>
 
                             <Button
@@ -199,7 +255,7 @@ const Hero = () => {
                                         animation: `slideInFromRight 0.6s ease-out ${0.8 + i * 0.15}s forwards`
                                     }}
                                 >
-                                    <div className={`rounded-xl bg-linear-to-br ${card.gradient} p-2.5`}>
+                                    <div className={`rounded-xl bg-gradient-to-br ${card.gradient} p-2.5`}>
                                         <card.icon className="h-5 w-5 text-white"/>
                                     </div>
                                     <div>
@@ -225,7 +281,7 @@ const Hero = () => {
                                     animation: `fadeInUp 0.5s ease-out ${1 + i * 0.1}s forwards`
                                 }}
                             >
-                                <div className={`rounded-lg bg-linear-to-br ${card.gradient} p-1.5`}>
+                                <div className={`rounded-lg bg-gradient-to-br ${card.gradient} p-1.5`}>
                                     <card.icon className="h-3.5 w-3.5 text-white"/>
                                 </div>
                                 <div>
@@ -245,9 +301,10 @@ const Hero = () => {
                     transition={{duration: 0.6, delay: 1.4}}
                 >
                     <motion.div
-                        className="flex flex-col items-center gap-2 text-white/30"
+                        className="flex cursor-pointer flex-col items-center gap-2 text-white/30 transition-colors hover:text-white/50"
                         animate={{y: [0, 8, 0]}}
                         transition={{duration: 2, repeat: Infinity, ease: "easeInOut"}}
+                        onClick={() => document.getElementById('about')?.scrollIntoView({behavior: 'smooth'})}
                     >
                         <span className="text-xs uppercase tracking-widest">Scroll</span>
                         <ArrowDown className="h-4 w-4"/>
