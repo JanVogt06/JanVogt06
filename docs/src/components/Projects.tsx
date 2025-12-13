@@ -28,8 +28,8 @@ const cssAnimations = `
 `;
 
 // Hook for intersection observer
-const useInView = (options = {}) => {
-    const ref = useRef<HTMLDivElement>(null);
+const useInView = <T extends HTMLElement = HTMLElement>(options = {}) => {
+    const ref = useRef<T>(null);
     const [isInView, setIsInView] = useState(false);
 
     useEffect(() => {
@@ -103,25 +103,25 @@ const projects = [
 
 // Project Card Component
 const ProjectCard = ({project, index}: {project: typeof projects[0], index: number}) => {
-    const {ref, isInView} = useInView();
+    const {ref, isInView} = useInView<HTMLDivElement>();
     const Icon = project.icon;
 
     return (
         <div
             ref={ref}
-            className="group relative rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl"
+            className="group relative rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl sm:p-6"
             style={{
                 opacity: 0,
                 animation: isInView ? `slideInFromBottom 0.6s linear ${index * 0.15}s forwards` : 'none'
             }}
         >
             {/* Header */}
-            <div className="mb-4 flex items-center gap-3">
-                <div className={`rounded-xl bg-linear-to-br ${project.iconGradient} p-3 shadow-lg transition-transform duration-300 group-hover:scale-110`}>
-                    <Icon className="h-6 w-6 text-white"/>
+            <div className="mb-3 flex items-center gap-3 sm:mb-4">
+                <div className={`rounded-xl bg-linear-to-br ${project.iconGradient} p-2.5 shadow-lg transition-transform duration-300 group-hover:scale-110 sm:p-3`}>
+                    <Icon className="h-5 w-5 text-white sm:h-6 sm:w-6"/>
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
+                    <h3 className="text-lg font-bold text-gray-900 sm:text-xl">{project.title}</h3>
                     <p className="text-sm text-gray-500">
                         {project.subtitle}
                     </p>
@@ -129,16 +129,16 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
             </div>
 
             {/* Description */}
-            <p className="mb-5 text-sm leading-relaxed text-gray-600">
+            <p className="mb-4 text-sm leading-relaxed text-gray-600 sm:mb-5">
                 {project.description}
             </p>
 
             {/* Tech Stack */}
-            <div className="mb-5 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-wrap gap-1.5 sm:mb-5 sm:gap-2">
                 {project.tech.map((tech, i) => (
                     <span
                         key={i}
-                        className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200"
+                        className="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 sm:px-3"
                     >
                         {tech}
                     </span>
@@ -146,13 +146,13 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
             </div>
 
             {/* Links */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
                 {project.links.github && (
                     <a
                         href={project.links.github}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-100"
+                        className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-100 sm:gap-2 sm:px-4"
                     >
                         <Github className="h-4 w-4"/>
                         Code
@@ -163,7 +163,7 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
                         href={project.links.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg`}
+                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
                     >
                         <Globe className="h-4 w-4"/>
                         Website
@@ -174,7 +174,7 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
                         href={project.links.app}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg`}
+                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
                     >
                         <Globe className="h-4 w-4"/>
                         Zur App
@@ -185,7 +185,7 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
                         href={project.links.play}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg`}
+                        className={`flex items-center gap-1.5 rounded-lg bg-linear-to-r ${project.iconGradient} px-3 py-2 text-sm font-medium text-white shadow-md transition-all hover:scale-105 hover:shadow-lg sm:gap-2 sm:px-4`}
                     >
                         <Gamepad2 className="h-4 w-4"/>
                         Play Now
@@ -193,8 +193,8 @@ const ProjectCard = ({project, index}: {project: typeof projects[0], index: numb
                 )}
             </div>
 
-            {/* Hover Glow Effect */}
-            <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            {/* Hover Glow Effect - Hidden on mobile */}
+            <div className="pointer-events-none absolute inset-0 hidden rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100 md:block"
                  style={{
                      background: 'radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(147, 51, 234, 0.06), transparent 40%)'
                  }}
@@ -207,32 +207,32 @@ const Projects = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section className="relative overflow-hidden bg-linear-to-b from-gray-50 via-white to-gray-50 py-24">
+            <section className="relative overflow-hidden bg-linear-to-b from-gray-50 via-white to-gray-50 py-16 md:py-24">
 
                 {/* Background Decoration */}
-                <div className="absolute -right-40 top-20 h-80 w-80 rounded-full bg-purple-100/50 blur-3xl"/>
-                <div className="absolute -left-40 bottom-20 h-80 w-80 rounded-full bg-pink-100/50 blur-3xl"/>
+                <div className="absolute -right-40 top-20 h-60 w-60 rounded-full bg-purple-100/50 blur-3xl md:h-80 md:w-80"/>
+                <div className="absolute -left-40 bottom-20 h-60 w-60 rounded-full bg-pink-100/50 blur-3xl md:h-80 md:w-80"/>
 
-                <div className="relative mx-auto max-w-7xl px-8">
+                <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
                     {/* Section Header */}
                     <motion.div
-                        className="mb-16 text-center"
+                        className="mb-10 text-center md:mb-16"
                         initial={{opacity: 0, y: 30}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true, margin: "-100px"}}
                         transition={{duration: 0.6}}
                     >
-                        <h2 className="mb-4 text-5xl font-bold text-gray-900 lg:text-6xl">
+                        <h2 className="mb-3 text-4xl font-bold text-gray-900 sm:text-5xl lg:text-6xl">
                             Projekte
                         </h2>
-                        <p className="mx-auto max-w-2xl text-xl text-gray-600">
+                        <p className="mx-auto max-w-2xl text-lg text-gray-600 sm:text-xl">
                             Eine Auswahl meiner Projekte aus verschiedenen Bereichen
                         </p>
                     </motion.div>
 
                     {/* Projects Grid */}
-                    <div className="grid gap-6 md:grid-cols-2">
+                    <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                         {projects.map((project, index) => (
                             <ProjectCard key={project.title} project={project} index={index}/>
                         ))}
@@ -240,7 +240,7 @@ const Projects = () => {
 
                     {/* More Projects Link */}
                     <motion.div
-                        className="mt-12 text-center"
+                        className="mt-10 text-center md:mt-12"
                         initial={{opacity: 0, y: 20}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true}}
@@ -250,10 +250,10 @@ const Projects = () => {
                             href="https://github.com/JanVogt06?tab=repositories"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-2 text-lg font-medium text-purple-600 transition-colors hover:text-purple-700"
+                            className="group inline-flex items-center gap-2 text-base font-medium text-purple-600 transition-colors hover:text-purple-700 sm:text-lg"
                         >
                             Weitere Projekte auf GitHub
-                            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1"/>
+                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 sm:h-5 sm:w-5"/>
                         </a>
                     </motion.div>
 

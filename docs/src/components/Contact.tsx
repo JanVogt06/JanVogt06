@@ -85,18 +85,18 @@ const ContactMethod = ({method, index}: {method: typeof contactMethods[0], index
             href={method.href}
             target={method.external ? "_blank" : undefined}
             rel={method.external ? "noopener noreferrer" : undefined}
-            className="group flex items-center gap-4 rounded-2xl border border-purple-500/20 bg-purple-950/30 p-5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/40 hover:bg-purple-900/40 hover:shadow-lg hover:shadow-purple-500/10"
+            className="group flex items-center gap-3 rounded-xl border border-purple-500/20 bg-purple-950/30 p-4 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-purple-500/40 hover:bg-purple-900/40 hover:shadow-lg hover:shadow-purple-500/10 sm:gap-4 sm:rounded-2xl sm:p-5"
             style={{
                 opacity: 0,
                 animation: isInView ? `slideInFromBottom 0.5s linear ${index * 0.1}s forwards` : 'none'
             }}
         >
-            <div className={`rounded-xl bg-linear-to-br ${method.gradient} p-3 shadow-lg transition-transform duration-300 group-hover:scale-110`}>
-                <Icon className="h-5 w-5 text-white"/>
+            <div className={`rounded-lg bg-linear-to-br ${method.gradient} p-2.5 shadow-lg transition-transform duration-300 group-hover:scale-110 sm:rounded-xl sm:p-3`}>
+                <Icon className="h-4 w-4 text-white sm:h-5 sm:w-5"/>
             </div>
             <div>
-                <h3 className="font-semibold text-white">{method.title}</h3>
-                <p className="text-sm text-gray-400 transition-colors group-hover:text-gray-300">{method.value}</p>
+                <h3 className="text-sm font-semibold text-white sm:text-base">{method.title}</h3>
+                <p className="text-xs text-gray-400 transition-colors group-hover:text-gray-300 sm:text-sm">{method.value}</p>
             </div>
         </a>
     );
@@ -108,35 +108,35 @@ const Contact = () => {
     return (
         <>
             <style>{cssAnimations}</style>
-            <section className="relative overflow-hidden bg-linear-to-br from-[#1a0b2e] via-[#2d1b4e] to-[#1a0b2e] py-24">
+            <section className="relative overflow-hidden bg-linear-to-br from-[#1a0b2e] via-[#2d1b4e] to-[#1a0b2e] py-16 md:py-24">
 
                 {/* Background Blobs */}
-                <div className="absolute -left-40 top-20 h-96 w-96 animate-pulse rounded-full bg-purple-600/20 blur-3xl"/>
-                <div className="absolute -right-40 bottom-20 h-96 w-96 animate-pulse rounded-full bg-pink-600/20 blur-3xl" style={{animationDelay: '1s'}}/>
+                <div className="absolute -left-40 top-20 h-64 w-64 animate-pulse rounded-full bg-purple-600/20 blur-3xl md:h-96 md:w-96"/>
+                <div className="absolute -right-40 bottom-20 h-64 w-64 animate-pulse rounded-full bg-pink-600/20 blur-3xl md:h-96 md:w-96" style={{animationDelay: '1s'}}/>
 
-                <div className="relative mx-auto max-w-4xl px-8">
+                <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
                     {/* Section Header */}
                     <motion.div
-                        className="mb-12 text-center"
+                        className="mb-8 text-center md:mb-12"
                         initial={{opacity: 0, y: 30}}
                         whileInView={{opacity: 1, y: 0}}
                         viewport={{once: true, margin: "-100px"}}
                         transition={{duration: 0.6}}
                     >
-                        <h2 className="mb-4 text-5xl font-bold text-white lg:text-6xl">
+                        <h2 className="mb-3 text-4xl font-bold text-white sm:text-5xl lg:text-6xl">
                             Kontakt
                         </h2>
-                        <p className="mx-auto max-w-xl text-xl text-gray-300">
+                        <p className="mx-auto max-w-xl text-base text-gray-300 sm:text-lg md:text-xl">
                             Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?
                         </p>
                     </motion.div>
 
                     {/* Contact Card */}
-                    <div className="rounded-3xl border border-purple-500/20 bg-purple-950/20 p-8 backdrop-blur-sm">
+                    <div className="rounded-2xl border border-purple-500/20 bg-purple-950/20 p-5 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8">
 
                         {/* Contact Methods Grid */}
-                        <div className="mb-8 grid gap-4 sm:grid-cols-2">
+                        <div className="mb-6 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mb-8">
                             {contactMethods.map((method, index) => (
                                 <ContactMethod key={method.title} method={method} index={index}/>
                             ))}
@@ -152,10 +152,10 @@ const Contact = () => {
                             }}
                         >
                             <a
-                                href="mailto:jan@jan-vogt.dev"
-                                className="group inline-flex items-center gap-3 rounded-full bg-linear-to-r from-pink-500 to-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-pink-600 hover:to-purple-700 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)]"
+                                href="mailto:contact@jan-vogt.dev"
+                                className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-pink-500 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-pink-600 hover:to-purple-700 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] sm:gap-3 sm:px-8 sm:py-4 sm:text-lg"
                             >
-                                <Send className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"/>
+                                <Send className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-5 sm:w-5"/>
                                 Nachricht senden
                             </a>
                         </div>

@@ -15,6 +15,17 @@ const slideInAnimation = `
     transform: translateX(0);
   }
 }
+
+@keyframes slideInFromBottom {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 `;
 
 const Hero = () => {
@@ -26,9 +37,9 @@ const Hero = () => {
 
                 {/* Animated Background Blobs */}
                 <div
-                    className="absolute -left-40 top-20 h-96 w-96 animate-pulse rounded-full bg-purple-600/20 blur-3xl"/>
+                    className="absolute -left-40 top-20 h-64 w-64 animate-pulse rounded-full bg-purple-600/20 blur-3xl md:h-96 md:w-96"/>
                 <div
-                    className="absolute -right-40 bottom-20 h-96 w-96 animate-pulse rounded-full bg-pink-600/20 blur-3xl"
+                    className="absolute -right-40 bottom-20 h-64 w-64 animate-pulse rounded-full bg-pink-600/20 blur-3xl md:h-96 md:w-96"
                     style={{animationDelay: '1s'}}/>
 
                 {/* Background Portrait */}
@@ -41,23 +52,23 @@ const Hero = () => {
                     <img
                         src={portraitImage}
                         alt="Jan Vogt"
-                        className="h-[85vh] w-auto object-cover object-bottom"
+                        className="h-[60vh] w-auto object-cover object-bottom sm:h-[70vh] lg:h-[85vh]"
                     />
-                    <div className="absolute inset-0 bg-linear-to-r from-[#1a0b2e]/90 via-transparent to-[#1a0b2e]/90"/>
-                    <div className="absolute inset-0 bg-linear-to-b from-[#1a0b2e]/40 via-transparent to-[#1a0b2e]/60"/>
+                    <div className="absolute inset-0 bg-linear-to-r from-[#1a0b2e]/95 via-[#1a0b2e]/40 to-[#1a0b2e]/95 sm:from-[#1a0b2e]/90 sm:via-transparent sm:to-[#1a0b2e]/90"/>
+                    <div className="absolute inset-0 bg-linear-to-b from-[#1a0b2e]/40 via-transparent to-[#1a0b2e]/80 lg:to-[#1a0b2e]/60"/>
                 </motion.div>
 
                 {/* Content Grid */}
                 <div className="relative z-10 grid min-h-screen lg:grid-cols-2">
 
-                    {/* Left Side - Mit Animation */}
-                    <div className="flex items-center px-8 py-20 lg:px-16">
-                        <div className="max-w-xl">
+                    {/* Left Side - Content */}
+                    <div className="flex items-center justify-center px-6 py-20 sm:px-8 lg:justify-start lg:px-16">
+                        <div className="max-w-xl text-center lg:text-left">
 
                             {/* Main Heading */}
                             <div className="mb-6 overflow-hidden">
                                 <motion.h1
-                                    className="text-7xl font-bold leading-none tracking-tight text-white lg:text-8xl xl:text-9xl"
+                                    className="text-5xl font-bold leading-none tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
                                     initial={{x: -200, opacity: 0}}
                                     animate={{x: 0, opacity: 1}}
                                     transition={{
@@ -70,7 +81,7 @@ const Hero = () => {
                                 </motion.h1>
 
                                 <motion.div
-                                    className="bg-linear-to-r from-pink-500 via-purple-500 to-cyan-400 bg-clip-text text-7xl font-bold leading-none tracking-tight text-transparent lg:text-8xl xl:text-9xl"
+                                    className="bg-linear-to-r from-pink-500 via-purple-500 to-cyan-400 bg-clip-text text-5xl font-bold leading-none tracking-tight text-transparent sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl"
                                     initial={{x: -180, opacity: 0, rotateZ: -8}}
                                     animate={{x: 0, opacity: 1, rotateZ: 0}}
                                     transition={{
@@ -85,7 +96,7 @@ const Hero = () => {
 
                             {/* Subtitle */}
                             <motion.p
-                                className="mb-8 text-xl font-light text-gray-300 lg:text-2xl"
+                                className="mb-8 text-lg font-light text-gray-300 sm:text-xl lg:text-2xl"
                                 initial={{x: -120, opacity: 0}}
                                 animate={{x: 0, opacity: 1}}
                                 transition={{
@@ -100,7 +111,7 @@ const Hero = () => {
 
                             {/* Buttons */}
                             <motion.div
-                                className="flex flex-wrap gap-4"
+                                className="flex flex-col gap-4 sm:flex-row sm:justify-center lg:justify-start"
                                 initial={{scale: 0.8, opacity: 0}}
                                 animate={{scale: 1, opacity: 1}}
                                 transition={{
@@ -125,11 +136,38 @@ const Hero = () => {
                                 </Button>
                             </motion.div>
 
+                            {/* Mobile Cards - Shown below content on small screens */}
+                            <div className="mt-12 flex flex-wrap justify-center gap-3 lg:hidden">
+                                {[
+                                    {icon: GraduationCap, title: "B.Sc. Informatik", subtitle: "FSU Jena", gradient: "from-cyan-500 to-blue-600", color: "text-cyan-400", delay: "1.2s"},
+                                    {icon: Sparkles, title: "Fußball-Schiedsrichter", subtitle: "Thüringen", gradient: "from-pink-500 to-purple-600", color: "text-pink-400", delay: "1.4s"},
+                                    {icon: Coffee, title: "Redaktionsmitglied", subtitle: "\"Die Wurzel\"", gradient: "from-purple-500 to-pink-600", color: "text-purple-400", delay: "1.6s"},
+                                ].map((card, i) => (
+                                    <div
+                                        key={i}
+                                        className="rounded-xl border border-purple-500/20 bg-purple-950/30 px-4 py-3 backdrop-blur-sm"
+                                        style={{
+                                            animation: `slideInFromBottom 0.5s linear ${card.delay} both`
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className={`rounded-lg bg-linear-to-br ${card.gradient} p-1.5`}>
+                                                <card.icon className="h-3 w-3 text-white"/>
+                                            </div>
+                                            <div>
+                                                <h3 className={`text-xs font-semibold ${card.color}`}>{card.title}</h3>
+                                                <p className="text-[10px] text-gray-400">{card.subtitle}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
                         </div>
                     </div>
 
-                    {/* Right Side - Pure CSS Animation */}
-                    <div className="flex items-center justify-end px-8 py-20 lg:px-16">
+                    {/* Right Side - Desktop Cards Only */}
+                    <div className="hidden items-center justify-end px-8 py-20 lg:flex lg:px-16">
                         <div className="space-y-4 max-w-sm">
 
                             {/* Card 1 */}
@@ -141,7 +179,7 @@ const Hero = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="rounded-lg bg-linear-to-br from-cyan-500 to-blue-600 p-2 transition-transform duration-500 group-hover:rotate-360">
+                                        className="rounded-lg bg-linear-to-br from-cyan-500 to-blue-600 p-2 transition-transform duration-500">
                                         <GraduationCap className="h-4 w-4 text-white"/>
                                     </div>
                                     <div>
@@ -160,7 +198,7 @@ const Hero = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="rounded-lg bg-linear-to-br from-pink-500 to-purple-600 p-2 transition-transform duration-500 group-hover:rotate-360">
+                                        className="rounded-lg bg-linear-to-br from-pink-500 to-purple-600 p-2 transition-transform duration-500">
                                         <Sparkles className="h-4 w-4 text-white"/>
                                     </div>
                                     <div>
@@ -179,7 +217,7 @@ const Hero = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div
-                                        className="rounded-lg bg-linear-to-br from-purple-500 to-pink-600 p-2 transition-transform duration-500 group-hover:rotate-360">
+                                        className="rounded-lg bg-linear-to-br from-purple-500 to-pink-600 p-2 transition-transform duration-500">
                                         <Coffee className="h-4 w-4 text-white"/>
                                     </div>
                                     <div>
