@@ -197,22 +197,28 @@ const fragmentShader = `
     void main() {
         vec2 uv = vUv;
         float time = uTime;
+        float aspect = uResolution.x / uResolution.y;
+        
+        // === ASPECT RATIO CORRECTION ===
+        // Create coordinates that maintain the same proportions on all screens
+        vec2 correctedUv = uv;
+        correctedUv.x *= aspect;
         
         // === NEBULA ===
-        vec3 col = nebula(uv, time);
+        vec3 col = nebula(correctedUv, time);
         
         // === STARS ===
-        // Multiple star layers for depth
+        // Multiple star layers for depth (use corrected UV for round stars)
         float starField = 0.0;
-        starField += stars(uv, 80.0, 0.8);  // Distant stars
-        starField += stars(uv + 0.5, 40.0, 1.0);  // Medium stars
-        starField += stars(uv + 0.25, 20.0, 1.2);  // Closer, brighter stars
+        starField += stars(correctedUv, 80.0, 0.8);  // Distant stars
+        starField += stars(correctedUv + 0.5, 40.0, 1.0);  // Medium stars
+        starField += stars(correctedUv + 0.25, 20.0, 1.2);  // Closer, brighter stars
         
         // Stars are white/slightly blue
         vec3 starColor = vec3(0.9, 0.95, 1.0);
         col += starColor * starField;
         
-        // === ATMOSPHERIC GLOW at edges ===
+        // === ATMOSPHERIC GLOW at edges === (use screen UV for edge detection)
         float edgeGlow = 0.0;
         edgeGlow += smoothstep(0.5, 0.0, uv.x) * 0.3;  // Left edge purple glow
         edgeGlow += smoothstep(0.5, 1.0, uv.x) * 0.25;  // Right edge pink glow
@@ -226,7 +232,7 @@ const fragmentShader = `
         float topGlow = smoothstep(0.5, 1.0, uv.y);
         col += vec3(0.2, 0.1, 0.3) * topGlow * 0.3;
         
-        // === VIGNETTE ===
+        // === VIGNETTE === (use screen UV)
         vec2 vignetteUv = uv * (1.0 - uv);
         float vignette = vignetteUv.x * vignetteUv.y * 15.0;
         vignette = pow(vignette, 0.25);
