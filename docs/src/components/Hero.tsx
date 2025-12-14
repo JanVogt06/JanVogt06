@@ -1,8 +1,11 @@
+import {useRef, useCallback} from "react"
 import {Button} from "@/components/ui/button"
 import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin} from "lucide-react"
 import {motion} from "framer-motion"
 import portraitImage from "@/assets/images/portrait.png"
 import NebulaWebGL from "./NebulaWebGL"
+import type {NebulaHandle} from "./NebulaWebGL"
+import QualitySlider from "./QualitySlider"
 
 // ============================================
 // CSS STYLES & ANIMATIONS
@@ -105,6 +108,12 @@ const PortraitGlow = () => {
 // ============================================
 
 const Hero = () => {
+    const nebulaRef = useRef<NebulaHandle>(null);
+
+    const handleQualityChange = useCallback((quality: number) => {
+        nebulaRef.current?.setQuality(quality);
+    }, []);
+
     return (
         <>
             <style>{styles}</style>
@@ -116,7 +125,7 @@ const Hero = () => {
                     <div className="absolute inset-0 bg-gradient-to-b from-[#0c0515] via-[#1a0a2e] to-[#0c0515]"/>
 
                     {/* WebGL Nebula */}
-                    <NebulaWebGL/>
+                    <NebulaWebGL ref={nebulaRef} initialQuality={0.5}/>
 
                     {/* Grid pattern */}
                     <div
@@ -310,6 +319,9 @@ const Hero = () => {
                         <ArrowDown className="h-4 w-4"/>
                     </motion.div>
                 </motion.div>
+
+                {/* Quality Slider */}
+                <QualitySlider onChange={handleQualityChange} initialValue={0.5}/>
 
             </section>
         </>
