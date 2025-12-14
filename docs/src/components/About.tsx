@@ -1,6 +1,8 @@
 import {Award, Users, BookOpen, GraduationCap} from "lucide-react"
 import {motion} from "framer-motion"
 import {useEffect, useRef, useState} from "react"
+import {Card} from "@/components/ui/card"
+import {Badge} from "@/components/ui/badge"
 import refereeImage from "@/assets/images/referee.png"
 import aboutPortraitImage from "@/assets/images/about_portrait.png"
 
@@ -80,7 +82,7 @@ const AnimatedCard = ({
     const {ref, isInView} = useInView<HTMLDivElement>();
 
     return (
-        <div
+        <Card
             ref={ref}
             className={className}
             style={{
@@ -89,7 +91,7 @@ const AnimatedCard = ({
             }}
         >
             {children}
-        </div>
+        </Card>
     );
 };
 
@@ -171,10 +173,10 @@ const About = () => {
                                 <div className="relative">
                                     <div
                                         className="absolute -left-8 top-1 h-3 w-3 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"/>
-                                    <span
-                                        className="mb-1.5 inline-block rounded-full bg-cyan-500/20 px-2.5 py-0.5 text-xs font-semibold text-cyan-400">
+                                    <Badge
+                                        className="mb-1.5 inline-block rounded-full bg-cyan-500/20 px-2.5 py-0.5 text-xs font-semibold text-cyan-400 hover:bg-cyan-500/20">
                                         seit 10/2024
-                                    </span>
+                                    </Badge>
                                     <h4 className="mb-0.5 text-lg font-semibold text-white">B.Sc. Informatik</h4>
                                     <p className="text-sm text-white/60">Friedrich-Schiller-Universität Jena</p>
                                 </div>
@@ -182,10 +184,10 @@ const About = () => {
                                 {/* Abitur */}
                                 <div className="relative">
                                     <div className="absolute -left-8 top-1 h-3 w-3 rounded-full bg-white/30"/>
-                                    <span
-                                        className="mb-1.5 inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/70">
+                                    <Badge
+                                        className="mb-1.5 inline-block rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-white/70 hover:bg-white/10">
                                         2024
-                                    </span>
+                                    </Badge>
                                     <h4 className="mb-0.5 text-lg font-semibold text-white">Abitur</h4>
                                     <p className="text-sm text-white/60">Marie-Curie-Gymnasium Bad Berka</p>
                                 </div>
@@ -209,9 +211,9 @@ const About = () => {
                         </motion.div>
 
                         {/* Engagement - Mobile */}
-                        <div
+                        <Card
                             ref={engagementCardRef.ref}
-                            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+                            className="rounded-2xl border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                             style={{
                                 opacity: 0,
                                 animation: engagementCardRef.isInView ? 'fadeInUp 0.6s linear forwards' : 'none'
@@ -243,8 +245,8 @@ const About = () => {
                                         desc: "Stadtentwicklung & ISEK-Workshops"
                                     },
                                 ].map((item, i) => (
-                                    <div key={i}
-                                         className="flex items-start gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all duration-300 hover:border-white/10 hover:bg-white/10">
+                                    <Card key={i}
+                                          className="flex items-start gap-3 rounded-xl border-white/5 bg-white/5 p-4 transition-all duration-300 hover:border-white/10 hover:bg-white/10">
                                         <div className={`rounded-lg bg-linear-to-br ${item.gradient} p-2`}>
                                             <item.icon className="h-4 w-4 text-white"/>
                                         </div>
@@ -252,15 +254,15 @@ const About = () => {
                                             <h4 className={`font-semibold ${item.color}`}>{item.title}</h4>
                                             <p className="text-sm text-white/60">{item.desc}</p>
                                         </div>
-                                    </div>
+                                    </Card>
                                 ))}
                             </div>
-                        </div>
+                        </Card>
 
                         {/* Awards - Mobile */}
-                        <div
+                        <Card
                             ref={awardsCardRef.ref}
-                            className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+                            className="rounded-2xl border-white/10 bg-white/5 p-6 backdrop-blur-sm"
                             style={{
                                 opacity: 0,
                                 animation: awardsCardRef.isInView ? 'fadeInUp 0.5s linear forwards' : 'none'
@@ -280,16 +282,16 @@ const About = () => {
                                     {year: "2022", text: "Schiedsrichter des Jahres"},
                                     {year: "2016-24", text: "Olympia-Preise"},
                                 ].map((award, i) => (
-                                    <div
+                                    <Card
                                         key={i}
-                                        className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:border-yellow-500/30 hover:bg-yellow-500/5"
+                                        className="flex items-center gap-2 rounded-lg border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:border-yellow-500/30 hover:bg-yellow-500/5"
                                     >
                                         <span className="text-sm font-semibold text-yellow-500">{award.year}</span>
                                         <span className="text-xs text-white/70">{award.text}</span>
-                                    </div>
+                                    </Card>
                                 ))}
                             </div>
-                        </div>
+                        </Card>
 
                     </div>
 
@@ -319,10 +321,10 @@ const About = () => {
                                     <div
                                         className="absolute -left-10.25 top-1 h-4 w-4 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)]"/>
 
-                                    <span
-                                        className="mb-2 inline-block rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-semibold text-cyan-400">
+                                    <Badge
+                                        className="mb-2 inline-block rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-semibold text-cyan-400 hover:bg-cyan-500/20">
                                         seit 10/2024
-                                    </span>
+                                    </Badge>
                                     <h4 className="mb-1 text-xl font-semibold text-white">B.Sc. Informatik</h4>
                                     <p className="text-white/60">Friedrich-Schiller-Universität Jena</p>
                                 </motion.div>
@@ -337,10 +339,10 @@ const About = () => {
                                 >
                                     <div className="absolute -left-10.25 top-1 h-4 w-4 rounded-full bg-white/30"/>
 
-                                    <span
-                                        className="mb-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70">
+                                    <Badge
+                                        className="mb-2 inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/70 hover:bg-white/10">
                                         2024
-                                    </span>
+                                    </Badge>
                                     <h4 className="mb-1 text-xl font-semibold text-white">Abitur</h4>
                                     <p className="text-white/60">Marie-Curie-Gymnasium Bad Berka</p>
                                 </motion.div>
@@ -383,7 +385,7 @@ const About = () => {
 
                             {/* Engagement Card */}
                             <AnimatedCard
-                                className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+                                className="rounded-3xl border-white/10 bg-white/5 p-8 backdrop-blur-sm"
                                 animation="slideInFromRight"
                                 duration="0.6s"
                             >
@@ -392,7 +394,7 @@ const About = () => {
                                 <div className="space-y-4">
                                     {/* Elite-Kader */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
+                                        className="rounded-2xl border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
@@ -410,7 +412,7 @@ const About = () => {
 
                                     {/* Redaktionsmitglied */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
+                                        className="rounded-2xl border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
@@ -428,7 +430,7 @@ const About = () => {
 
                                     {/* Jugendvertretung */}
                                     <AnimatedCard
-                                        className="rounded-2xl border border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
+                                        className="rounded-2xl border-white/5 bg-white/5 p-5 transition-all duration-300 hover:translate-x-1 hover:border-white/10 hover:bg-white/10"
                                         animation="slideInFromBottom"
                                         duration="0.5s"
                                     >
@@ -449,7 +451,7 @@ const About = () => {
 
                             {/* Auszeichnungen Card */}
                             <AnimatedCard
-                                className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm"
+                                className="rounded-3xl border-white/10 bg-white/5 p-8 backdrop-blur-sm"
                                 animation="fadeInUp"
                                 duration="0.5s"
                             >
@@ -469,7 +471,7 @@ const About = () => {
                                     ].map((award, i) => (
                                         <AnimatedCard
                                             key={i}
-                                            className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:scale-105 hover:border-yellow-500/30 hover:bg-yellow-500/5"
+                                            className="flex items-center gap-2 rounded-lg border-white/5 bg-white/5 px-3 py-2 transition-all duration-300 hover:scale-105 hover:border-yellow-500/30 hover:bg-yellow-500/5"
                                             animation="slideInFromBottom"
                                             duration="0.4s"
                                         >

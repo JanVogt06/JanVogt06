@@ -1,6 +1,9 @@
 import {Github, Globe, Satellite, Zap, Receipt, Sword, ArrowRight, Gamepad2} from "lucide-react"
 import {motion} from "framer-motion"
 import {useEffect, useRef, useState} from "react"
+import {Card} from "@/components/ui/card"
+import {Badge} from "@/components/ui/badge"
+import {Button} from "@/components/ui/button"
 
 // CSS Animations
 const cssAnimations = `
@@ -100,9 +103,9 @@ const ProjectCard = ({project, index}: { project: typeof projects[0], index: num
     const Icon = project.icon;
 
     return (
-        <div
+        <Card
             ref={ref}
-            className="group relative rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10"
+            className="group relative rounded-2xl border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10"
             style={{
                 opacity: 0,
                 animation: isInView ? `slideInFromBottom 0.6s ease-out ${index * 0.1}s forwards` : 'none'
@@ -132,64 +135,85 @@ const ProjectCard = ({project, index}: { project: typeof projects[0], index: num
                 {/* Tech Stack */}
                 <div className="mb-5 flex flex-wrap gap-2">
                     {project.tech.map((tech, i) => (
-                        <span
+                        <Badge
                             key={i}
-                            className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70"
+                            className="rounded-full border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/5"
                         >
                             {tech}
-                        </span>
+                        </Badge>
                     ))}
                 </div>
 
                 {/* Links */}
                 <div className="flex flex-wrap gap-2">
                     {project.links.github && (
-                        <a
-                            href={project.links.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white"
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                            asChild
                         >
-                            <Github className="h-4 w-4"/>
-                            Code
-                        </a>
+                            <a
+                                href={project.links.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Github className="mr-2 h-4 w-4"/>
+                                Code
+                            </a>
+                        </Button>
                     )}
                     {project.links.website && (
-                        <a
-                            href={project.links.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        <Button
+                            size="sm"
+                            className={`bg-linear-to-r ${project.iconGradient} text-white shadow-lg transition-all hover:scale-105`}
+                            asChild
                         >
-                            <Globe className="h-4 w-4"/>
-                            Website
-                        </a>
+                            <a
+                                href={project.links.website}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Globe className="mr-2 h-4 w-4"/>
+                                Website
+                            </a>
+                        </Button>
                     )}
                     {project.links.app && (
-                        <a
-                            href={project.links.app}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        <Button
+                            size="sm"
+                            className={`bg-linear-to-r ${project.iconGradient} text-white shadow-lg transition-all hover:scale-105`}
+                            asChild
                         >
-                            <Globe className="h-4 w-4"/>
-                            Zur App
-                        </a>
+                            <a
+                                href={project.links.app}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Globe className="mr-2 h-4 w-4"/>
+                                Zur App
+                            </a>
+                        </Button>
                     )}
                     {project.links.play && (
-                        <a
-                            href={project.links.play}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`flex items-center gap-2 rounded-lg bg-linear-to-r ${project.iconGradient} px-4 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105`}
+                        <Button
+                            size="sm"
+                            className={`bg-linear-to-r ${project.iconGradient} text-white shadow-lg transition-all hover:scale-105`}
+                            asChild
                         >
-                            <Gamepad2 className="h-4 w-4"/>
-                            Play Now
-                        </a>
+                            <a
+                                href={project.links.play}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                <Gamepad2 className="mr-2 h-4 w-4"/>
+                                Play Now
+                            </a>
+                        </Button>
                     )}
                 </div>
             </div>
-        </div>
+        </Card>
     );
 };
 

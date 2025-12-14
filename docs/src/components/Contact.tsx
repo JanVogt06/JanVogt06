@@ -1,6 +1,8 @@
 import {Mail, Github, Instagram, MapPin, Send} from "lucide-react"
 import {motion} from "framer-motion"
 import {useEffect, useRef, useState} from "react"
+import {Card} from "@/components/ui/card"
+import {Button} from "@/components/ui/button"
 
 // CSS Animations
 const cssAnimations = `
@@ -137,8 +139,8 @@ const Contact = () => {
                     </motion.div>
 
                     {/* Contact Card */}
-                    <div
-                        className="rounded-2xl border border-purple-500/20 bg-purple-950/20 p-5 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8">
+                    <Card
+                        className="rounded-2xl border-purple-500/20 bg-purple-950/20 p-5 backdrop-blur-sm sm:rounded-3xl sm:p-6 md:p-8">
 
                         {/* Contact Methods Grid */}
                         <div className="mb-6 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mb-8">
@@ -156,20 +158,20 @@ const Contact = () => {
                                 animation: ctaRef.isInView ? 'slideInFromBottom 0.5s linear 0.5s forwards' : 'none'
                             }}
                         >
-                            <a
-                                href="mailto:contact@jan-vogt.dev"
-                                className="group inline-flex items-center gap-2 rounded-full bg-linear-to-r from-pink-500 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-pink-600 hover:to-purple-700 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] sm:gap-3 sm:px-8 sm:py-4 sm:text-lg"
+                            <Button
+                                size="lg"
+                                className="group rounded-full bg-linear-to-r from-pink-500 to-purple-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition-all hover:scale-105 hover:from-pink-600 hover:to-purple-700 hover:shadow-[0_0_30px_rgba(236,72,153,0.5)] sm:px-8 sm:py-4 sm:text-lg"
+                                asChild
                             >
-                                <Send
-                                    className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:h-5 sm:w-5"/>
-                                Nachricht senden
-                            </a>
+                                <a href="mailto:contact@jan-vogt.dev">
+                                    <Send
+                                        className="mr-2 h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:mr-3 sm:h-5 sm:w-5"/>
+                                    Nachricht senden
+                                </a>
+                            </Button>
                         </div>
-
-                    </div>
-
+                    </Card>
                 </div>
-
             </section>
         </>
     );

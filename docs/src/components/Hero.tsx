@@ -1,15 +1,12 @@
 import {useRef, useCallback} from "react"
 import {Button} from "@/components/ui/button"
+import {Card} from "@/components/ui/card"
 import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin} from "lucide-react"
 import {motion} from "framer-motion"
 import portraitImage from "@/assets/images/portrait.png"
 import NebulaWebGL from "./NebulaWebGL"
 import type {NebulaHandle} from "./NebulaWebGL"
 import QualitySlider from "./QualitySlider"
-
-// ============================================
-// CSS STYLES & ANIMATIONS
-// ============================================
 
 const styles = `
 @keyframes gradient-shift {
@@ -47,10 +44,6 @@ const styles = `
 }
 `;
 
-// ============================================
-// CARD DATA
-// ============================================
-
 const cards = [
     {
         icon: GraduationCap,
@@ -82,11 +75,6 @@ const cards = [
     },
 ];
 
-// ============================================
-// ADDITIONAL BACKGROUND ELEMENTS
-// ============================================
-
-// Light glow behind portrait
 const PortraitGlow = () => {
     return (
         <div className="absolute inset-x-0 bottom-0 flex justify-center overflow-hidden pointer-events-none">
@@ -103,10 +91,6 @@ const PortraitGlow = () => {
     );
 };
 
-// ============================================
-// MAIN HERO COMPONENT
-// ============================================
-
 const Hero = () => {
     const nebulaRef = useRef<NebulaHandle>(null);
 
@@ -119,15 +103,9 @@ const Hero = () => {
             <style>{styles}</style>
             <section className="relative min-h-screen w-full overflow-hidden bg-[#0c0515]">
 
-                {/* === LAYERED BACKGROUND === */}
                 <div className="absolute inset-0">
-                    {/* Base gradient */}
                     <div className="absolute inset-0 bg-gradient-to-b from-[#0c0515] via-[#1a0a2e] to-[#0c0515]"/>
-
-                    {/* WebGL Nebula */}
                     <NebulaWebGL ref={nebulaRef} initialQuality={0.5}/>
-
-                    {/* Grid pattern */}
                     <div
                         className="absolute inset-0 opacity-[0.03]"
                         style={{
@@ -135,8 +113,6 @@ const Hero = () => {
                             backgroundSize: '50px 50px'
                         }}
                     />
-
-                    {/* Subtle noise texture */}
                     <div
                         className="absolute inset-0 opacity-[0.015] pointer-events-none"
                         style={{
@@ -145,10 +121,8 @@ const Hero = () => {
                     />
                 </div>
 
-                {/* Portrait glow */}
                 <PortraitGlow/>
 
-                {/* === PORTRAIT === */}
                 <div className="absolute inset-x-0 bottom-0 z-0 flex justify-center">
                     <motion.div
                         initial={{opacity: 0, y: 80, scale: 0.95}}
@@ -163,13 +137,11 @@ const Hero = () => {
                     </motion.div>
                 </div>
 
-                {/* === CONTENT OVERLAY === */}
-                <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
+                <div
+                    className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
 
-                    {/* Left Side: Name & CTA */}
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
 
-                        {/* Overline */}
                         <motion.p
                             className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-purple-400"
                             initial={{opacity: 0, y: 20}}
@@ -179,7 +151,6 @@ const Hero = () => {
                             Informatik • Developer • Referee
                         </motion.p>
 
-                        {/* Giant Name */}
                         <div className="relative">
                             <motion.h1
                                 className="text-7xl font-black leading-[0.85] tracking-tighter text-white sm:text-8xl lg:text-9xl"
@@ -195,12 +166,12 @@ const Hero = () => {
                                 animate={{opacity: 1, x: 0, filter: "blur(0px)"}}
                                 transition={{duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1]}}
                             >
-                                <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent animate-gradient-shift">
+                                <span
+                                    className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent animate-gradient-shift">
                                     VOGT
                                 </span>
                             </motion.h1>
 
-                            {/* Decorative line */}
                             <motion.div
                                 className="mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 lg:w-32"
                                 initial={{scaleX: 0, originX: 0}}
@@ -209,7 +180,6 @@ const Hero = () => {
                             />
                         </div>
 
-                        {/* Subtitle */}
                         <motion.p
                             className="mt-6 max-w-md text-lg text-white/60"
                             initial={{opacity: 0, y: 20}}
@@ -221,7 +191,6 @@ const Hero = () => {
                             <span className="text-pink-400"> Fußball</span>.
                         </motion.p>
 
-                        {/* CTA Buttons */}
                         <motion.div
                             className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4"
                             initial={{opacity: 0, y: 20}}
@@ -233,7 +202,6 @@ const Hero = () => {
                                 className="group relative overflow-hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
                                 onClick={() => document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}
                             >
-                                {/* Shimmer effect */}
                                 <span
                                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-[shimmer_0.75s_ease]"
                                 />
@@ -252,13 +220,12 @@ const Hero = () => {
                         </motion.div>
                     </div>
 
-                    {/* Right Side: Floating Cards - Desktop */}
                     <div className="hidden items-center justify-end lg:flex">
                         <div className="flex flex-col gap-3">
                             {cards.map((card, i) => (
-                                <div
+                                <Card
                                     key={i}
-                                    className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-x-2 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10"
+                                    className="group flex items-center gap-3 rounded-2xl border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-x-2 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10"
                                     style={{
                                         opacity: 0,
                                         animation: `slideInFromRight 0.6s ease-out ${0.8 + i * 0.15}s forwards`
@@ -269,22 +236,21 @@ const Hero = () => {
                                     </div>
                                     <div>
                                         <p className={`text-sm font-semibold ${card.color}`}>{card.text}</p>
-                                        <p className="text-xs text-white/50">{card.subtext}</p>
+                                        <p className="text-xs text-white/50 text-center">{card.subtext}</p>
                                     </div>
-                                </div>
+                                </Card>
                             ))}
                         </div>
                     </div>
 
                 </div>
 
-                {/* Mobile Cards - Bottom */}
                 <div className="absolute bottom-16 left-0 right-0 z-20 px-4 sm:bottom-20 sm:px-6 lg:hidden">
                     <div className="flex flex-wrap justify-center gap-2">
                         {cards.map((card, i) => (
-                            <div
+                            <Card
                                 key={i}
-                                className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/60 px-3 py-2 backdrop-blur-md"
+                                className="flex items-center gap-2 rounded-xl border-white/10 bg-black/60 px-3 py-2 backdrop-blur-md"
                                 style={{
                                     opacity: 0,
                                     animation: `fadeInUp 0.5s ease-out ${1 + i * 0.1}s forwards`
@@ -297,12 +263,11 @@ const Hero = () => {
                                     <p className={`text-xs font-semibold ${card.color}`}>{card.text}</p>
                                     <p className="text-[10px] text-white/50">{card.subtext}</p>
                                 </div>
-                            </div>
+                            </Card>
                         ))}
                     </div>
                 </div>
 
-                {/* Scroll Indicator */}
                 <motion.div
                     className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2"
                     initial={{opacity: 0}}
@@ -320,7 +285,6 @@ const Hero = () => {
                     </motion.div>
                 </motion.div>
 
-                {/* Quality Slider */}
                 <QualitySlider onChange={handleQualityChange} initialValue={0.5}/>
 
             </section>
