@@ -127,7 +127,6 @@ const QualitySlider = ({onChange, initialValue = 0.5}: QualitySliderProps) => {
                 .quality-track {
                     position: relative;
                     height: 12px;
-                    background: rgba(255, 255, 255, 0.1);
                     border-radius: 9999px;
                     cursor: pointer;
                 }
