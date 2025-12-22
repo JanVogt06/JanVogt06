@@ -280,7 +280,7 @@ const About = () => {
                                     {year: "2024", text: "Pierre-de-Coubertin-Preis"},
                                     {year: "2022", text: "Marie-Curie-Preis"},
                                     {year: "2022", text: "Schiedsrichter des Jahres"},
-                                    {year: "2016-24", text: "Olympia-Preise"},
+                                    {year: "2016-24", text: "Olympiaden-Preise in Mathematik und Physik"},
                                 ].map((award, i) => (
                                     <Card
                                         key={i}
@@ -467,7 +467,7 @@ const About = () => {
                                         {year: "2024", text: "Pierre-de-Coubertin-Preis"},
                                         {year: "2022", text: "Marie-Curie-Preis"},
                                         {year: "2022", text: "Schiedsrichter des Jahres"},
-                                        {year: "2016-24", text: "Olympia-Preise"},
+                                        {year: "2016-24", text: "Olympiaden-Preise in Mathematik und Physik"},
                                     ].map((award, i) => (
                                         <AnimatedCard
                                             key={i}
