@@ -42,6 +42,23 @@ const styles = `
 .animate-pulse-glow {
     animation: pulse-glow 4s ease-in-out infinite;
 }
+
+.liquid-glass-card {
+    position: relative;
+}
+
+.liquid-glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.3) 0%,
+        transparent 50%
+    );
+    pointer-events: none;
+}
 `;
 
 const cards = [
@@ -188,7 +205,7 @@ const Hero = () => {
                         >
                             Student an der FSU Jena mit Leidenschaft für
                             <span className="text-purple-400"> Naturwissenschaften</span> und
-                            <span className="text-pink-400"> Fußball</span>.
+                            <span className="text-pink-400"> Sport</span>.
                         </motion.p>
 
                         <motion.div
@@ -245,15 +262,19 @@ const Hero = () => {
 
                 </div>
 
-                <div className="absolute bottom-16 left-0 right-0 z-20 px-4 sm:bottom-20 sm:px-6 lg:hidden">
+                <div className="absolute bottom-24 left-0 right-0 z-20 px-4 sm:bottom-20 sm:px-6 lg:hidden">
                     <div className="flex flex-wrap justify-center gap-2">
                         {cards.map((card, i) => (
                             <Card
                                 key={i}
-                                className="flex items-center gap-2 rounded-xl border-white/10 bg-black/60 px-3 py-2 backdrop-blur-md"
+                                className="liquid-glass-card flex items-center gap-2 rounded-xl border-white/20 px-3 py-2"
                                 style={{
                                     opacity: 0,
-                                    animation: `fadeInUp 0.5s ease-out ${1 + i * 0.1}s forwards`
+                                    animation: `fadeInUp 0.5s ease-out ${1 + i * 0.1}s forwards`,
+                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%)',
+                                    backdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
+                                    WebkitBackdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
+                                    boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.1)',
                                 }}
                             >
                                 <div className={`rounded-lg bg-gradient-to-br ${card.gradient} p-1.5`}>
@@ -285,6 +306,7 @@ const Hero = () => {
                     </motion.div>
                 </motion.div>
 
+                {/* Quality Slider - now positioned top-right inside the component */}
                 <QualitySlider onChange={handleQualityChange} initialValue={0.5}/>
 
             </section>
