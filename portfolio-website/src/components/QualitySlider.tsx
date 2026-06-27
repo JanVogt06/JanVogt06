@@ -196,7 +196,7 @@ const QualitySlider = ({onChange, initialValue = 0.5}: QualitySliderProps) => {
                 }
             `}</style>
 
-            <div className="absolute top-6 right-6 z-50 max-sm:top-auto max-sm:bottom-6 max-sm:right-1/2 max-sm:translate-x-1/2">
+            <div className="absolute top-20 right-6 z-40 max-sm:top-auto max-sm:bottom-6 max-sm:right-1/2 max-sm:translate-x-1/2">
                 <div className="liquid-glass-slider rounded-full px-5 py-3">
                     <div
                         ref={trackRef}

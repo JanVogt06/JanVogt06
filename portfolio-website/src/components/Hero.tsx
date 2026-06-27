@@ -1,13 +1,15 @@
 import {useRef, useCallback} from "react"
 import {Button} from "@/components/ui/button"
-import {Card} from "@/components/ui/card"
-import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin} from "lucide-react"
+import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin, Briefcase} from "lucide-react"
 import {motion} from "framer-motion"
 import portraitImage from "@/assets/images/portrait.png"
 import NebulaWebGL from "./NebulaWebGL"
 import type {NebulaHandle} from "./NebulaWebGL"
 import QualitySlider from "./QualitySlider"
+import {EASE, stagger, fadeUp} from "@/lib/motion"
 
+/* Nur noch dekorative Endlos-/Hover-Effekte als CSS – alle Eintritts-
+   Animationen laufen über framer-motion. */
 const styles = `
 @keyframes gradient-shift {
     0%, 100% { background-position: 0% 50%; }
@@ -17,16 +19,6 @@ const styles = `
 @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
-}
-
-@keyframes slideInFromRight {
-    from { opacity: 0; transform: translateX(50px); }
-    to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pulse-glow {
@@ -42,38 +34,32 @@ const styles = `
 .animate-pulse-glow {
     animation: pulse-glow 4s ease-in-out infinite;
 }
-
-.liquid-glass-card {
-    position: relative;
-}
-
-.liquid-glass-card::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(
-        135deg,
-        rgba(255, 255, 255, 0.3) 0%,
-        transparent 50%
-    );
-    pointer-events: none;
-}
 `;
 
+// Einträge der "git status"-Liste im Terminalfenster.
 const cards = [
     {
         icon: GraduationCap,
         text: "B.Sc. Informatik",
         subtext: "FSU Jena",
         color: "text-cyan-400",
+        dot: "bg-cyan-400",
         gradient: "from-cyan-500 to-blue-600"
+    },
+    {
+        icon: Briefcase,
+        text: "Werkstudent",
+        subtext: "Carl Zeiss Meditec AG.",
+        color: "text-blue-400",
+        dot: "bg-blue-400",
+        gradient: "from-blue-500 to-indigo-600"
     },
     {
         icon: Sparkles,
         text: "Elite-Kader",
         subtext: "Schiedsrichter",
         color: "text-pink-400",
+        dot: "bg-pink-400",
         gradient: "from-pink-500 to-purple-600"
     },
     {
@@ -81,6 +67,7 @@ const cards = [
         text: "Die Wurzel",
         subtext: "Redaktion",
         color: "text-purple-400",
+        dot: "bg-purple-400",
         gradient: "from-purple-500 to-pink-600"
     },
     {
@@ -88,6 +75,7 @@ const cards = [
         text: "Bad Berka",
         subtext: "Thüringen",
         color: "text-emerald-400",
+        dot: "bg-emerald-400",
         gradient: "from-emerald-500 to-teal-600"
     },
 ];
@@ -108,6 +96,51 @@ const PortraitGlow = () => {
     );
 };
 
+// Terminalfenster, das den Werdegang als "git status" zeigt.
+const StatusTerminal = () => (
+    <motion.div
+        className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0d0a16]/80 shadow-2xl backdrop-blur-md"
+        variants={stagger(0.08, 0.9)}
+        initial="hidden"
+        animate="show"
+    >
+        {/* Fenster-Titelleiste */}
+        <motion.div variants={fadeUp}
+                    className="flex items-center gap-2 border-b border-white/10 bg-white/5 px-4 py-2.5">
+            <span className="h-3 w-3 rounded-full bg-red-400/80"/>
+            <span className="h-3 w-3 rounded-full bg-yellow-400/80"/>
+            <span className="h-3 w-3 rounded-full bg-green-400/80"/>
+            <span className="ml-2 font-mono text-xs text-white/40">jan@vogt: ~/portfolio</span>
+        </motion.div>
+
+        <div className="space-y-2.5 p-4 font-mono text-sm">
+            <motion.p variants={fadeUp} className="text-white/40">
+                <span className="text-emerald-400">$</span> git status
+            </motion.p>
+            <motion.p variants={fadeUp} className="text-white/30">
+                On branch <span className="text-cyan-400">main</span> · 5 tracked
+            </motion.p>
+
+            {cards.map((card) => (
+                <motion.div
+                    key={card.text}
+                    variants={fadeUp}
+                    className="group flex items-center gap-3 rounded-lg border border-transparent px-2 py-1.5 transition-colors hover:border-white/10 hover:bg-white/5"
+                >
+                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${card.dot}`}/>
+                    <div className={`rounded-lg bg-gradient-to-br ${card.gradient} p-1.5`}>
+                        <card.icon className="h-4 w-4 text-white"/>
+                    </div>
+                    <div className="min-w-0">
+                        <p className={`truncate text-sm font-semibold ${card.color}`}>{card.text}</p>
+                        <p className="truncate text-xs text-white/40">{card.subtext}</p>
+                    </div>
+                </motion.div>
+            ))}
+        </div>
+    </motion.div>
+);
+
 const Hero = () => {
     const nebulaRef = useRef<NebulaHandle>(null);
 
@@ -118,7 +151,7 @@ const Hero = () => {
     return (
         <>
             <style>{styles}</style>
-            <section className="relative min-h-screen w-full overflow-hidden bg-[#0c0515]">
+            <section id="hero" className="relative min-h-screen w-full overflow-hidden bg-[#0c0515]">
 
                 <div className="absolute inset-0">
                     <div className="absolute inset-0 bg-gradient-to-b from-[#0c0515] via-[#1a0a2e] to-[#0c0515]"/>
@@ -144,7 +177,7 @@ const Hero = () => {
                     <motion.div
                         initial={{opacity: 0, y: 80, scale: 0.95}}
                         animate={{opacity: 1, y: 0, scale: 1}}
-                        transition={{duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1]}}
+                        transition={{duration: 1, delay: 0.2, ease: EASE}}
                     >
                         <img
                             src={portraitImage}
@@ -155,17 +188,18 @@ const Hero = () => {
                 </div>
 
                 <div
-                    className="relative z-10 mx-auto grid min-h-screen max-w-7xl grid-cols-1 px-6 sm:px-8 lg:grid-cols-2 lg:px-12">
+                    className="relative z-10 mx-auto grid min-h-screen max-w-[88rem] grid-cols-1 px-6 pt-14 sm:px-8 lg:grid-cols-2 lg:px-12">
 
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
 
                         <motion.p
-                            className="mb-4 text-sm font-medium uppercase tracking-[0.3em] text-purple-400"
+                            className="mb-4 flex items-center gap-2 font-mono text-sm font-medium text-purple-400"
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.3}}
+                            transition={{duration: 0.6, delay: 0.3, ease: EASE}}
                         >
-                            Informatik • Developer • Referee
+                            <span className="text-emerald-400">$</span> whoami
+                            <span className="text-white/40">— informatik · developer · referee</span>
                         </motion.p>
 
                         <div className="relative">
@@ -173,7 +207,7 @@ const Hero = () => {
                                 className="text-7xl font-black leading-[0.85] tracking-tighter text-white sm:text-8xl lg:text-9xl"
                                 initial={{opacity: 0, x: -80, filter: "blur(8px)"}}
                                 animate={{opacity: 1, x: 0, filter: "blur(0px)"}}
-                                transition={{duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1]}}
+                                transition={{duration: 0.8, delay: 0.4, ease: EASE}}
                             >
                                 JAN
                             </motion.h1>
@@ -181,7 +215,7 @@ const Hero = () => {
                                 className="text-7xl font-black leading-[0.85] tracking-tighter sm:text-8xl lg:text-9xl"
                                 initial={{opacity: 0, x: -80, filter: "blur(8px)"}}
                                 animate={{opacity: 1, x: 0, filter: "blur(0px)"}}
-                                transition={{duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1]}}
+                                transition={{duration: 0.8, delay: 0.5, ease: EASE}}
                             >
                                 <span
                                     className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent animate-gradient-shift">
@@ -193,7 +227,7 @@ const Hero = () => {
                                 className="mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 lg:w-32"
                                 initial={{scaleX: 0, originX: 0}}
                                 animate={{scaleX: 1}}
-                                transition={{duration: 0.8, delay: 0.7}}
+                                transition={{duration: 0.8, delay: 0.7, ease: EASE}}
                             />
                         </div>
 
@@ -201,18 +235,18 @@ const Hero = () => {
                             className="mt-6 max-w-md text-lg text-white/60"
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.8}}
+                            transition={{duration: 0.6, delay: 0.8, ease: EASE}}
                         >
-                            Student an der FSU Jena mit Leidenschaft für
-                            <span className="text-purple-400"> Naturwissenschaften</span> und
-                            <span className="text-pink-400"> Sport</span>.
+                            Informatik-Student an der FSU Jena,
+                            <span className="text-blue-400"> Werkstudent bei ZEISS</span> und
+                            <span className="text-pink-400"> Schiedsrichter</span> im Elite-Kader.
                         </motion.p>
 
                         <motion.div
                             className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4"
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
-                            transition={{duration: 0.6, delay: 0.9}}
+                            transition={{duration: 0.6, delay: 0.9, ease: EASE}}
                         >
                             <Button
                                 size="lg"
@@ -237,40 +271,27 @@ const Hero = () => {
                         </motion.div>
                     </div>
 
+                    {/* Terminal-Statusfenster (Desktop) */}
                     <div className="hidden items-center justify-end lg:flex">
-                        <div className="flex flex-col gap-3">
-                            {cards.map((card, i) => (
-                                <Card
-                                    key={i}
-                                    className="group flex items-center gap-3 rounded-2xl border-white/10 bg-white/5 p-4 backdrop-blur-md transition-all duration-300 hover:-translate-x-2 hover:scale-[1.02] hover:border-white/20 hover:bg-white/10"
-                                    style={{
-                                        opacity: 0,
-                                        animation: `slideInFromRight 0.6s ease-out ${0.8 + i * 0.15}s forwards`
-                                    }}
-                                >
-                                    <div className={`rounded-xl bg-gradient-to-br ${card.gradient} p-2.5`}>
-                                        <card.icon className="h-5 w-5 text-white"/>
-                                    </div>
-                                    <div>
-                                        <p className={`text-sm font-semibold ${card.color}`}>{card.text}</p>
-                                        <p className="text-xs text-white/50 text-center">{card.subtext}</p>
-                                    </div>
-                                </Card>
-                            ))}
-                        </div>
+                        <StatusTerminal/>
                     </div>
 
                 </div>
 
-                <div className="absolute bottom-24 left-0 right-0 z-20 px-4 sm:bottom-20 sm:px-6 lg:hidden">
+                {/* Kompakte Chips (Mobile) */}
+                <motion.div
+                    className="absolute bottom-24 left-0 right-0 z-20 px-4 sm:bottom-20 sm:px-6 lg:hidden"
+                    variants={stagger(0.08, 1)}
+                    initial="hidden"
+                    animate="show"
+                >
                     <div className="flex flex-wrap justify-center gap-2">
-                        {cards.map((card, i) => (
-                            <Card
-                                key={i}
-                                className="liquid-glass-card flex items-center gap-2 rounded-xl border-white/20 px-3 py-2"
+                        {cards.map((card) => (
+                            <motion.div
+                                key={card.text}
+                                variants={fadeUp}
+                                className="flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2"
                                 style={{
-                                    opacity: 0,
-                                    animation: `fadeInUp 0.5s ease-out ${1 + i * 0.1}s forwards`,
                                     background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%)',
                                     backdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
                                     WebkitBackdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
@@ -284,10 +305,10 @@ const Hero = () => {
                                     <p className={`text-xs font-semibold ${card.color}`}>{card.text}</p>
                                     <p className="text-[10px] text-white/50">{card.subtext}</p>
                                 </div>
-                            </Card>
+                            </motion.div>
                         ))}
                     </div>
-                </div>
+                </motion.div>
 
                 <motion.div
                     className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2"
@@ -306,7 +327,6 @@ const Hero = () => {
                     </motion.div>
                 </motion.div>
 
-                {/* Quality Slider - now positioned top-right inside the component */}
                 <QualitySlider onChange={handleQualityChange} initialValue={0.5}/>
 
             </section>
