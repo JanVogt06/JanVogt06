@@ -18,6 +18,7 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 ![Unity](https://img.shields.io/badge/Unity-100000?style=flat-square&logo=unity&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white)
 ![OpenGL](https://img.shields.io/badge/OpenGL-FFFFFF?style=flat-square&logo=opengl)
 ![Git](https://img.shields.io/badge/Git-F05032?style=flat-square&logo=git&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
@@ -34,7 +35,12 @@ Hallo, ich bin Jan! Ein leidenschaftlicher Informatikstudent an der Friedrich-Sc
 - 🥈 2. Platz Thüringer Physikolympiade (Klasse 10)
 - 🥉 3. Platz Thüringer Physikolympiade (Klasse 12)
 
-## 🌱 Aktuelle Projekte
+## 🌱 Projekte
+
+### 🌊 [Riptide – Tsunami Lab](https://github.com/SquadCommit/Riptide)
+**Technologien:** C++, Python, OpenGL, GLSL
+
+Finite-Volumen-Solver zur Simulation von Tsunami-Wellenausbreitung auf Basis der Flachwassergleichungen. Umfasst Riemann-Löser für Shock-Shock-, Rare-Rare- und Dammbruch-Szenarien sowie Visualisierungen und Sphinx-Dokumentation. Entwickelt im Team mit Yannik Köllmann und Mika Brückner.
 
 ### ⚽ [TFV Spesen Generator](https://github.com/JanVogt06/dfb-spesen-generator)
 **Technologien:** Python, FastAPI, React, TypeScript, Playwright, Docker
@@ -53,11 +59,10 @@ Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius Wechselrichtern
 
 ### 📦 Weitere Tools
 - **[PicHunter](https://github.com/JanVogt06/PicHunter)** – Automatisierter Bild-Download mit Duplikaterkennung
-- **[code-merge-tools](https://github.com/JanVogt06/code-merge-tools)** – Bash-Skripte zum Zusammenführen von Source-Code
 - Weitere Projekte in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
 
 ## 📚 Weitere Engagements
-- ⚽ Schiedsrichter (Elite-Kader Thüringen & "Schiedsrichter des Jahres 2022")
+- ⚽ Schiedsrichter – Oberliga NOFV & U19-Bundesliga, Assistent in der Regionalliga
 - 📝 Redaktionsmitglied für "Die Wurzel" (Zeitschrift für Mathematik)
 - 🏛️ Aktiv in der lokalen Stadtentwicklung Bad Berka
 
