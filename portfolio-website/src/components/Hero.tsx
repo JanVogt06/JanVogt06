@@ -56,7 +56,7 @@ const cards = [
     },
     {
         icon: Sparkles,
-        text: "Elite-Kader",
+        text: "Oberliga",
         subtext: "Schiedsrichter",
         color: "text-pink-400",
         dot: "bg-pink-400",
@@ -239,7 +239,7 @@ const Hero = () => {
                         >
                             Informatik-Student an der FSU Jena,
                             <span className="text-blue-400"> Werkstudent bei ZEISS</span> und
-                            <span className="text-pink-400"> Schiedsrichter</span> im Elite-Kader.
+                            <span className="text-pink-400"> Schiedsrichter</span> im NOFV.
                         </motion.p>
 
                         <motion.div

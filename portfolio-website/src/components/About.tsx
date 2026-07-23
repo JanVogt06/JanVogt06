@@ -20,8 +20,8 @@ const engagementItems: EngagementItem[] = [
         icon: Users,
         gradient: "from-purple-500 to-pink-600",
         color: "text-purple-400",
-        title: "Elite-Kader Thüringen",
-        desc: "Fußball-Schiedsrichter Thüringenliga & Junioren-Bundesliga",
+        title: "Schiedsrichter NOFV",
+        desc: "Oberliga & U19-Bundesliga, Assistent Regionalliga",
     },
     {
         icon: BookOpen,

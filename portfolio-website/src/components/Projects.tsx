@@ -1,4 +1,4 @@
-import {Github, Globe, Satellite, Zap, Receipt, Sword, ArrowRight, Gamepad2, FolderGit2, GitCommitHorizontal} from "lucide-react"
+import {Github, Globe, Satellite, Zap, Receipt, Sword, Waves, ArrowRight, Gamepad2, FolderGit2, GitCommitHorizontal} from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import {motion} from "framer-motion"
 import {Badge} from "@/components/ui/badge"
@@ -33,6 +33,7 @@ const iconMap: Record<string, LucideIcon> = {
     Zap,
     Receipt,
     Sword,
+    Waves,
 };
 
 const projects = projectsData as Project[];
@@ -83,7 +84,7 @@ const ProjectCard = ({project}: { project: Project }) => {
                                 key={tech}
                                 className="rounded-full border-emerald-400/15 bg-emerald-500/10 px-3 py-1 font-mono text-xs text-emerald-300/90 hover:bg-emerald-500/10"
                             >
-                                +{tech}
+                                {tech}
                             </Badge>
                         ))}
                     </div>
