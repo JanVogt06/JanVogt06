@@ -228,7 +228,6 @@ const PinnedProjects = () => {
                     argument="--oneline projekte/"
                     title="Meine"
                     accent="Projekte"
-                    lead="Jedes Projekt ein Commit – eine Auswahl aus verschiedenen Bereichen"
                     className="mb-6 grid grid-cols-12 items-end gap-8"
                 />
 
@@ -310,7 +309,6 @@ const Projects = () => {
                         argument="--oneline projekte/"
                         title="Meine"
                         accent="Projekte"
-                        lead="Jedes Projekt ein Commit – eine Auswahl aus verschiedenen Bereichen"
                     />
 
                     <ProjectGrid/>

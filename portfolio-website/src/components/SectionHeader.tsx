@@ -27,7 +27,9 @@ const SectionHeader = ({
     argument?: string
     title: string
     accent: string
-    lead: string
+    /** Optional – ein Abschnitt, der nichts zu erklären hat, braucht keinen
+     *  Fließtext. Eine Zeile, die nur Platz füllt, ist schlechter als keine. */
+    lead?: string
     centered?: boolean
     /** Überschreibt die Außenabstände – im gepinnten Projekte-Rahmen ist der
      *  Platz knapp, dort braucht der Kopf einen kleineren unteren Abstand. */
@@ -58,16 +60,18 @@ const SectionHeader = ({
             </motion.h2>
         </div>
 
-        <motion.p
-            variants={fadeUp}
-            className={
-                centered
-                    ? "mx-auto mt-4 max-w-2xl text-lg text-white/55"
-                    : "mt-5 max-w-xl text-lg leading-relaxed text-white/55 lg:col-span-5 lg:mt-0 lg:pb-2"
-            }
-        >
-            {lead}
-        </motion.p>
+        {lead && (
+            <motion.p
+                variants={fadeUp}
+                className={
+                    centered
+                        ? "mx-auto mt-4 max-w-2xl text-lg text-white/55"
+                        : "mt-5 max-w-xl text-lg leading-relaxed text-white/55 lg:col-span-5 lg:mt-0 lg:pb-2"
+                }
+            >
+                {lead}
+            </motion.p>
+        )}
     </Reveal>
 )
 
