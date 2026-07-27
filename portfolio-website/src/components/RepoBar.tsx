@@ -13,10 +13,12 @@ const GITHUB_USER = "https://github.com/JanVogt06"
 const GITHUB_REPO = `${GITHUB_USER}/JanVogt06`
 const CLONE_CMD = `git clone ${GITHUB_REPO}.git`
 
+/* `short` fuer schmale Viewports: die vollen Dateinamen sind zusammen mit
+   Repo-Pfad und Stern breiter als ein 375-px-Bildschirm. */
 const sections = [
-    {id: "about", label: "werdegang.md"},
-    {id: "projects", label: "projekte/"},
-    {id: "contact", label: "kontakt.pr"},
+    {id: "about", label: "werdegang.md", short: "werdegang"},
+    {id: "projects", label: "projekte/", short: "projekte"},
+    {id: "contact", label: "kontakt.pr", short: "kontakt"},
 ]
 
 const RepoBar = () => {
@@ -60,7 +62,10 @@ const RepoBar = () => {
             transition={{duration: 0.6, ease: EASE, delay: 0.2}}
             className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-page/70 backdrop-blur-xl"
         >
-            <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-3 px-4 sm:px-6 lg:px-8">
+            {/* gap-1.5 auf Mobile: mit gap-2 brauchte die Leiste 377 px bei 375
+                verfuegbaren. overflow-hidden ist die harte Absicherung, damit die
+                fixierte Leiste die Seite nie seitwaerts scrollbar machen kann. */}
+            <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-1.5 overflow-hidden px-4 sm:gap-3 sm:px-6 lg:px-8">
                 {/* Repo-Pfad – wie auf GitHub zwei getrennte Links:
                     der Benutzername fuehrt zum Profil, der Repo-Name zum Repo. */}
                 <div className="flex shrink-0 items-center gap-2 text-sm font-medium">
@@ -91,18 +96,19 @@ const RepoBar = () => {
                 </span>
 
                 {/* Datei-/Abschnitts-Navigation */}
-                <nav className="ml-auto flex items-center gap-1 font-mono text-xs sm:text-sm">
+                <nav className="ml-auto flex min-w-0 items-center gap-0.5 font-mono text-[11px] sm:gap-1 sm:text-sm">
                     {sections.map((s) => {
                         const isActive = active === s.id
                         return (
                             <button
                                 key={s.id}
                                 onClick={() => go(s.id)}
-                                className={`relative rounded-md px-2.5 py-1.5 transition-colors sm:px-3 ${
+                                className={`relative shrink-0 rounded-md px-2 py-1.5 transition-colors sm:px-3 ${
                                     isActive ? "text-white" : "text-white/50 hover:text-white/80"
                                 }`}
                             >
-                                {s.label}
+                                <span className="sm:hidden">{s.short}</span>
+                                <span className="hidden sm:inline">{s.label}</span>
                                 {isActive && (
                                     <motion.span
                                         layoutId="repobar-active"

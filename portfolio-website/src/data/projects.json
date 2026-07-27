@@ -1,5 +1,6 @@
 [
   {
+    "slug": "riptide",
     "icon": "Waves",
     "type": "feat",
     "hash": "e4a7b09",
@@ -16,9 +17,12 @@
     "links": {
       "github": "https://github.com/SquadCommit/Riptide",
       "website": "https://riptide.jan-vogt.dev"
-    }
+    },
+    "embed": false,
+    "embedNote": "coi-serviceworker (SharedArrayBuffer) – im iframe ungetestet"
   },
   {
+    "slug": "sattrak",
     "icon": "Satellite",
     "type": "feat",
     "hash": "3f9a1c7",
@@ -35,6 +39,7 @@
     }
   },
   {
+    "slug": "solarflow",
     "icon": "Zap",
     "type": "feat",
     "hash": "b2e8d40",
@@ -53,6 +58,7 @@
     }
   },
   {
+    "slug": "spesen-generator",
     "icon": "Receipt",
     "type": "feat",
     "hash": "c7104af",
@@ -72,6 +78,7 @@
     }
   },
   {
+    "slug": "cryptborne",
     "icon": "Sword",
     "type": "feat(game)",
     "hash": "9d5b2e1",
@@ -86,6 +93,7 @@
     "links": {
       "github": "https://github.com/JY-Studios/cryptborne",
       "play": "https://cryptborne.jan-vogt.dev/"
-    }
+    },
+    "previewNote": "74 MB Unity-Build"
   }
 ]
