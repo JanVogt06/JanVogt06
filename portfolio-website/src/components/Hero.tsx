@@ -1,12 +1,13 @@
 import {useRef, useCallback} from "react"
 import {Button} from "@/components/ui/button"
 import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin, Briefcase} from "lucide-react"
-import {motion} from "framer-motion"
+import {motion, useReducedMotion} from "framer-motion"
 import portraitImage from "../data/images/portrait.webp"
 import NebulaWebGL from "./NebulaWebGL"
 import type {NebulaHandle} from "./NebulaWebGL"
 import QualitySlider from "./QualitySlider"
 import {EASE, stagger, fadeUp} from "@/lib/motion"
+import useTypewriter from "@/lib/useTypewriter"
 
 /* Nur noch dekorative Endlos-/Hover-Effekte als CSS – alle Eintritts-
    Animationen laufen über framer-motion. */
@@ -33,6 +34,25 @@ const styles = `
 
 .animate-pulse-glow {
     animation: pulse-glow 4s ease-in-out infinite;
+}
+
+@keyframes caret {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+}
+
+.animate-caret {
+    animation: caret 1.1s steps(1, end) infinite;
+}
+
+/* Blinken ist fuer manche Menschen unangenehm bis ausloesend – bei
+   prefers-reduced-motion steht der Cursor einfach still. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-caret,
+    .animate-pulse-glow,
+    .animate-gradient-shift {
+        animation: none;
+    }
 }
 `;
 
@@ -63,46 +83,87 @@ const PortraitGlow = () => {
     );
 };
 
-// Terminalfenster, das den Werdegang als "git status" zeigt.
-const StatusTerminal = () => (
-    <motion.div
-        className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0714]/80 shadow-2xl backdrop-blur-md"
-        variants={stagger(0.08, 0.9)}
-        initial="hidden"
-        animate="show"
-    >
-        {/* Fenster-Titelleiste */}
-        <motion.div variants={fadeUp}
-                    className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.03] px-4 py-2.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
-            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
-            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
-            <span className="ml-2 font-mono text-xs text-white/40">jan@vogt: ~/portfolio</span>
-        </motion.div>
+const COMMAND = "git status";
 
-        <div className="space-y-1 p-4 font-mono text-sm">
-            <motion.p variants={fadeUp} className="text-white/40">
-                <span className="text-status">$</span> git status
-            </motion.p>
-            <motion.p variants={fadeUp} className="pb-1.5 text-white/30">
-                On branch <span className="text-brand">main</span> · 5 tracked
-            </motion.p>
+/**
+ * Terminalfenster, das den Werdegang als "git status" zeigt.
+ *
+ * Der Befehl tippt sich selbst, danach erscheint die Ausgabe – die Reihenfolge
+ * ist damit die eines echten Terminals (Eingabe, dann Antwort) statt eines
+ * gleichzeitigen Einblendens aller Zeilen. Der Cursor wandert am Ende in eine
+ * neue Prompt-Zeile, so wie er es nach einem echten Befehl täte.
+ */
+const StatusTerminal = () => {
+    const reduced = useReducedMotion();
+    /* 700 ms Vorlauf: lang genug, dass das Fenster erst da ist, kurz genug,
+       dass die Ausgabe nach ~1,2 s steht und der Hero nicht leer wirkt. */
+    const {typed, done} = useTypewriter(COMMAND, {startDelay: 700, cps: 20, enabled: !reduced});
 
-            {cards.map((card) => (
+    return (
+        <div
+            className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0714]/80 shadow-2xl backdrop-blur-md">
+
+            {/* Fenster-Titelleiste */}
+            <motion.div
+                className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.03] px-4 py-2.5"
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{duration: 0.5, delay: 0.6, ease: EASE}}
+            >
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+                <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+                <span className="ml-2 font-mono text-xs text-white/40">jan@vogt: ~/portfolio</span>
+            </motion.div>
+
+            <div className="p-4 font-mono text-sm">
+                {/* Eingabezeile – tippt sich selbst */}
+                <p className="text-white/70">
+                    <span className="text-status">$</span> {typed}
+                    {!done && <Caret/>}
+                </p>
+
+                {/* Ausgabe – erst wenn der Befehl fertig getippt ist */}
                 <motion.div
-                    key={card.text}
-                    variants={fadeUp}
-                    className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.04]"
+                    className="space-y-1"
+                    variants={stagger(0.07)}
+                    initial="hidden"
+                    animate={done ? "show" : "hidden"}
                 >
-                    <card.icon className="h-4 w-4 shrink-0 text-brand"/>
-                    <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                        <p className="truncate text-sm text-white/85">{card.text}</p>
-                        <p className="truncate text-xs text-white/35">{card.subtext}</p>
-                    </div>
+                    <motion.p variants={fadeUp} className="pt-1 text-white/30">
+                        On branch <span className="text-brand">main</span> · 5 tracked
+                    </motion.p>
+
+                    {cards.map((card) => (
+                        <motion.div
+                            key={card.text}
+                            variants={fadeUp}
+                            className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.04]"
+                        >
+                            <card.icon className="h-4 w-4 shrink-0 text-brand"/>
+                            <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                                <p className="truncate text-sm text-white/85">{card.text}</p>
+                                <p className="truncate text-xs text-white/35">{card.subtext}</p>
+                            </div>
+                        </motion.div>
+                    ))}
+
+                    {/* Diff-Stat und neue Prompt-Zeile mit wanderndem Cursor */}
+                    <motion.p variants={fadeUp} className="pt-1.5 text-white/25">
+                        5 files changed, <span className="text-status">5 insertions(+)</span>
+                    </motion.p>
+                    <motion.p variants={fadeUp} className="text-white/70">
+                        <span className="text-status">$</span> {done && <Caret/>}
+                    </motion.p>
                 </motion.div>
-            ))}
+            </div>
         </div>
-    </motion.div>
+    );
+};
+
+/** Blinkender Block-Cursor. */
+const Caret = () => (
+    <span className="ml-0.5 inline-block h-[1.05em] w-[0.5em] translate-y-[0.15em] bg-brand animate-caret"/>
 );
 
 const Hero = () => {
