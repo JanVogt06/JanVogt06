@@ -166,6 +166,23 @@
         background-color: color-mix(in oklab, var(--color-brand) 30%, transparent);
         color: white;
     }
+
+    /**
+     * Zeigefinger auf allen Buttons.
+     *
+     * Tailwind v4 normalisiert im Preflight jedes <button> auf
+     * cursor: default – Links bekommen ihren Pointer dagegen vom Browser. Auf
+     * der Seite hiess das: "Star" (ein <a>) reagierte, "git clone", die
+     * Navigation und die Hero-Buttons (alle <button>) nicht.
+     *
+     * Global statt pro Komponente, damit es auch fuer jeden Button gilt, der
+     * spaeter dazukommt. Deaktivierte Buttons behalten den Standardzeiger,
+     * denn dort gibt es nichts zu klicken.
+     */
+    button:not(:disabled),
+    [role="button"]:not(:disabled) {
+        cursor: pointer;
+    }
 }
 
 @layer components {

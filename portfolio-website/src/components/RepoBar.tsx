@@ -9,7 +9,9 @@ import {EASE} from "@/lib/motion"
  * ein "git clone"-Befehl zum Kopieren.
  */
 
-const CLONE_CMD = "git clone https://github.com/JanVogt06/JanVogt06.git"
+const GITHUB_USER = "https://github.com/JanVogt06"
+const GITHUB_REPO = `${GITHUB_USER}/JanVogt06`
+const CLONE_CMD = `git clone ${GITHUB_REPO}.git`
 
 const sections = [
     {id: "about", label: "werdegang.md"},
@@ -59,16 +61,28 @@ const RepoBar = () => {
             className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-page/70 backdrop-blur-xl"
         >
             <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-3 px-4 sm:px-6 lg:px-8">
-                {/* Repo-Pfad */}
-                <button
-                    onClick={() => go("hero")}
-                    className="flex shrink-0 items-center gap-2 text-sm font-medium text-white/80 transition-colors hover:text-white"
-                >
-                    <Github className="h-4 w-4 text-white/60"/>
-                    <span className="hidden sm:inline text-white/40">jan-vogt</span>
-                    <span className="hidden sm:inline text-white/30">/</span>
-                    <span className="font-semibold">portfolio</span>
-                </button>
+                {/* Repo-Pfad – wie auf GitHub zwei getrennte Links:
+                    der Benutzername fuehrt zum Profil, der Repo-Name zum Repo. */}
+                <div className="flex shrink-0 items-center gap-2 text-sm font-medium">
+                    <a
+                        href={GITHUB_USER}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center gap-2 text-white/40 transition-colors hover:text-white"
+                    >
+                        <Github className="h-4 w-4 text-white/60 transition-colors group-hover:text-white"/>
+                        <span className="hidden sm:inline">jan-vogt</span>
+                    </a>
+                    <span className="hidden text-white/30 sm:inline">/</span>
+                    <a
+                        href={GITHUB_REPO}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-white/80 transition-colors hover:text-white"
+                    >
+                        portfolio
+                    </a>
+                </div>
 
                 {/* Branch-Pill */}
                 <span className="hidden items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 font-mono text-xs font-medium text-brand md:inline-flex">
@@ -113,7 +127,10 @@ const RepoBar = () => {
 
                 {/* Star */}
                 <a
-                    href="https://github.com/JanVogt06"
+                    /* Zeigt aufs Repo, nicht aufs Profil: einen Stern gibt man
+                       einem Repository. Das Profil erreicht man jetzt links
+                       ueber den Benutzernamen. */
+                    href={GITHUB_REPO}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
