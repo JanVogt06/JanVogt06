@@ -22,12 +22,28 @@ export interface Project {
     /**
      * Darf die Seite in einem iframe eingebettet werden? Standard ja.
      *
-     * Auf false setzen, wenn die Anwendung im iframe nicht sauber läuft – dann
-     * zeigt der Rahmen einen "In neuem Tab öffnen"-Knopf statt der Vorschau.
-     * Riptide steht auf false, weil es coi-serviceworker für SharedArrayBuffer
-     * lädt: die Library registriert einen Service Worker und lädt die Seite neu,
-     * was in einem Cross-Origin-iframe eine Reload-Schleife auslösen kann.
-     * Ungetestet, deshalb bewusst aus – nach einem Test einfach umstellen.
+     * Auf false setzen, wenn eine Anwendung im iframe nicht sauber läuft – dann
+     * zeigt der Rahmen "in neuem Tab öffnen" statt der Vorschau.
+     *
+     * Zu Riptide, weil es der Grenzfall ist: es ist ein Emscripten-Build mit
+     * Threads (pthreads) und braucht dafür SharedArrayBuffer, das nur in einem
+     * cross-origin isolierten Kontext existiert. In einem Cross-Origin-iframe
+     * wird `crossOriginIsolated` nur dann true, wenn DIESE Seite selbst
+     * COOP: same-origin und COEP setzt – tut sie nicht. Die Simulation läuft im
+     * iframe also ohne Threads.
+     *
+     * Sie stürzt dabei nicht ab: der Build prüft zur Laufzeit ab
+     * (`_emscripten_has_threading_support`) und pthread_create gibt EAGAIN
+     * zurück statt zu crashen. Deshalb ist embed hier an.
+     *
+     * Voller Threading-Support wäre möglich, ist aber ein Eingriff ins Hosting:
+     * eine Cloudflare-Transform-Rule, die auf jan-vogt.dev
+     * `Cross-Origin-Opener-Policy: same-origin` und
+     * `Cross-Origin-Embedder-Policy: credentialless` setzt. Dann greift das
+     * `allow="cross-origin-isolated"` am iframe. Achtung: COEP regiert danach
+     * auch die anderen drei Vorschauen, und credentialless wird außerhalb von
+     * Chromium schlechter unterstützt – es kann sie in Safari und Firefox
+     * brechen. Deshalb nicht vorausgeeilt.
      */
     embed?: boolean;
     /** Begründung zu embed: false, nur zur Dokumentation in der JSON */

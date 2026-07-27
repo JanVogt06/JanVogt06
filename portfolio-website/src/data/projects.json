@@ -18,8 +18,8 @@
       "github": "https://github.com/SquadCommit/Riptide",
       "website": "https://riptide.jan-vogt.dev"
     },
-    "embed": false,
-    "embedNote": "coi-serviceworker (SharedArrayBuffer) – im iframe ungetestet"
+    "embed": true,
+    "embedNote": "Emscripten-Threads-Build: laeuft im iframe ohne SharedArrayBuffer, also einthreadig. Stuerzt nicht ab (pthread_create -> EAGAIN)."
   },
   {
     "slug": "sattrak",

@@ -86,7 +86,23 @@ const BrowserFrame = ({
                         className="h-full w-full border-0"
                         loading="lazy"
                         referrerPolicy="no-referrer"
+                        /**
+                         * allow-same-origin ist nötig, damit die eingebettete
+                         * Anwendung ihren eigenen Origin behält – ohne das kann
+                         * sie keinen Service Worker registrieren (Riptide braucht
+                         * einen für coi-serviceworker) und kein localStorage
+                         * nutzen. Cross-Origin bleibt es dadurch trotzdem.
+                         */
                         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                        /**
+                         * Nur wirksam, wenn DIESE Seite selbst cross-origin
+                         * isoliert ist (COOP: same-origin + COEP). Ist sie das
+                         * nicht, wird das Attribut ignoriert – es kostet also
+                         * nichts und ist der einzige Schalter, der Riptide im
+                         * iframe echtes SharedArrayBuffer und damit Threads
+                         * geben könnte. Siehe Hinweis in lib/projects.ts.
+                         */
+                        allow="cross-origin-isolated"
                     />
                 ) : (
                     <>
