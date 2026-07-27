@@ -1,6 +1,5 @@
 import {Mail, Github, Instagram, MapPin, Send, GitPullRequest, GitMerge} from "lucide-react"
 import {motion} from "framer-motion"
-import {Card} from "@/components/ui/card"
 import {Button} from "@/components/ui/button"
 import Reveal from "./Reveal"
 import SectionHeader from "./SectionHeader"
@@ -79,9 +78,13 @@ const Contact = () => {
                 />
 
                 {/* PR-Karte – Box statisch (wie das Hero-Terminal), Inhalte animieren
-                    über eigenständige Reveals (kein Erben durch eine bewegte Karte). */}
-                <Card
-                    className="surface overflow-hidden rounded-2xl p-0 sm:rounded-3xl">
+                    über eigenständige Reveals (kein Erben durch eine bewegte Karte).
+
+                    Bewusst ein div und nicht die shadcn-Card: die bringt bg-card
+                    mit, und eine Utility schlaegt .surface aus dem
+                    Components-Layer – die Karte war deshalb weiss. .surface ist
+                    die einzige Quelle fuer Kartenoberflaechen auf der Seite. */}
+                <div className="surface overflow-hidden rounded-2xl sm:rounded-3xl">
 
                     {/* PR-Kopfzeile mit Merge-Indikator */}
                     <Reveal
@@ -122,7 +125,7 @@ const Contact = () => {
                                 </Button>
                         </Reveal>
                     </div>
-                </Card>
+                </div>
             </div>
         </section>
     );
