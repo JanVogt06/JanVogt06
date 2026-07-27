@@ -1,8 +1,8 @@
 import {Award, Users, BookOpen, GraduationCap} from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import {motion} from "framer-motion"
-import refereeImage from "@/assets/images/referee.png"
-import aboutPortraitImage from "@/assets/images/about_portrait.png"
+import refereeImage from "../data/images/referee.png"
+import skiJumpImage from "../data/images/ski_jump.png"
 import GitGraph from "./GitGraph"
 import Reveal from "./Reveal"
 import {fadeUp, scaleIn, slideInLeft, stagger} from "@/lib/motion"
@@ -145,12 +145,12 @@ const About = () => {
 
                     <Reveal
                         variants={scaleIn}
-                        className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
+                        className="overflow-hidden rounded-2xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
                     >
                         <img
-                            src={aboutPortraitImage}
-                            alt="Jan Vogt"
-                            className="h-64 w-full object-contain object-bottom sm:h-80"
+                            src={skiJumpImage}
+                            alt="Jan Vogt beim Skifahren"
+                            className="block h-56 w-full object-cover object-center sm:h-72"
                         />
                     </Reveal>
 
@@ -192,12 +192,12 @@ const About = () => {
 
                     <Reveal
                         variants={scaleIn}
-                        className="col-span-5 flex items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
+                        className="col-span-5 overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-cyan-900/20 to-blue-900/20"
                     >
                         <img
-                            src={aboutPortraitImage}
-                            alt="Jan Vogt"
-                            className="h-full w-full max-h-85 object-contain object-bottom"
+                            src={skiJumpImage}
+                            alt="Jan Vogt beim Skifahren"
+                            className="block h-full w-full object-cover object-center"
                         />
                     </Reveal>
 
