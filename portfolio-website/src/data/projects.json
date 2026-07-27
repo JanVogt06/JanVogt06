@@ -3,12 +3,16 @@
     "icon": "Waves",
     "type": "feat",
     "hash": "e4a7b09",
-    "iconGradient": "from-teal-500 to-cyan-600",
-    "glowColor": "teal",
     "title": "Riptide",
     "subtitle": "Interaktive Tsunami-Simulation",
     "description": "Browserbasierte Tsunami-Simulation mit einem FWave-Finite-Volumen-Solver als WebAssembly. Erdbeben mit echter USGS-Slab2-Verwerfungsgeometrie platzieren und die Wellenausbreitung live über GEBCO-Bathymetrie in WebGL2 verfolgen.",
-    "tech": ["C++", "WebAssembly", "React", "WebGL2", "Vite"],
+    "tech": [
+      "C++",
+      "WebAssembly",
+      "React",
+      "WebGL2",
+      "Vite"
+    ],
     "links": {
       "github": "https://github.com/SquadCommit/Riptide",
       "website": "https://riptide.jan-vogt.dev"
@@ -18,12 +22,14 @@
     "icon": "Satellite",
     "type": "feat",
     "hash": "3f9a1c7",
-    "iconGradient": "from-cyan-500 to-blue-600",
-    "glowColor": "cyan",
     "title": "SatTrak",
     "subtitle": "3D Satellitenvisualisierung",
     "description": "Interaktive Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus. Mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung.",
-    "tech": ["Unity", "C#", "Cesium"],
+    "tech": [
+      "Unity",
+      "C#",
+      "Cesium"
+    ],
     "links": {
       "github": "https://github.com/JanVogt06/SatTrak-SatelliteVisualization"
     }
@@ -32,12 +38,15 @@
     "icon": "Zap",
     "type": "feat",
     "hash": "b2e8d40",
-    "iconGradient": "from-yellow-500 to-orange-600",
-    "glowColor": "yellow",
     "title": "SolarFlow",
     "subtitle": "Smart Energy Management",
     "description": "Intelligentes Energie-Management-System für Photovoltaik-Anlagen. Maximiert den Eigenverbrauch durch automatische Steuerung von Verbrauchern.",
-    "tech": ["Python", "FastAPI", "SQLite", "JavaScript"],
+    "tech": [
+      "Python",
+      "FastAPI",
+      "SQLite",
+      "JavaScript"
+    ],
     "links": {
       "github": "https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement",
       "website": "https://solarflow.jan-vogt.dev/"
@@ -47,12 +56,16 @@
     "icon": "Receipt",
     "type": "feat",
     "hash": "c7104af",
-    "iconGradient": "from-green-500 to-emerald-600",
-    "glowColor": "green",
     "title": "TFV Spesen Generator",
     "subtitle": "Automatisierte Spesenabrechnung",
     "description": "Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Scrapt Spielansetzungen und generiert Word-Dokumente.",
-    "tech": ["Python", "FastAPI", "React", "TypeScript", "Docker"],
+    "tech": [
+      "Python",
+      "FastAPI",
+      "React",
+      "TypeScript",
+      "Docker"
+    ],
     "links": {
       "github": "https://github.com/JanVogt06/dfb-spesen-generator",
       "app": "https://spesen-generator.jan-vogt.dev/"
@@ -62,12 +75,14 @@
     "icon": "Sword",
     "type": "feat(game)",
     "hash": "9d5b2e1",
-    "iconGradient": "from-purple-500 to-pink-600",
-    "glowColor": "purple",
     "title": "Cryptborne",
     "subtitle": "3D Dungeon-Crawler",
     "description": "Prozedural generierter Dungeon-Crawler im mittelalterlichen Fantasy-Setting. Mit variantenreichem Waffensystem und intelligenter Enemy-AI.",
-    "tech": ["Unity", "C#", "Procedural Gen"],
+    "tech": [
+      "Unity",
+      "C#",
+      "Procedural Gen"
+    ],
     "links": {
       "github": "https://github.com/JY-Studios/cryptborne",
       "play": "https://cryptborne.jan-vogt.dev/"

@@ -36,48 +36,15 @@ const styles = `
 }
 `;
 
-// Einträge der "git status"-Liste im Terminalfenster.
+/* Einträge der "git status"-Liste im Terminalfenster.
+   Einheitlich statt fünf verschiedener Gradients: in einem echten `git status`
+   sind die Einträge auch nicht farbcodiert. */
 const cards = [
-    {
-        icon: GraduationCap,
-        text: "B.Sc. Informatik",
-        subtext: "FSU Jena",
-        color: "text-cyan-400",
-        dot: "bg-cyan-400",
-        gradient: "from-cyan-500 to-blue-600"
-    },
-    {
-        icon: Briefcase,
-        text: "Werkstudent",
-        subtext: "Carl Zeiss Meditec AG.",
-        color: "text-blue-400",
-        dot: "bg-blue-400",
-        gradient: "from-blue-500 to-indigo-600"
-    },
-    {
-        icon: Sparkles,
-        text: "Oberliga",
-        subtext: "Schiedsrichter",
-        color: "text-pink-400",
-        dot: "bg-pink-400",
-        gradient: "from-pink-500 to-purple-600"
-    },
-    {
-        icon: Coffee,
-        text: "Die Wurzel",
-        subtext: "Redaktion",
-        color: "text-purple-400",
-        dot: "bg-purple-400",
-        gradient: "from-purple-500 to-pink-600"
-    },
-    {
-        icon: MapPin,
-        text: "Bad Berka",
-        subtext: "Thüringen",
-        color: "text-emerald-400",
-        dot: "bg-emerald-400",
-        gradient: "from-emerald-500 to-teal-600"
-    },
+    {icon: GraduationCap, text: "B.Sc. Informatik", subtext: "FSU Jena"},
+    {icon: Briefcase, text: "Werkstudent", subtext: "Carl Zeiss Meditec AG."},
+    {icon: Sparkles, text: "Oberliga", subtext: "Schiedsrichter"},
+    {icon: Coffee, text: "Die Wurzel", subtext: "Redaktion"},
+    {icon: MapPin, text: "Bad Berka", subtext: "Thüringen"},
 ];
 
 const PortraitGlow = () => {
@@ -106,34 +73,31 @@ const StatusTerminal = () => (
     >
         {/* Fenster-Titelleiste */}
         <motion.div variants={fadeUp}
-                    className="flex items-center gap-2 border-b border-white/10 bg-white/5 px-4 py-2.5">
-            <span className="h-3 w-3 rounded-full bg-red-400/80"/>
-            <span className="h-3 w-3 rounded-full bg-yellow-400/80"/>
-            <span className="h-3 w-3 rounded-full bg-green-400/80"/>
+                    className="flex items-center gap-2 border-b border-white/[0.06] bg-white/[0.03] px-4 py-2.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+            <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
             <span className="ml-2 font-mono text-xs text-white/40">jan@vogt: ~/portfolio</span>
         </motion.div>
 
-        <div className="space-y-2.5 p-4 font-mono text-sm">
+        <div className="space-y-1 p-4 font-mono text-sm">
             <motion.p variants={fadeUp} className="text-white/40">
-                <span className="text-emerald-400">$</span> git status
+                <span className="text-status">$</span> git status
             </motion.p>
-            <motion.p variants={fadeUp} className="text-white/30">
-                On branch <span className="text-cyan-400">main</span> · 5 tracked
+            <motion.p variants={fadeUp} className="pb-1.5 text-white/30">
+                On branch <span className="text-brand">main</span> · 5 tracked
             </motion.p>
 
             {cards.map((card) => (
                 <motion.div
                     key={card.text}
                     variants={fadeUp}
-                    className="group flex items-center gap-3 rounded-lg border border-transparent px-2 py-1.5 transition-colors hover:border-white/10 hover:bg-white/5"
+                    className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/[0.04]"
                 >
-                    <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${card.dot}`}/>
-                    <div className={`rounded-lg bg-gradient-to-br ${card.gradient} p-1.5`}>
-                        <card.icon className="h-4 w-4 text-white"/>
-                    </div>
-                    <div className="min-w-0">
-                        <p className={`truncate text-sm font-semibold ${card.color}`}>{card.text}</p>
-                        <p className="truncate text-xs text-white/40">{card.subtext}</p>
+                    <card.icon className="h-4 w-4 shrink-0 text-brand"/>
+                    <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                        <p className="truncate text-sm text-white/85">{card.text}</p>
+                        <p className="truncate text-xs text-white/35">{card.subtext}</p>
                     </div>
                 </motion.div>
             ))}
@@ -196,13 +160,13 @@ const Hero = () => {
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
 
                         <motion.p
-                            className="mb-4 flex items-center gap-2 font-mono text-sm font-medium text-purple-400"
+                            className="mb-4 flex items-center gap-2 font-mono text-sm text-white/55"
                             initial={{opacity: 0, y: 20}}
                             animate={{opacity: 1, y: 0}}
                             transition={{duration: 0.6, delay: 0.3, ease: EASE}}
                         >
-                            <span className="text-emerald-400">$</span> whoami
-                            <span className="text-white/40">— informatik · developer · referee</span>
+                            <span className="text-status">$</span> whoami
+                            <span className="text-white/35">— informatik · developer · referee</span>
                         </motion.p>
 
                         <div className="relative">
@@ -221,13 +185,13 @@ const Hero = () => {
                                 transition={{duration: 0.8, delay: 0.5, ease: EASE}}
                             >
                                 <span
-                                    className="bg-gradient-to-r from-purple-400 via-pink-500 to-purple-400 bg-clip-text text-transparent animate-gradient-shift">
+                                    className="bg-gradient-to-r from-glow via-[#c4a3ff] to-glow bg-clip-text text-transparent animate-gradient-shift">
                                     VOGT
                                 </span>
                             </motion.h1>
 
                             <motion.div
-                                className="mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 lg:w-32"
+                                className="mt-4 h-1 w-24 rounded-full bg-gradient-to-r from-glow to-glow/10 lg:w-32"
                                 initial={{scaleX: 0, originX: 0}}
                                 animate={{scaleX: 1}}
                                 transition={{duration: 0.8, delay: 0.7, ease: EASE}}
@@ -241,8 +205,8 @@ const Hero = () => {
                             transition={{duration: 0.6, delay: 0.8, ease: EASE}}
                         >
                             Informatik-Student an der FSU Jena,
-                            <span className="text-blue-400"> Werkstudent bei ZEISS</span> und
-                            <span className="text-pink-400"> Schiedsrichter</span> im NOFV.
+                            <span className="text-brand"> Werkstudent bei ZEISS</span> und
+                            <span className="text-white/85"> Schiedsrichter</span> im NOFV.
                         </motion.p>
 
                         <motion.div
@@ -253,7 +217,7 @@ const Hero = () => {
                         >
                             <Button
                                 size="lg"
-                                className="group relative overflow-hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(168,85,247,0.4)]"
+                                className="group relative overflow-hidden rounded-full bg-glow px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:bg-glow/90 hover:shadow-[0_0_40px_rgba(139,92,246,0.4)]"
                                 onClick={() => document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}
                             >
                                 <span
@@ -266,7 +230,7 @@ const Hero = () => {
                             <Button
                                 size="lg"
                                 variant="outline"
-                                className="rounded-full border-white/20 bg-white/5 px-8 py-6 text-base font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:border-white/40 hover:bg-white/10 hover:text-white"
+                                className="rounded-full border-white/[0.12] bg-white/[0.03] px-8 py-6 text-base font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:border-white/30 hover:bg-white/[0.07] hover:text-white"
                                 onClick={() => document.getElementById('projects')?.scrollIntoView({behavior: 'smooth'})}
                             >
                                 Projekte
@@ -293,21 +257,10 @@ const Hero = () => {
                             <motion.div
                                 key={card.text}
                                 variants={fadeUp}
-                                className="flex items-center gap-2 rounded-xl border border-white/20 px-3 py-2"
-                                style={{
-                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%)',
-                                    backdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
-                                    WebkitBackdropFilter: 'blur(24px) saturate(1.8) brightness(1.05)',
-                                    boxShadow: '0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(255,255,255,0.1)',
-                                }}
+                                className="flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.06] px-3 py-1.5 backdrop-blur-xl"
                             >
-                                <div className={`rounded-lg bg-gradient-to-br ${card.gradient} p-1.5`}>
-                                    <card.icon className="h-3.5 w-3.5 text-white"/>
-                                </div>
-                                <div>
-                                    <p className={`text-xs font-semibold ${card.color}`}>{card.text}</p>
-                                    <p className="text-[10px] text-white/50">{card.subtext}</p>
-                                </div>
+                                <card.icon className="h-3.5 w-3.5 shrink-0 text-brand"/>
+                                <p className="font-mono text-[11px] text-white/80">{card.text}</p>
                             </motion.div>
                         ))}
                     </div>

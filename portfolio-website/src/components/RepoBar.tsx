@@ -71,7 +71,7 @@ const RepoBar = () => {
                 </button>
 
                 {/* Branch-Pill */}
-                <span className="hidden items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-1 font-mono text-xs font-medium text-cyan-300 md:inline-flex">
+                <span className="hidden items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 font-mono text-xs font-medium text-brand md:inline-flex">
                     <GitBranch className="h-3.5 w-3.5"/>
                     main
                 </span>
@@ -92,7 +92,7 @@ const RepoBar = () => {
                                 {isActive && (
                                     <motion.span
                                         layoutId="repobar-active"
-                                        className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500"
+                                        className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand to-brand-deep"
                                         transition={{type: "spring", stiffness: 400, damping: 32}}
                                     />
                                 )}
@@ -105,9 +105,9 @@ const RepoBar = () => {
                 <button
                     onClick={copyClone}
                     title={CLONE_CMD}
-                    className="ml-1 hidden shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 font-mono text-xs text-white/60 transition-colors hover:border-white/20 hover:bg-white/10 hover:text-white lg:flex"
+                    className="ml-1 hidden shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 font-mono text-xs text-white/60 transition-colors hover:border-white/20 hover:bg-white/[0.07] hover:text-white lg:flex"
                 >
-                    {copied ? <Check className="h-3.5 w-3.5 text-emerald-400"/> : <Copy className="h-3.5 w-3.5"/>}
+                    {copied ? <Check className="h-3.5 w-3.5 text-status"/> : <Copy className="h-3.5 w-3.5"/>}
                     <span>{copied ? "kopiert!" : "git clone"}</span>
                 </button>
 
@@ -116,7 +116,7 @@ const RepoBar = () => {
                     href="https://github.com/JanVogt06"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-yellow-400/30 hover:bg-yellow-500/10 hover:text-yellow-300"
+                    className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
                 >
                     <Star className="h-3.5 w-3.5"/>
                     <span className="hidden sm:inline">Star</span>

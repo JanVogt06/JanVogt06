@@ -34,14 +34,21 @@ type Commit = {
     head?: boolean
 }
 
+/* Eine Farbe, drei Helligkeiten – der aktuellste Commit leuchtet am stärksten,
+   die Vergangenheit tritt zurück. Vorher hatte jeder Branch eine eigene Farbe
+   (blau/cyan/slate), was ohne Bedeutung nur Buntheit war. */
+const BRAND = "#22d3ee"
+const BRAND_DEEP = "#0891b2"
+const PAST = "#334155"
+
 const commits: Commit[] = [
     {
         id: "zeiss",
         lane: 1,
         branch: "feat/zeiss",
-        accent: "text-blue-300",
-        chipClass: "bg-blue-500/15 text-blue-300 ring-1 ring-blue-400/30",
-        nodeColor: "#3b82f6",
+        accent: "text-brand",
+        chipClass: "bg-brand/15 text-brand ring-1 ring-brand/30",
+        nodeColor: BRAND,
         date: "seit 02/2026",
         title: "Werkstudent · Softwareentwicklung",
         sub: "Carl Zeiss Meditec AG.",
@@ -52,9 +59,9 @@ const commits: Commit[] = [
         id: "bsc",
         lane: 0,
         branch: "main",
-        accent: "text-cyan-300",
-        chipClass: "bg-cyan-500/15 text-cyan-300 ring-1 ring-cyan-400/30",
-        nodeColor: "#06b6d4",
+        accent: "text-brand/70",
+        chipClass: "bg-brand/10 text-brand/80 ring-1 ring-brand/20",
+        nodeColor: BRAND_DEEP,
         date: "seit 10/2024",
         title: "B.Sc. Informatik",
         sub: "Friedrich-Schiller-Universität Jena",
@@ -65,9 +72,9 @@ const commits: Commit[] = [
         id: "abitur",
         lane: 0,
         branch: "main",
-        accent: "text-white/50",
-        chipClass: "bg-white/10 text-white/60 ring-1 ring-white/15",
-        nodeColor: "#64748b",
+        accent: "text-white/40",
+        chipClass: "bg-white/[0.07] text-white/50 ring-1 ring-white/10",
+        nodeColor: PAST,
         date: "2024",
         title: "Abitur",
         sub: "Marie-Curie-Gymnasium Bad Berka",
@@ -97,7 +104,7 @@ const GitGraph = () => {
         <div ref={ref}>
             {/* Kopfzeile im Terminal-Stil */}
             <div className="mb-6 flex items-center gap-2 font-mono text-xs text-white/40">
-                <GitBranch className="h-4 w-4 text-cyan-400"/>
+                <GitBranch className="h-4 w-4 text-brand"/>
                 <span className="text-white/60">git log</span>
                 <span className="text-white/30">--graph --all</span>
             </div>
@@ -114,25 +121,25 @@ const GitGraph = () => {
                     {/* main: offenes Ende oben (gestrichelt = läuft weiter) */}
                     <motion.path
                         d={`M${LANE_X[0]},${BSC_Y} L${LANE_X[0]},${Y_TOP}`}
-                        stroke="#06b6d4" strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
+                        stroke={BRAND_DEEP} strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
                         fill="none" opacity={0.5} {...drawn(0.35)}
                     />
                     {/* main: durchgezogene Linie zwischen den Commits */}
                     <motion.path
                         d={`M${LANE_X[0]},${BSC_Y} L${LANE_X[0]},${ABI_Y}`}
-                        stroke="#06b6d4" strokeWidth={2.5} strokeLinecap="round"
+                        stroke={BRAND_DEEP} strokeWidth={2.5} strokeLinecap="round"
                         fill="none" {...drawn(0)}
                     />
                     {/* feat/zeiss: zweigt am B.Sc.-Commit ab und läuft nach oben */}
                     <motion.path
                         d={`M${LANE_X[0]},${BSC_Y} C ${LANE_X[0]},${BSC_Y - 44} ${LANE_X[1]},${ZEISS_Y + 56} ${LANE_X[1]},${ZEISS_Y}`}
-                        stroke="#3b82f6" strokeWidth={2.5} strokeLinecap="round"
+                        stroke={BRAND} strokeWidth={2.5} strokeLinecap="round"
                         fill="none" {...drawn(0.3)}
                     />
                     {/* feat/zeiss: offenes Ende oben */}
                     <motion.path
                         d={`M${LANE_X[1]},${ZEISS_Y} L${LANE_X[1]},${Y_TOP}`}
-                        stroke="#3b82f6" strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
+                        stroke={BRAND} strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
                         fill="none" opacity={0.5} {...drawn(0.6)}
                     />
 
@@ -145,7 +152,7 @@ const GitGraph = () => {
                             transition={{delay: 0.15 + i * 0.15, type: "spring", stiffness: 210, damping: 22}}
                             style={{transformBox: "fill-box", transformOrigin: "center"}}
                         >
-                            <circle cx={LANE_X[c.lane]} cy={yOf(i)} r={11} fill="#0b1220" stroke={c.nodeColor} strokeWidth={2.5}/>
+                            <circle cx={LANE_X[c.lane]} cy={yOf(i)} r={11} fill="#05070d" stroke={c.nodeColor} strokeWidth={2.5}/>
                             <circle cx={LANE_X[c.lane]} cy={yOf(i)} r={4} fill={c.nodeColor}/>
                         </motion.g>
                     ))}
@@ -167,7 +174,7 @@ const GitGraph = () => {
                                     {c.branch}
                                 </span>
                                 {c.head && (
-                                    <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-400/30">
+                                    <span className="rounded-full bg-status/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status ring-1 ring-status/30">
                                         HEAD
                                     </span>
                                 )}
