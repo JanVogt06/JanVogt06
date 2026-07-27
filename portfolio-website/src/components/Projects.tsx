@@ -214,12 +214,26 @@ const PinnedProjects = () => {
 
     return (
         <div ref={pinRef} className="relative hidden lg:block" style={{height: `calc(100vh + ${overflow}px)`}}>
+            {/* Der Rahmen ist genau einen Bildschirm hoch und wird vollständig
+                gefüllt: Abschnittskopf, Zähler, dann nehmen die Karten den Rest.
+                Vorher standen nur Zähler und Karten mittig zentriert darin – das
+                waren die 438 px Leerraum über und unter den Karten. Der Kopf im
+                Rahmen bleibt außerdem sichtbar, während man durchblättert. */}
             <div
                 ref={viewportRef}
-                className="sticky top-14 flex h-[calc(100vh-3.5rem)] flex-col justify-center overflow-hidden"
+                className="sticky top-14 flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden py-8"
             >
+                <SectionHeader
+                    command="git log"
+                    argument="--oneline projekte/"
+                    title="Meine"
+                    accent="Projekte"
+                    lead="Jedes Projekt ein Commit – eine Auswahl aus verschiedenen Bereichen"
+                    className="mb-6 grid grid-cols-12 items-end gap-8"
+                />
+
                 {/* Zähler im git-log-Stil */}
-                <div className="mb-6 flex items-center gap-4 font-mono text-xs text-white/40">
+                <div className="mb-4 flex items-center gap-4 font-mono text-xs text-white/40">
                     <span>
                         commit <span className="text-brand">{current}</span>
                         <span className="text-white/25">/{projects.length}</span>
@@ -231,9 +245,20 @@ const PinnedProjects = () => {
                         />
                     </div>
                     <span className="text-white/25">scrollen blättert weiter</span>
+                    <a
+                        href="https://github.com/JanVogt06?tab=repositories"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group ml-auto inline-flex items-center gap-2 text-brand transition-colors hover:text-white"
+                    >
+                        weitere Projekte auf GitHub
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
+                    </a>
                 </div>
 
-                <motion.div ref={trackRef} className="flex gap-5" style={{x}}>
+                {/* min-h-0 ist nötig, damit flex-1 in einer Flex-Spalte auch
+                    schrumpfen darf und nicht über den Rahmen hinauswächst. */}
+                <motion.div ref={trackRef} className="flex min-h-0 flex-1 gap-5" style={{x}}>
                     {projects.map((project) => (
                         <div key={project.title} className="w-[25rem] shrink-0 xl:w-[27rem]">
                             <ProjectCardBody project={project}/>
@@ -252,7 +277,10 @@ const Projects = () => {
         /* KEIN overflow-hidden auf der Section: das macht sie zum Scroll-Container
            und position: sticky im gepinnten Verlauf würde nicht mehr greifen.
            Das Clipping der Blur-Blobs übernimmt der Hintergrund-Wrapper. */
-        <section id="projects" className="relative py-20 md:py-28">
+        /* Kein py auf der Section: im gepinnten Verlauf soll der bildschirmhohe
+           Rahmen direkt oben ansetzen, sonst entsteht wieder eine Lücke davor
+           und dahinter. Die Abstände trägt der jeweilige Zweig. */
+        <section id="projects" className="relative">
 
             {/* Hintergrund – wie im Werdegang: Cyan = Arbeit/Technik */}
             <div className="absolute inset-0 overflow-hidden">
@@ -273,35 +301,34 @@ const Projects = () => {
 
             <div className="relative mx-auto max-w-[88rem] px-6 sm:px-8 lg:px-12">
 
-                <SectionHeader
-                    command="git log"
-                    argument="--oneline projekte/"
-                    title="Meine"
-                    accent="Projekte"
-                    lead="Jedes Projekt ein Commit – eine Auswahl aus verschiedenen Bereichen"
-                />
+                {/* Vertikaler Zweig: Mobile, Tablet und prefers-reduced-motion.
+                    Kopf und GitHub-Link stehen hier ausserhalb, im gepinnten
+                    Verlauf sitzen beide im bildschirmhohen Rahmen. */}
+                <div className={reduced ? "py-20 md:py-28" : "py-20 md:py-28 lg:hidden"}>
+                    <SectionHeader
+                        command="git log"
+                        argument="--oneline projekte/"
+                        title="Meine"
+                        accent="Projekte"
+                        lead="Jedes Projekt ein Commit – eine Auswahl aus verschiedenen Bereichen"
+                    />
 
-                {reduced ? (
                     <ProjectGrid/>
-                ) : (
-                    <>
-                        <ProjectGrid className="lg:hidden"/>
-                        <PinnedProjects/>
-                    </>
-                )}
 
-                {/* More Projects Link */}
-                <Reveal variants={fadeUp} className="mt-12">
-                    <a
-                        href="https://github.com/JanVogt06?tab=repositories"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group inline-flex items-center gap-2 font-mono text-sm text-brand transition-colors hover:text-white"
-                    >
-                        weitere Projekte auf GitHub
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
-                    </a>
-                </Reveal>
+                    <Reveal variants={fadeUp} className="mt-12">
+                        <a
+                            href="https://github.com/JanVogt06?tab=repositories"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group inline-flex items-center gap-2 font-mono text-sm text-brand transition-colors hover:text-white"
+                        >
+                            weitere Projekte auf GitHub
+                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
+                        </a>
+                    </Reveal>
+                </div>
+
+                {!reduced && <PinnedProjects/>}
             </div>
         </section>
     );

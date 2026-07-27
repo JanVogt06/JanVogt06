@@ -21,6 +21,7 @@ const SectionHeader = ({
     accent,
     lead,
     centered = false,
+    className,
 }: {
     command: string
     argument?: string
@@ -28,13 +29,17 @@ const SectionHeader = ({
     accent: string
     lead: string
     centered?: boolean
+    /** Überschreibt die Außenabstände – im gepinnten Projekte-Rahmen ist der
+     *  Platz knapp, dort braucht der Kopf einen kleineren unteren Abstand. */
+    className?: string
 }) => (
     <Reveal
         variants={stagger(0.08)}
         className={
-            centered
+            className ??
+            (centered
                 ? "mb-10 text-center md:mb-14"
-                : "mb-10 md:mb-16 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8"
+                : "mb-10 md:mb-16 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8")
         }
     >
         <div className={centered ? "" : "lg:col-span-7"}>
