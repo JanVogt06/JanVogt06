@@ -216,7 +216,7 @@ const Hero = () => {
                 </div>
 
                 <div
-                    className="relative z-10 mx-auto grid min-h-screen max-w-[88rem] grid-cols-1 pl-6 pr-6 pt-14 sm:pl-16 sm:pr-8 lg:grid-cols-2 lg:pl-24 lg:pr-12">
+                    className="relative z-10 mx-auto grid min-h-screen max-w-[88rem] grid-cols-1 px-6 pt-14 sm:px-8 lg:grid-cols-2 lg:px-12">
 
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
 

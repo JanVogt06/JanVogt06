@@ -1,6 +1,5 @@
 import {MotionConfig} from 'framer-motion'
 import RepoBar from './components/RepoBar'
-import ScrollSpine from './components/ScrollSpine'
 import Hero from './components/Hero'
 import About from './components/About'
 import Projects from './components/Projects'
@@ -15,8 +14,6 @@ function App() {
            und es gilt automatisch fuer alles, was noch dazukommt. */
         <MotionConfig reducedMotion="user">
             <RepoBar/>
-            {/* Commit-Achse in der linken Rinne – zeichnet sich mit dem Scroll */}
-            <ScrollSpine/>
             <Hero/>
             <About/>
             <Projects/>

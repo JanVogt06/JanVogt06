@@ -126,7 +126,7 @@ const About = () => {
                 }}
             />
 
-            <div className="relative mx-auto max-w-[88rem] pl-4 pr-4 sm:pl-14 sm:pr-6 lg:pl-20 lg:pr-8">
+            <div className="relative mx-auto max-w-[88rem] px-4 sm:px-6 lg:px-8">
 
                 <SectionHeader
                     command="cat"
