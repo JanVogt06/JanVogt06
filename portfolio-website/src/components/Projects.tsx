@@ -140,14 +140,14 @@ const ProjectCard = ({project}: { project: Project }) => {
 
 const Projects = () => {
     return (
-        <section id="projects" className="relative overflow-hidden bg-[#0a0a12] py-20 md:py-28">
+        <section id="projects" className="relative overflow-hidden py-20 md:py-28">
 
-            {/* Hintergrund */}
+            {/* Hintergrund – wie im Werdegang: Cyan = Arbeit/Technik */}
             <div className="absolute inset-0">
                 <div
-                    className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-purple-600/10 blur-[150px]"/>
+                    className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-brand/10 blur-[150px]"/>
                 <div
-                    className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-pink-600/10 blur-[150px]"/>
+                    className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-brand-deep/10 blur-[150px]"/>
             </div>
 
             {/* Raster-Linien */}

@@ -151,10 +151,13 @@ const Hero = () => {
     return (
         <>
             <style>{styles}</style>
-            <section id="hero" className="relative min-h-screen w-full overflow-hidden bg-[#0c0515]">
+            <section id="hero" className="relative min-h-screen w-full overflow-hidden">
 
                 <div className="absolute inset-0">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#0c0515] via-[#1a0a2e] to-[#0c0515]"/>
+                    {/* Violett lebt nur hier und im Kontakt – die "menschlichen"
+                        Klammern der Seite. Endet auf --color-page, damit der
+                        Übergang in den Werdegang nahtlos ist. */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-page via-[#160b2a] to-page"/>
                     <NebulaWebGL ref={nebulaRef} initialQuality={0.5}/>
                     <div
                         className="absolute inset-0 opacity-[0.03]"

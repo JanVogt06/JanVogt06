@@ -105,14 +105,14 @@ const AwardsCard = () => (
 
 const About = () => {
     return (
-        <section id="about" className="relative overflow-hidden bg-[#080b14] py-16 md:py-24">
+        <section id="about" className="relative overflow-hidden py-16 md:py-24">
 
-            {/* Hintergrund */}
+            {/* Hintergrund – Cyan ist die Farbe der Arbeit/Technik */}
             <div className="absolute inset-0">
                 <div
-                    className="absolute -right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-cyan-600/10 blur-[150px]"/>
+                    className="absolute -right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-brand/10 blur-[150px]"/>
                 <div
-                    className="absolute -left-1/4 bottom-0 h-[500px] w-[500px] rounded-full bg-blue-600/10 blur-[150px]"/>
+                    className="absolute -left-1/4 bottom-0 h-[500px] w-[500px] rounded-full bg-brand-deep/10 blur-[150px]"/>
             </div>
 
             {/* Punktraster */}

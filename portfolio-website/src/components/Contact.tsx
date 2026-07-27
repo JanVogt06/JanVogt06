@@ -64,13 +64,13 @@ const ContactMethod = ({method}: { method: typeof contactMethods[0] }) => {
 
 const Contact = () => {
     return (
-        <section id="contact" className="relative overflow-hidden bg-[#0c0515] py-16 md:py-24">
+        <section id="contact" className="relative overflow-hidden py-16 md:py-24">
 
-            {/* Hintergrund-Blobs */}
+            {/* Hintergrund-Blobs – Violett wie im Hero: die Seite schließt sich */}
             <div
-                className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-purple-600/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
+                className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-glow/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
             <div
-                className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-pink-600/20 blur-[150px] md:h-[600px] md:w-[600px]"
+                className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-brand/10 blur-[150px] md:h-[600px] md:w-[600px]"
                 style={{animationDelay: '1s'}}/>
 
             <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">

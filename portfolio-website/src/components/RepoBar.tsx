@@ -56,7 +56,7 @@ const RepoBar = () => {
             initial={{y: -64, opacity: 0}}
             animate={{y: 0, opacity: 1}}
             transition={{duration: 0.6, ease: EASE, delay: 0.2}}
-            className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#0c0515]/70 backdrop-blur-xl"
+            className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-page/70 backdrop-blur-xl"
         >
             <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-3 px-4 sm:px-6 lg:px-8">
                 {/* Repo-Pfad */}

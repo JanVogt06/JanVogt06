@@ -3,6 +3,33 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/**
+ * Eigene Design-Tokens der Seite.
+ *
+ * Bewusst nur ZWEI Flächen und DREI Akzente. Vorher hatte fast jede Karte
+ * ihren eigenen Gradient (purple, pink, cyan, blue, emerald, yellow, rose,
+ * teal, indigo) – das ist der Hauptgrund, warum die Seite wie ein Template
+ * gewirkt hat. Regel ab hier:
+ *
+ *   brand   (Cyan)     = Primärakzent. Git, Terminal, Linien, Knoten, Links.
+ *   glow    (Violett)  = NUR Hero-Atmosphäre, H1-Gradient und Haupt-CTA.
+ *   status  (Emerald)  = ausschließlich git-Semantik: $-Prompt, HEAD, "open".
+ *
+ * Alles andere ist Weiß mit Deckkraft. Wer eine vierte Farbe braucht,
+ * braucht in Wahrheit mehr Kontrast – nicht mehr Farbe.
+ */
+@theme {
+    /* Flächen */
+    --color-page: #05070d;
+    --color-panel: #0a0e19;
+
+    /* Akzente */
+    --color-brand: #22d3ee;
+    --color-brand-deep: #0891b2;
+    --color-glow: #8b5cf6;
+    --color-status: #34d399;
+}
+
 @theme inline {
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
@@ -122,9 +149,50 @@
         scroll-behavior: smooth;
         /* Versatz, damit Anker-Sprünge nicht unter der fixierten RepoBar landen */
         scroll-padding-top: 4rem;
+        /* Scrollbars, Formularelemente und Overscroll-Bereich dunkel */
+        color-scheme: dark;
+        background-color: var(--color-page);
     }
 
+    /* EIN Seitengrund. Vorher war body weiß (--background: oklch(1 0 0)) und
+       jede Sektion hat ihr eigenes Dunkel darübergemalt – beim Overscroll und
+       zwischen den Sektionen blitzte dadurch Weiß durch. */
     body {
-        @apply bg-background text-foreground;
+        background-color: var(--color-page);
+        @apply text-white;
+    }
+
+    ::selection {
+        background-color: color-mix(in oklab, var(--color-brand) 30%, transparent);
+        color: white;
+    }
+}
+
+@layer components {
+    /**
+     * Standard-Oberfläche für Karten.
+     *
+     * Eine Hairline (1 px, 6 % Weiß) statt des überall gleichen
+     * border-white/10 + bg-white/5 + backdrop-blur-Glaskastens. Der Panel-Ton
+     * ist minimal heller als die Seite, dadurch entsteht Schichtung über
+     * Helligkeit statt über Rahmen.
+     */
+    .surface {
+        background-color: color-mix(in oklab, var(--color-panel) 88%, transparent);
+        border: 1px solid rgb(255 255 255 / 0.06);
+    }
+
+    .surface-hover {
+        transition: border-color 300ms, background-color 300ms;
+    }
+
+    .surface-hover:hover {
+        background-color: color-mix(in oklab, var(--color-panel) 100%, transparent);
+        border-color: rgb(255 255 255 / 0.12);
+    }
+
+    /* Monospace-Label über Abschnittsüberschriften ($ git …) */
+    .cmd {
+        @apply font-mono text-white/40;
     }
 }
