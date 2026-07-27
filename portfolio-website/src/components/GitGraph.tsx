@@ -1,7 +1,7 @@
-import {motion, useReducedMotion, useScroll, useTransform} from "framer-motion"
-import type {MotionValue} from "framer-motion"
+import {motion, useInView} from "framer-motion"
 import {useRef} from "react"
 import {GitBranch, GitCommitHorizontal} from "lucide-react"
+import {EASE} from "@/lib/motion"
 
 /**
  * Werdegang als Git-Graph.
@@ -10,14 +10,12 @@ import {GitBranch, GitCommitHorizontal} from "lucide-react"
  * der Branch `feat/zeiss` ab: der Werkstudentenjob bei ZEISS, der parallel zum
  * Studium läuft. Beide Branches enden offen (gestrichelt) = noch laufend.
  *
- * Die Animation ist an den Scroll GEKOPPELT, nicht davon ausgelöst: Solange die
- * Karte durch den Viewport wandert, wächst der Graph von unten (Abitur, der
- * älteste Commit) nach oben (ZEISS, HEAD). Rückwärts scrollen baut ihn zurück.
- * Vorher lief hier ein einmaliges useInView-Einblenden, das man genau einmal
- * gesehen hat und danach nie wieder.
+ * Die komplette Animation wird über EINEN useInView-Hook am Container gesteuert
+ * (statt whileInView pro SVG-Element – das ist auf <g>-Knoten unzuverlässig).
  *
- * Der Graph zeichnet von unten nach oben, weil die Zeit nach oben läuft – die
- * Pfade sind deshalb bewusst vom älteren zum jüngeren Commit hin definiert.
+ * War zwischendurch an den Scroll gekoppelt (useScroll/useTransform, der Graph
+ * wuchs mit der Scroll-Position und baute sich beim Zurückscrollen wieder ab).
+ * Zurück auf das einmalige Einblenden – das war die bessere Lesbarkeit.
  */
 
 const LANE_X = [22, 70] as const   // x-Position der beiden Branch-Spuren
@@ -95,48 +93,16 @@ const ZEISS_Y = yOf(0)
 const BSC_Y = yOf(1)
 const ABI_Y = yOf(2)
 
-/**
- * Der Graph baut sich über vier Phasen des Scroll-Fortschritts auf. Feste
- * Abschnitte statt Verzögerungen in Sekunden – so bestimmt die Scroll-Position
- * den Zustand, nicht eine abgelaufene Zeit.
- *
- *   0.00 – 0.35   main von Abitur nach B.Sc.
- *   0.30 – 0.60   feat/zeiss zweigt ab
- *   0.55 – 0.80   offenes Ende von main
- *   0.60 – 0.90   offenes Ende von feat/zeiss
- */
-const PHASES = {
-    mainSolid: [0.0, 0.35],
-    branch: [0.3, 0.6],
-    mainOpen: [0.55, 0.8],
-    branchOpen: [0.6, 0.9],
-} as const
-
-/* Ein Commit wacht auf, kurz bevor die Linie ihn erreicht. */
-const NODE_AT = [0.55, 0.28, 0.04] as const
-
 const GitGraph = () => {
     const ref = useRef<HTMLDivElement>(null)
-    const reduced = useReducedMotion()
+    const inView = useInView(ref, {once: true, margin: "-80px"})
 
-    /* Fortschritt der Karte durch den Viewport: 0 = Oberkante der Karte
-       erreicht die Unterkante des Viewports, 1 = Karte ist mittig. Dadurch ist
-       der Graph fertig, wenn man ihn liest – und nicht erst, wenn er oben
-       schon halb aus dem Bild ist. */
-    const {scrollYProgress} = useScroll({
-        target: ref,
-        offset: ["start end", "center center"],
+    // Pfad-Zeichnen: gemeinsame Helfer-Props, abhängig von inView.
+    const drawn = (delay: number) => ({
+        initial: {pathLength: 0, opacity: 0},
+        animate: inView ? {pathLength: 1, opacity: 1} : {pathLength: 0, opacity: 0},
+        transition: {pathLength: {duration: 0.7, delay, ease: EASE}, opacity: {duration: 0.2, delay}},
     })
-
-    /* Bewusst vier einzelne useTransform-Aufrufe statt einer Hilfsfunktion:
-       Hooks dürfen nicht in Callbacks aufgerufen werden. */
-    const clamp = {clamp: true}
-    const mainSolid = useTransform(scrollYProgress, [...PHASES.mainSolid], [0, 1], clamp)
-    const branch = useTransform(scrollYProgress, [...PHASES.branch], [0, 1], clamp)
-    const mainOpen = useTransform(scrollYProgress, [...PHASES.mainOpen], [0, 1], clamp)
-    const branchOpen = useTransform(scrollYProgress, [...PHASES.branchOpen], [0, 1], clamp)
-
-    const len = (v: MotionValue<number>) => (reduced ? {pathLength: 1} : {pathLength: v})
 
     return (
         <div ref={ref}>
@@ -156,115 +122,78 @@ const GitGraph = () => {
                     className="shrink-0 overflow-visible"
                     aria-hidden="true"
                 >
-                    {/* main: durchgezogen, wächst vom Abitur nach oben zum B.Sc. */}
+                    {/* main: offenes Ende oben (gestrichelt = läuft weiter) */}
                     <motion.path
-                        d={`M${LANE_X[0]},${ABI_Y} L${LANE_X[0]},${BSC_Y}`}
+                        d={`M${LANE_X[0]},${BSC_Y} L${LANE_X[0]},${Y_TOP}`}
+                        stroke={BRAND_DEEP} strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
+                        fill="none" opacity={0.5} {...drawn(0.35)}
+                    />
+                    {/* main: durchgezogene Linie zwischen den Commits */}
+                    <motion.path
+                        d={`M${LANE_X[0]},${BSC_Y} L${LANE_X[0]},${ABI_Y}`}
                         stroke={BRAND_DEEP} strokeWidth={2.5} strokeLinecap="round"
-                        fill="none" style={len(mainSolid)}
+                        fill="none" {...drawn(0)}
                     />
                     {/* feat/zeiss: zweigt am B.Sc.-Commit ab und läuft nach oben */}
                     <motion.path
                         d={`M${LANE_X[0]},${BSC_Y} C ${LANE_X[0]},${BSC_Y - 44} ${LANE_X[1]},${ZEISS_Y + 56} ${LANE_X[1]},${ZEISS_Y}`}
                         stroke={BRAND} strokeWidth={2.5} strokeLinecap="round"
-                        fill="none" style={len(branch)}
-                    />
-                    {/* main: offenes Ende oben (gestrichelt = läuft weiter) */}
-                    <motion.path
-                        d={`M${LANE_X[0]},${BSC_Y} L${LANE_X[0]},${Y_TOP}`}
-                        stroke={BRAND_DEEP} strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
-                        fill="none" opacity={0.5} style={len(mainOpen)}
+                        fill="none" {...drawn(0.3)}
                     />
                     {/* feat/zeiss: offenes Ende oben */}
                     <motion.path
                         d={`M${LANE_X[1]},${ZEISS_Y} L${LANE_X[1]},${Y_TOP}`}
                         stroke={BRAND} strokeWidth={2} strokeDasharray="4 5" strokeLinecap="round"
-                        fill="none" opacity={0.5} style={len(branchOpen)}
+                        fill="none" opacity={0.5} {...drawn(0.6)}
                     />
 
                     {/* Commit-Knoten */}
                     {commits.map((c, i) => (
-                        <CommitNode
+                        <motion.g
                             key={c.id}
-                            commit={c}
-                            cx={LANE_X[c.lane]}
-                            cy={yOf(i)}
-                            at={NODE_AT[i]}
-                            progress={scrollYProgress}
-                            reduced={!!reduced}
-                        />
+                            initial={{scale: 0, opacity: 0}}
+                            animate={inView ? {scale: 1, opacity: 1} : {scale: 0, opacity: 0}}
+                            transition={{delay: 0.15 + i * 0.15, type: "spring", stiffness: 210, damping: 22}}
+                            style={{transformBox: "fill-box", transformOrigin: "center"}}
+                        >
+                            <circle cx={LANE_X[c.lane]} cy={yOf(i)} r={11} fill="#05070d" stroke={c.nodeColor} strokeWidth={2.5}/>
+                            <circle cx={LANE_X[c.lane]} cy={yOf(i)} r={4} fill={c.nodeColor}/>
+                        </motion.g>
                     ))}
                 </svg>
 
-                {/* Commit-Labels, ausgerichtet auf die Knotenhöhe.
-                    Bewusst OHNE eigene Animation: der Text ist Inhalt und darf
-                    nicht davon abhängen, dass eine Scroll-Kopplung greift.
-                    Das Einblenden übernimmt der Reveal um die ganze Karte. */}
+                {/* Commit-Labels, ausgerichtet auf die Knotenhöhe */}
                 <div className="relative flex-1" style={{height: HEIGHT}}>
                     {commits.map((c, i) => (
-                        <CommitLabel key={c.id} commit={c} top={yOf(i) - 18}/>
+                        <motion.div
+                            key={c.id}
+                            className="absolute left-0 right-0"
+                            style={{top: yOf(i) - 18}}
+                            initial={{opacity: 0, x: 16}}
+                            animate={inView ? {opacity: 1, x: 0} : {opacity: 0, x: 16}}
+                            transition={{duration: 0.5, delay: 0.25 + i * 0.15, ease: EASE}}
+                        >
+                            <div className="mb-1 flex flex-wrap items-center gap-2">
+                                <span className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-semibold ${c.chipClass}`}>
+                                    {c.branch}
+                                </span>
+                                {c.head && (
+                                    <span className="rounded-full bg-status/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status ring-1 ring-status/30">
+                                        HEAD
+                                    </span>
+                                )}
+                                <span className="font-mono text-[11px] text-white/30">{c.hash}</span>
+                                <span className="text-[11px] text-white/40">· {c.date}</span>
+                            </div>
+                            <h4 className="flex items-center gap-1.5 text-base font-semibold text-white sm:text-lg">
+                                <GitCommitHorizontal className={`h-4 w-4 ${c.accent}`}/>
+                                {c.title}
+                            </h4>
+                            <p className="pl-5.5 text-sm text-white/55">{c.sub}</p>
+                        </motion.div>
                     ))}
                 </div>
             </div>
-        </div>
-    )
-}
-
-const CommitNode = ({
-    commit,
-    cx,
-    cy,
-    at,
-    progress,
-    reduced,
-}: {
-    commit: Commit
-    cx: number
-    cy: number
-    at: number
-    progress: MotionValue<number>
-    reduced: boolean
-}) => {
-    const lit = useTransform(progress, [at, at + 0.08], [0, 1], {clamp: true})
-    /* Nie ganz auf 0: ein noch nicht erreichter Knoten ist schwach sichtbar
-       ("kommt noch") statt unsichtbar – so wirkt die Rinne nie kaputt-leer. */
-    const opacity = useTransform(lit, [0, 1], [0.2, 1])
-    const scale = useTransform(lit, [0, 1], [0.55, 1])
-
-    return (
-        <motion.g
-            style={
-                reduced
-                    ? {transformBox: "fill-box", transformOrigin: "center"}
-                    : {opacity, scale, transformBox: "fill-box", transformOrigin: "center"}
-            }
-        >
-            <circle cx={cx} cy={cy} r={11} fill="#05070d" stroke={commit.nodeColor} strokeWidth={2.5}/>
-            <circle cx={cx} cy={cy} r={4} fill={commit.nodeColor}/>
-        </motion.g>
-    )
-}
-
-const CommitLabel = ({commit, top}: { commit: Commit; top: number }) => {
-    return (
-        <div className="absolute left-0 right-0" style={{top}}>
-            <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-semibold ${commit.chipClass}`}>
-                    {commit.branch}
-                </span>
-                {commit.head && (
-                    <span
-                        className="rounded-full bg-status/15 px-2 py-0.5 font-mono text-[11px] font-semibold text-status ring-1 ring-status/30">
-                        HEAD
-                    </span>
-                )}
-                <span className="font-mono text-[11px] text-white/30">{commit.hash}</span>
-                <span className="text-[11px] text-white/40">· {commit.date}</span>
-            </div>
-            <h4 className="flex items-center gap-1.5 text-base font-semibold text-white sm:text-lg">
-                <GitCommitHorizontal className={`h-4 w-4 ${commit.accent}`}/>
-                {commit.title}
-            </h4>
-            <p className="pl-5.5 text-sm text-white/55">{commit.sub}</p>
         </div>
     )
 }
