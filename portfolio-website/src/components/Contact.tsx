@@ -58,7 +58,11 @@ const ContactMethod = ({method}: { method: typeof contactMethods[0] }) => {
 
 const Contact = () => {
     return (
-        <section id="contact" className="relative overflow-hidden py-16 md:py-24">
+        /* Bildschirmhöhe wie der Hero. min-h statt h, damit der Inhalt auf
+           kurzen Fenstern nicht abgeschnitten wird, sondern die Sektion mitwächst. */
+        <section
+            id="contact"
+            className="relative flex min-h-screen items-center overflow-hidden py-16 md:py-24">
 
             {/* Hintergrund-Blobs – Violett wie im Hero: die Seite schließt sich */}
             <div

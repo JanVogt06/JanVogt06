@@ -52,10 +52,10 @@ const CardLabel = ({children}: { children: string }) => (
 /* Engagement – Hairline-getrennte Zeilen statt Karten in Karten in Karten.
    Vorher: Karte > Item-Karte mit eigenem Rahmen > Icon-Kachel mit eigenem
    Gradient. Drei Rahmen um zwei Zeilen Text ist der Kern des "plump"-Gefühls. */
-const EngagementCard = () => (
+const EngagementCard = ({className = ""}: { className?: string }) => (
     <Reveal
         variants={stagger(0.08)}
-        className="surface rounded-2xl p-6 lg:rounded-3xl lg:p-8"
+        className={`surface rounded-2xl p-6 lg:rounded-3xl lg:p-8 ${className}`}
     >
         <CardLabel>Engagement</CardLabel>
         {engagementItems.map((item, i) => (
@@ -76,10 +76,10 @@ const EngagementCard = () => (
 );
 
 /* Auszeichnungen – Jahre in Mono als linke Spalte, wie ein git-log-Datum. */
-const AwardsCard = () => (
+const AwardsCard = ({className = ""}: { className?: string }) => (
     <Reveal
         variants={stagger(0.05)}
-        className="surface rounded-2xl p-6 lg:rounded-3xl lg:p-8"
+        className={`surface rounded-2xl p-6 lg:rounded-3xl lg:p-8 ${className}`}
     >
         <motion.h3
             variants={fadeUp}
@@ -209,10 +209,14 @@ const About = () => {
                         />
                     </Reveal>
 
-                    {/* Engagement + Awards - col-span-8 */}
-                    <div className="col-span-8 space-y-5">
-                        <EngagementCard/>
-                        <AwardsCard/>
+                    {/* Engagement + Auszeichnungen teilen sich die Hoehe der
+                        Referee-Karte. Die Spalte ist als Grid-Item automatisch so
+                        hoch wie die Nachbarzelle – nur ihre Kinder waren es nicht,
+                        seit die Karten durch die Hairline-Zeilen kompakter sind.
+                        flex-1 auf beiden verteilt den Platz. */}
+                    <div className="col-span-8 flex flex-col gap-5">
+                        <EngagementCard className="flex-1"/>
+                        <AwardsCard className="flex-1"/>
                     </div>
                 </div>
             </div>
