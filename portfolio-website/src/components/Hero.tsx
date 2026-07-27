@@ -54,8 +54,8 @@ const PortraitGlow = () => {
                 className="absolute bottom-0 h-[70vh] w-[50vw] animate-pulse-glow"
                 style={{
                     background: `
-                        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(139, 92, 246, 0.4) 0%, transparent 50%),
-                        radial-gradient(ellipse 40% 40% at 50% 100%, rgba(236, 72, 153, 0.3) 0%, transparent 40%)
+                        radial-gradient(ellipse 60% 50% at 50% 100%, rgba(139, 92, 246, 0.40) 0%, transparent 50%),
+                        radial-gradient(ellipse 40% 40% at 50% 100%, rgba(103, 60, 209, 0.30) 0%, transparent 40%)
                     `,
                 }}
             />
@@ -66,7 +66,7 @@ const PortraitGlow = () => {
 // Terminalfenster, das den Werdegang als "git status" zeigt.
 const StatusTerminal = () => (
     <motion.div
-        className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0d0a16]/80 shadow-2xl backdrop-blur-md"
+        className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0714]/80 shadow-2xl backdrop-blur-md"
         variants={stagger(0.08, 0.9)}
         initial="hidden"
         animate="show"
@@ -155,7 +155,7 @@ const Hero = () => {
                 </div>
 
                 <div
-                    className="relative z-10 mx-auto grid min-h-screen max-w-[88rem] grid-cols-1 px-6 pt-14 sm:px-8 lg:grid-cols-2 lg:px-12">
+                    className="relative z-10 mx-auto grid min-h-screen max-w-[88rem] grid-cols-1 pl-6 pr-6 pt-14 sm:pl-16 sm:pr-8 lg:grid-cols-2 lg:pl-24 lg:pr-12">
 
                     <div className="flex flex-col justify-start pt-12 sm:pt-16 lg:justify-center lg:pt-0">
 

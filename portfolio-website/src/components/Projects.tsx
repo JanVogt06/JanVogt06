@@ -152,7 +152,7 @@ const Projects = () => {
                 }}
             />
 
-            <div className="relative mx-auto max-w-[88rem] px-6 sm:px-8 lg:px-12">
+            <div className="relative mx-auto max-w-[88rem] pl-6 pr-6 sm:pl-16 sm:pr-8 lg:pl-24 lg:pr-12">
 
                 <SectionHeader
                     command="git log"
