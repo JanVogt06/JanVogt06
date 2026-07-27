@@ -25,25 +25,33 @@ export interface Project {
      * Auf false setzen, wenn eine Anwendung im iframe nicht sauber läuft – dann
      * zeigt der Rahmen "in neuem Tab öffnen" statt der Vorschau.
      *
-     * Zu Riptide, weil es der Grenzfall ist: es ist ein Emscripten-Build mit
-     * Threads (pthreads) und braucht dafür SharedArrayBuffer, das nur in einem
-     * cross-origin isolierten Kontext existiert. In einem Cross-Origin-iframe
-     * wird `crossOriginIsolated` nur dann true, wenn DIESE Seite selbst
-     * COOP: same-origin und COEP setzt – tut sie nicht. Die Simulation läuft im
-     * iframe also ohne Threads.
+     * Riptide steht auf false, und zwar nicht aus Vorsicht, sondern weil es
+     * nachweislich nicht geht. In wasm/tsunami_web.js steht:
      *
-     * Sie stürzt dabei nicht ab: der Build prüft zur Laufzeit ab
-     * (`_emscripten_has_threading_support`) und pthread_create gibt EAGAIN
-     * zurück statt zu crashen. Deshalb ist embed hier an.
+     *     wasmMemory = new WebAssembly.Memory({
+     *       'initial': INITIAL_MEMORY / 65536,
+     *       'maximum': INITIAL_MEMORY / 65536,
+     *       'shared': true,
+     *     })
      *
-     * Voller Threading-Support wäre möglich, ist aber ein Eingriff ins Hosting:
-     * eine Cloudflare-Transform-Rule, die auf jan-vogt.dev
-     * `Cross-Origin-Opener-Policy: same-origin` und
-     * `Cross-Origin-Embedder-Policy: credentialless` setzt. Dann greift das
-     * `allow="cross-origin-isolated"` am iframe. Achtung: COEP regiert danach
-     * auch die anderen drei Vorschauen, und credentialless wird außerhalb von
-     * Chromium schlechter unterstützt – es kann sie in Safari und Firefox
-     * brechen. Deshalb nicht vorausgeeilt.
+     * `shared: true` ist bedingungslos und passiert im Modul-Init. Ohne
+     * SharedArrayBuffer wirft das, das Modul wird nie instanziiert und der
+     * Loader der Anwendung hängt endlos bei "Modul wird geladen" – genau das
+     * war zu sehen. Der Laufzeit-Check `_emscripten_has_threading_support`
+     * schützt nur `pthread_create` und wird nie erreicht.
+     *
+     * SharedArrayBuffer gibt es in einem Cross-Origin-iframe nur, wenn die
+     * einbettende Seite cross-origin isoliert ist. Zwei Wege dorthin:
+     *
+     * 1. Riptide ohne -pthread bauen (einthreadig). Dann braucht es kein SAB
+     *    und läuft überall – im Tab, im iframe, auch bei Nutzern, die SAB
+     *    blockiert haben. Kostet Rechenleistung im Solver.
+     * 2. Auf jan-vogt.dev `Cross-Origin-Opener-Policy: same-origin` und
+     *    `Cross-Origin-Embedder-Policy: credentialless` setzen (Cloudflare
+     *    Transform Rule). Dann greift das `allow="cross-origin-isolated"` am
+     *    iframe. Preis: COEP regiert danach auch die anderen drei Vorschauen,
+     *    und credentialless gibt es in Safari nicht – dort bliebe die Seite
+     *    nicht isoliert und Riptide hinge wieder.
      */
     embed?: boolean;
     /** Begründung zu embed: false, nur zur Dokumentation in der JSON */

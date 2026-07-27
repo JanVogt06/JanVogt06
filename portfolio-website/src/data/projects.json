@@ -18,8 +18,8 @@
       "github": "https://github.com/SquadCommit/Riptide",
       "website": "https://riptide.jan-vogt.dev"
     },
-    "embed": true,
-    "embedNote": "Emscripten-Threads-Build: laeuft im iframe ohne SharedArrayBuffer, also einthreadig. Stuerzt nicht ab (pthread_create -> EAGAIN)."
+    "embed": false,
+    "embedNote": "WASM verlangt shared memory (new WebAssembly.Memory({shared:true}) bedingungslos im Modul-Init). Ohne SharedArrayBuffer wirft das, das Modul instanziiert nie und der Loader haengt endlos. SAB gibt es im Cross-Origin-iframe nur bei cross-origin isolierter Elternseite."
   },
   {
     "slug": "sattrak",
