@@ -16,10 +16,8 @@ import {primaryLinkOf} from "@/lib/projects"
  * bewusst auf eine Mono-Zeile reduziert: auf einer ganzen Bildschirmhöhe ist das
  * Projekt der Star, nicht die Verpackung.
  *
- * `scroll-snap-align: start` lässt die Folie an der Bildschirmkante einrasten,
- * `scroll-margin-top` hält sie unter der Repo-Leiste frei. Die Seite nutzt dafür
- * `scroll-snap-type: proximity` und nicht `mandatory` – mandatory kann Leute
- * beim Scrollen einsperren und bricht Tastaturnavigation und Seitensuche.
+ * Die Folie ist genau bildschirmhoch, rastet aber nicht ein: scroll-snap hat
+ * sich beim Scrollen unangenehm angefühlt und ist wieder raus.
  */
 
 // Mappt den `icon`-String aus der JSON auf die lucide-Komponente.
@@ -55,7 +53,7 @@ const ProjectSlide = ({
     const primary = primaryLinkOf(project.links)
 
     return (
-        <div className="snap-slide flex min-h-screen items-center py-24 lg:py-28">
+        <div className="project-slide flex min-h-screen items-center py-24 lg:py-28">
             <div className="grid w-full items-center gap-10 lg:grid-cols-12 lg:gap-14">
 
                 {/* Fakten */}

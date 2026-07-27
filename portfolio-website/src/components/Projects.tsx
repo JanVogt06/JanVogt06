@@ -14,9 +14,9 @@ import {projects} from "@/lib/projects"
  * erzeugt. Hier ist jede Folie ein voller Bildschirm mit Inhalt darin – die
  * Höhe der Sektion ist damit begründet statt ein Nebeneffekt der Mechanik.
  *
- * Statt Sticky-Rechnerei rastet jede Folie über `scroll-snap` ein. Das ist
- * natives CSS: kein ResizeObserver, keine Transform-Kette, und es funktioniert
- * auf Touch genauso – der gepinnte Verlauf konnte auf Mobile gar nicht laufen.
+ * Ohne Sticky-Rechnerei und ohne scroll-snap: kein ResizeObserver, keine
+ * Transform-Kette, man scrollt einfach frei durch bildschirmhohe Folien. Damit
+ * funktioniert es auf Touch genauso – der gepinnte Verlauf konnte das nicht.
  *
  * Es ist immer nur EINE Live-Vorschau aktiv. Der Zustand liegt deshalb hier und
  * nicht in der Folie: vier gleichzeitig laufende Web-Apps wären vier iframes im

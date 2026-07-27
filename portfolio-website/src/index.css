@@ -150,18 +150,10 @@
         /* Versatz, damit Anker-Sprünge nicht unter der fixierten RepoBar landen */
         scroll-padding-top: 4rem;
 
-        /**
-         * Einrasten der Projekt-Folien.
-         *
-         * Bewusst `proximity` und NICHT `mandatory`: mandatory rastet immer ein
-         * und kann Leute damit im Abschnitt einsperren, bricht Tastaturnavigation
-         * und die Seitensuche des Browsers. proximity rastet nur ein, wenn man
-         * ohnehin in der Nähe zum Stehen kommt.
-         *
-         * Kandidaten sind ausschließlich Elemente mit scroll-snap-align, also nur
-         * die Folien – Hero, Werdegang und Kontakt scrollen unverändert frei.
-         */
-        scroll-snap-type: y proximity;
+        /* Kein scroll-snap: Das Einrasten zwischen den Projekt-Folien hat sich
+           beim Scrollen unangenehm angefühlt – auch mit `proximity`, das nur in
+           der Nähe eines Rastpunkts greift. Die Folien sind weiterhin genau
+           bildschirmhoch, man scrollt jetzt nur frei durch sie hindurch. */
         /* Scrollbars, Formularelemente und Overscroll-Bereich dunkel */
         color-scheme: dark;
         background-color: var(--color-page);
@@ -226,10 +218,9 @@
         @apply font-mono text-white/40;
     }
 
-    /* Eine Projekt-Folie. scroll-margin-top hält sie unter der fixierten
-       Repo-Leiste frei, sonst liegt der Folienkopf darunter. */
-    .snap-slide {
-        scroll-snap-align: start;
+    /* Eine Projekt-Folie. scroll-margin-top bleibt, damit ein Anker-Sprung auf
+       eine Folie sie nicht unter der fixierten Repo-Leiste ablegt. */
+    .project-slide {
         scroll-margin-top: 3.5rem;
     }
 }
