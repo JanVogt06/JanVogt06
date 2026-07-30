@@ -1,5 +1,6 @@
-import {useEffect, useRef, useImperativeHandle, forwardRef} from 'react';
+import {useEffect, useRef} from 'react';
 import * as THREE from 'three';
+import {detectQuality, stepDown} from '@/lib/quality';
 
 const vertexShader = `
     varying vec2 vUv;
@@ -299,15 +300,6 @@ const fragmentShader = `
     }
 `;
 
-export interface NebulaHandle {
-    setQuality: (quality: number) => void;
-}
-
-interface NebulaProps {
-    className?: string;
-    initialQuality?: number;
-}
-
 /**
  * Aufloesung pro Qualitaetsstufe (0 = Eco ... 1 = Ultra). Auf schmalen
  * Viewports niedriger, weil dort meist der schwaechere Chip sitzt.
@@ -322,27 +314,14 @@ const pixelRatioFor = (quality: number, width: number) => {
     return Math.min(window.devicePixelRatio, ratios[Math.round(quality * 4)]);
 };
 
-const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', initialQuality = 0.5}, ref) => {
+/* Messfenster und Schwelle der Selbstkorrektur: 45 fps ist der Punkt, ab dem
+   eine Hintergrundanimation anfaengt, sich zaeh anzufuehlen. */
+const SAMPLE_FRAMES = 60;
+const MIN_ACCEPTABLE_FPS = 45;
+
+const NebulaWebGL = ({className = ''}: {className?: string}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const frameRef = useRef<number>(0);
-    const materialRef = useRef<THREE.ShaderMaterial | null>(null);
-    const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-    /* Die Startqualitaet darf den Effect NICHT neu ausloesen – das wuerde den
-       WebGL-Kontext samt Shader-Kompilat wegwerfen und neu aufbauen. */
-    const initialQualityRef = useRef(initialQuality);
-
-    useImperativeHandle(ref, () => ({
-        setQuality: (quality: number) => {
-            if (materialRef.current) {
-                materialRef.current.uniforms.uQuality.value = quality;
-            }
-            if (rendererRef.current && containerRef.current) {
-                rendererRef.current.setPixelRatio(
-                    pixelRatioFor(quality, containerRef.current.clientWidth),
-                );
-            }
-        }
-    }));
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -350,7 +329,7 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
         const container = containerRef.current;
         const width = container.clientWidth;
         const height = container.clientHeight;
-        const quality = initialQualityRef.current;
+        let quality = detectQuality();
 
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -364,7 +343,6 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
         renderer.setPixelRatio(pixelRatioFor(quality, width));
         renderer.setClearColor(0x000000, 0);
         container.appendChild(renderer.domElement);
-        rendererRef.current = renderer;
 
         const geometry = new THREE.PlaneGeometry(2, 2);
 
@@ -379,8 +357,6 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
             transparent: true,
             depthWrite: false,
         });
-        materialRef.current = material;
-
         scene.add(new THREE.Mesh(geometry, material));
 
         const clock = new THREE.Clock();
@@ -390,16 +366,60 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
         };
 
         /**
+         * Selbstkorrektur nach unten.
+         *
+         * detectQuality() raet anhand von Kernzahl und RAM – beides sagt nichts
+         * ueber die GPU, und genau die entscheidet hier. Statt zu raten und
+         * dabei zu bleiben, wird die echte Bildrate gemessen und die Stufe
+         * gesenkt, solange sie nicht reicht.
+         *
+         * Nur abwaerts: ein Hoch- und Runterschalten wuerde pendeln, sobald die
+         * Bildrate um die Schwelle herum liegt.
+         */
+        let frames = 0;
+        let sampleStart = 0;
+
+        const adapt = (now: number) => {
+            if (quality === 0) return;
+            if (frames === 0) sampleStart = now;
+            if (++frames < SAMPLE_FRAMES) return;
+
+            const fps = (frames * 1000) / (now - sampleStart);
+            frames = 0;
+            if (fps >= MIN_ACCEPTABLE_FPS) return;
+
+            const lower = stepDown(quality);
+            if (lower === null) return;
+            quality = lower;
+            material.uniforms.uQuality.value = quality;
+            renderer.setPixelRatio(pixelRatioFor(quality, container.clientWidth));
+        };
+
+        /* Bewegung reduziert: EIN Bild, danach nichts mehr. Ein sich ewig
+           umwaelzender Nebel ist genau die Art Bewegung, die gemeint ist. */
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            render();
+            return () => {
+                geometry.dispose();
+                material.dispose();
+                renderer.dispose();
+                if (container.contains(renderer.domElement)) {
+                    container.removeChild(renderer.domElement);
+                }
+            };
+        }
+
+        /**
          * Der Shader ist teuer (bis zu sechs FBM-Oktaven pro Pixel). Er laeuft
          * deshalb nur, wenn das Canvas wirklich zu sehen ist: nicht wenn es aus
          * dem Viewport gescrollt wurde und nicht in einem Hintergrund-Tab.
-         * Vorher lief die Schleife bis zum Unmount durch.
          */
         let onScreen = true;
         let running = false;
 
-        const loop = () => {
+        const loop = (now: number) => {
             frameRef.current = requestAnimationFrame(loop);
+            adapt(now);
             render();
         };
 
@@ -408,10 +428,11 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
             if (shouldRun === running) return;
             running = shouldRun;
             if (shouldRun) {
-                /* Die Uhr laeuft weiter, waehrend nicht gerendert wird – sonst
-                   springt die Animation beim Zurueckkehren nicht, sondern setzt
-                   dort fort, wo sie optisch stehengeblieben ist. */
-                loop();
+                /* Messung neu beginnen: die Pause haette sonst als ein sehr
+                   langsames Bild in den Durchschnitt gezaehlt und die Stufe
+                   grundlos gesenkt. */
+                frames = 0;
+                frameRef.current = requestAnimationFrame(loop);
             } else {
                 cancelAnimationFrame(frameRef.current);
             }
@@ -459,8 +480,6 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
             style={{zIndex: 0}}
         />
     );
-});
-
-NebulaWebGL.displayName = 'NebulaWebGL';
+};
 
 export default NebulaWebGL;

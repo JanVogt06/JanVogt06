@@ -1,11 +1,8 @@
-import {useRef, useCallback} from "react"
 import {Button} from "@/components/ui/button"
 import {GraduationCap, Sparkles, Coffee, ArrowDown, MapPin, Briefcase} from "lucide-react"
 import {motion, useReducedMotion} from "framer-motion"
 import portraitImage from "../data/images/portrait.webp"
 import NebulaWebGL from "./NebulaWebGL"
-import type {NebulaHandle} from "./NebulaWebGL"
-import QualitySlider from "./QualitySlider"
 import {EASE, stagger, fadeUp} from "@/lib/motion"
 import useTypewriter from "@/lib/useTypewriter"
 
@@ -163,12 +160,6 @@ const Caret = () => (
 );
 
 const Hero = () => {
-    const nebulaRef = useRef<NebulaHandle>(null);
-
-    const handleQualityChange = useCallback((quality: number) => {
-        nebulaRef.current?.setQuality(quality);
-    }, []);
-
     return (
         <>
             <style>{styles}</style>
@@ -178,7 +169,7 @@ const Hero = () => {
                     {/* Violett lebt nur hier und im Kontakt. Endet auf
                         --color-page, damit der Uebergang nahtlos ist. */}
                     <div className="absolute inset-0 bg-gradient-to-b from-page via-[#160b2a] to-page"/>
-                    <NebulaWebGL ref={nebulaRef} initialQuality={0.5}/>
+                    <NebulaWebGL/>
                     <div
                         className="absolute inset-0 opacity-[0.03]"
                         style={{
@@ -338,8 +329,6 @@ const Hero = () => {
                         <ArrowDown className="h-4 w-4"/>
                     </motion.div>
                 </motion.div>
-
-                <QualitySlider onChange={handleQualityChange} initialValue={0.5}/>
 
             </section>
         </>
