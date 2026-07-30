@@ -3,16 +3,9 @@ import {useEffect, useState} from "react"
 /**
  * Tippt einen String zeichenweise.
  *
- * Absichtlich in Zeichen pro Sekunde statt in einer Gesamtdauer angegeben: so
- * bleibt das Tempo gleich, egal wie lang der Befehl ist – ein längeres Kommando
- * braucht dann eben länger, genau wie beim echten Tippen.
- *
- * `enabled: false` (prefers-reduced-motion) gibt sofort den vollständigen Text
- * zurück, damit nichts vom Ablauf einer Animation abhängt.
- *
- * Der Zustand ist die Anzahl getippter Zeichen, der sichtbare Text wird daraus
- * abgeleitet. So muss im Effect kein State gesetzt werden – das wäre ein
- * zusätzlicher Render pro Durchlauf und react-hooks verbietet es zu Recht.
+ * Tempo in Zeichen pro Sekunde statt Gesamtdauer: so tippt ein langes Kommando
+ * laenger statt schneller. `enabled: false` (prefers-reduced-motion) gibt
+ * sofort den vollstaendigen Text zurueck.
  */
 export const useTypewriter = (
     text: string,

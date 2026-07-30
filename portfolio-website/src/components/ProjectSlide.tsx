@@ -10,22 +10,15 @@ import type {Project} from "@/lib/projects"
 import {primaryLinkOf} from "@/lib/projects"
 
 /**
- * Ein Projekt auf einer ganzen Bildschirmhöhe.
- *
- * Links die Fakten, rechts die laufende Anwendung. Die Commit-Metapher bleibt
- * bewusst auf eine Mono-Zeile reduziert: auf einer ganzen Bildschirmhöhe ist das
- * Projekt der Star, nicht die Verpackung.
- *
- * Die Folie ist genau bildschirmhoch, rastet aber nicht ein: scroll-snap hat
- * sich beim Scrollen unangenehm angefühlt und ist wieder raus.
+ * Ein Projekt auf einer ganzen Bildschirmhöhe: links die Fakten, rechts die
+ * laufende Anwendung.
  */
 
 // Mappt den `icon`-String aus der JSON auf die lucide-Komponente.
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
 
-/* Screenshots werden aus dem Ordner gelesen, nicht einzeln importiert: so
-   genügt es, eine Datei mit dem passenden Slug dort abzulegen – kein Code muss
-   angefasst werden. Fehlt sie, zeigt BrowserFrame seinen Poster-Zustand. */
+/* Screenshots kommen aus dem Ordner statt aus Einzel-Imports: eine Datei mit
+   passendem Slug ablegen genuegt, kein Code muss angefasst werden. */
 const screenshots = import.meta.glob<string>(
     "../data/images/screenshots/*.{png,jpg,jpeg,webp}",
     {eager: true, import: "default"},
@@ -58,7 +51,7 @@ const ProjectSlide = ({
 
                 {/* Fakten */}
                 <Reveal variants={stagger(0.08)} className="lg:col-span-5">
-                    {/* Reduzierte Commit-Metapher: Nummer, Hash, Typ in einer Zeile */}
+                    {/* Commit-Metapher als eine Mono-Zeile: Nummer, Hash, Typ */}
                     <motion.div variants={fadeUp} className="mb-5 flex items-center gap-3 font-mono text-xs">
                         <span className="text-brand">
                             {String(index + 1).padStart(2, "0")}

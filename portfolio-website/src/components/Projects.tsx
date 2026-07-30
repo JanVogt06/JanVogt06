@@ -9,19 +9,9 @@ import {projects} from "@/lib/projects"
 /**
  * Projekte – ein Projekt pro Bildschirmhöhe.
  *
- * Ersetzt den gepinnten horizontalen Verlauf. Der brauchte zusätzliche
- * Scroll-Strecke, um überhaupt stehen zu bleiben, und hat dadurch Leerraum
- * erzeugt. Hier ist jede Folie ein voller Bildschirm mit Inhalt darin – die
- * Höhe der Sektion ist damit begründet statt ein Nebeneffekt der Mechanik.
- *
- * Ohne Sticky-Rechnerei und ohne scroll-snap: kein ResizeObserver, keine
- * Transform-Kette, man scrollt einfach frei durch bildschirmhohe Folien. Damit
- * funktioniert es auf Touch genauso – der gepinnte Verlauf konnte das nicht.
- *
- * Es ist immer nur EINE Live-Vorschau aktiv. Der Zustand liegt deshalb hier und
- * nicht in der Folie: vier gleichzeitig laufende Web-Apps wären vier iframes im
- * Speicher, und Riptide braucht WebGL2, wovon im Hero schon ein Kontext belegt
- * ist.
+ * Es ist immer nur EINE Live-Vorschau aktiv, deshalb liegt der Zustand hier und
+ * nicht in der Folie: fuenf gleichzeitig laufende Web-Apps waeren fuenf iframes
+ * im Speicher, und im Hero ist schon ein WebGL-Kontext belegt.
  */
 const Projects = () => {
     const [activeSlug, setActiveSlug] = useState<string | null>(null)
@@ -29,7 +19,7 @@ const Projects = () => {
     return (
         <section id="projects" className="relative">
 
-            {/* Hintergrund – wie im Werdegang: Cyan = Arbeit/Technik */}
+            {/* Wie im Werdegang: Cyan = Arbeit/Technik */}
             <div className="absolute inset-0 overflow-hidden">
                 <div
                     className="absolute left-1/2 top-0 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-brand/10 blur-[150px]"/>

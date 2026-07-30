@@ -6,16 +6,12 @@ import {EASE} from "@/lib/motion"
 /**
  * Werdegang als Git-Graph.
  *
- * Der `main`-Branch ist der akademische Weg (Abitur -> Studium). Davon zweigt
- * der Branch `feat/zeiss` ab: der Werkstudentenjob bei ZEISS, der parallel zum
- * Studium läuft. Beide Branches enden offen (gestrichelt) = noch laufend.
+ * `main` ist der akademische Weg (Abitur -> Studium), davon zweigt `feat/zeiss`
+ * ab: der Werkstudentenjob, der parallel laeuft. Beide Branches enden offen
+ * (gestrichelt) = noch laufend.
  *
- * Die komplette Animation wird über EINEN useInView-Hook am Container gesteuert
- * (statt whileInView pro SVG-Element – das ist auf <g>-Knoten unzuverlässig).
- *
- * War zwischendurch an den Scroll gekoppelt (useScroll/useTransform, der Graph
- * wuchs mit der Scroll-Position und baute sich beim Zurückscrollen wieder ab).
- * Zurück auf das einmalige Einblenden – das war die bessere Lesbarkeit.
+ * Die Animation haengt an EINEM useInView am Container, nicht an whileInView pro
+ * SVG-Element – auf <g>-Knoten ist das unzuverlaessig.
  */
 
 const LANE_X = [22, 70] as const   // x-Position der beiden Branch-Spuren
@@ -38,9 +34,8 @@ type Commit = {
     head?: boolean
 }
 
-/* Eine Farbe, drei Helligkeiten – der aktuellste Commit leuchtet am stärksten,
-   die Vergangenheit tritt zurück. Vorher hatte jeder Branch eine eigene Farbe
-   (blau/cyan/slate), was ohne Bedeutung nur Buntheit war. */
+/* Eine Farbe, drei Helligkeiten: der aktuellste Commit leuchtet am staerksten,
+   die Vergangenheit tritt zurueck. */
 const BRAND = "#22d3ee"
 const BRAND_DEEP = "#0891b2"
 const PAST = "#334155"

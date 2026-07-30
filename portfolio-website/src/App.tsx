@@ -7,11 +7,9 @@ import Contact from './components/Contact'
 
 function App() {
     return (
-        /* reducedMotion="user" gilt fuer JEDE motion-Komponente der Seite:
-           Wer im Betriebssystem "Bewegung reduzieren" gesetzt hat, bekommt keine
-           Transforms mehr, nur noch Ein-/Ausblenden. Das global hier zu setzen
-           ist verlaesslicher, als es in zwanzig Komponenten einzeln zu prüfen –
-           und es gilt automatisch fuer alles, was noch dazukommt. */
+        /* reducedMotion="user": wer im System "Bewegung reduzieren" gesetzt hat,
+           bekommt in JEDER motion-Komponente nur noch Ein-/Ausblenden statt
+           Transforms – auch in allem, was spaeter dazukommt. */
         <MotionConfig reducedMotion="user">
             <RepoBar/>
             <Hero/>

@@ -41,17 +41,15 @@ const awards = [
     {year: "2016-24", text: "Olympiaden-Preise in Mathematik und Physik"},
 ];
 
-/* Kartenüberschrift: Mono-Kapitälchen statt einer zweiten großen Headline.
-   So bleibt pro Sektion nur EINE laute Schriftgröße. */
+/* Kartenueberschrift als Mono-Kapitaelchen: pro Sektion bleibt nur EINE laute
+   Schriftgroesse. */
 const CardLabel = ({children}: { children: string }) => (
     <motion.h3 variants={fadeUp} className="mb-1 font-mono text-xs uppercase tracking-[0.2em] text-white/40">
         {children}
     </motion.h3>
 );
 
-/* Engagement – Hairline-getrennte Zeilen statt Karten in Karten in Karten.
-   Vorher: Karte > Item-Karte mit eigenem Rahmen > Icon-Kachel mit eigenem
-   Gradient. Drei Rahmen um zwei Zeilen Text ist der Kern des "plump"-Gefühls. */
+/* Engagement – Hairline-getrennte Zeilen statt Karten in Karten in Karten. */
 const EngagementCard = ({className = ""}: { className?: string }) => (
     <Reveal
         variants={stagger(0.08)}
@@ -93,7 +91,7 @@ const AwardsCard = ({className = ""}: { className?: string }) => (
                 <motion.div
                     key={award.text}
                     variants={fadeUp}
-                    /* Trennlinie oben bei allen außer der ersten Zeile jeder Spalte:
+                    /* Trennlinie oben ausser bei der ersten Zeile jeder Spalte:
                        einspaltig ab i>0, zweispaltig verliert i=1 seine Linie. */
                     className={`flex items-baseline gap-3 py-2.5 ${i > 0 ? "border-t border-white/[0.06]" : ""} ${i === 1 ? "sm:border-t-0" : ""}`}
                 >
@@ -109,7 +107,7 @@ const About = () => {
     return (
         <section id="about" className="relative overflow-hidden py-20 md:py-28">
 
-            {/* Hintergrund – Cyan ist die Farbe der Arbeit/Technik */}
+            {/* Hintergrund – Cyan steht auf der Seite fuer Arbeit/Technik */}
             <div className="absolute inset-0">
                 <div
                     className="absolute -right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-brand/10 blur-[150px]"/>
@@ -210,10 +208,8 @@ const About = () => {
                     </Reveal>
 
                     {/* Engagement + Auszeichnungen teilen sich die Hoehe der
-                        Referee-Karte. Die Spalte ist als Grid-Item automatisch so
-                        hoch wie die Nachbarzelle – nur ihre Kinder waren es nicht,
-                        seit die Karten durch die Hairline-Zeilen kompakter sind.
-                        flex-1 auf beiden verteilt den Platz. */}
+                        Referee-Karte: die Spalte ist als Grid-Item so hoch wie
+                        die Nachbarzelle, flex-1 verteilt den Platz auf beide. */}
                     <div className="col-span-8 flex flex-col gap-5">
                         <EngagementCard className="flex-1"/>
                         <AwardsCard className="flex-1"/>

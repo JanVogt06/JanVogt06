@@ -2,19 +2,14 @@ import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight, Play, X} from "lucide-react"
 
 /**
- * Browser-Rahmen mit Live-Vorschau.
+ * Browser-Rahmen mit Live-Vorschau: zeigt einen Screenshot und lädt die echte
+ * Seite erst auf Klick in einen iframe.
  *
- * Zeigt einen Screenshot als Poster und lädt die echte Seite erst auf Klick in
- * einen iframe. Das ist keine Bequemlichkeit, sondern Notwendigkeit: Cryptborne
- * ist ein 74-MB-Unity-Build (48,5 MB wasm + 25,8 MB data). Den zu laden, nur
- * weil jemand vorbeiscrollt, wäre respektlos gegenüber jedem Mobilfunkvertrag.
- * Riptide braucht zusätzlich WebGL2, und im Hero läuft schon ein WebGL-Canvas –
- * Browser erlauben nur eine Handvoll gleichzeitiger Kontexte.
- *
- * Deshalb ist immer nur EIN iframe aktiv; das steuert die Elternkomponente über
- * `active`. Vor der Aktivierung existiert kein iframe, dadurch kann er auch
- * nicht das Seiten-Scrollen abfangen. Nach der Aktivierung schließt das X ihn
- * wieder.
+ * Der Klick ist Pflicht, nicht Bequemlichkeit – Cryptborne ist ein 74-MB-Unity-
+ * Build. Und es ist immer nur EIN iframe aktiv (gesteuert über `active`), weil
+ * Browser nur eine Handvoll WebGL-Kontexte gleichzeitig erlauben. Vor der
+ * Aktivierung existiert kein iframe, dadurch kann er auch nicht das
+ * Seiten-Scrollen abfangen.
  */
 const BrowserFrame = ({
     url,
@@ -86,22 +81,13 @@ const BrowserFrame = ({
                         className="h-full w-full border-0"
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        /**
-                         * allow-same-origin ist nötig, damit die eingebettete
-                         * Anwendung ihren eigenen Origin behält – ohne das kann
-                         * sie keinen Service Worker registrieren (Riptide braucht
-                         * einen für coi-serviceworker) und kein localStorage
-                         * nutzen. Cross-Origin bleibt es dadurch trotzdem.
-                         */
+                        /* allow-same-origin: die eingebettete Anwendung behaelt
+                           ihren eigenen Origin und kann damit Service Worker und
+                           localStorage nutzen. Cross-Origin bleibt es trotzdem. */
                         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                        /**
-                         * Nur wirksam, wenn DIESE Seite selbst cross-origin
-                         * isoliert ist (COOP: same-origin + COEP). Ist sie das
-                         * nicht, wird das Attribut ignoriert – es kostet also
-                         * nichts und ist der einzige Schalter, der Riptide im
-                         * iframe echtes SharedArrayBuffer und damit Threads
-                         * geben könnte. Siehe Hinweis in lib/projects.ts.
-                         */
+                        /* Wirkt nur, wenn DIESE Seite cross-origin isoliert ist
+                           (COOP + COEP). Ist sie es nicht, wird es ignoriert –
+                           kostet also nichts. */
                         allow="cross-origin-isolated"
                     />
                 ) : (
@@ -115,9 +101,9 @@ const BrowserFrame = ({
                                 decoding="async"
                             />
                         ) : (
-                            /* Ohne Screenshot: Icon und Adresse. Bewusst ohne
-                               Hinweis auf ein fehlendes Bild – der Zustand soll
-                               gewollt aussehen, nicht unfertig. */
+                            /* Ohne Screenshot: Icon und Adresse, ohne Hinweis auf
+                               das fehlende Bild – der Zustand soll gewollt
+                               aussehen, nicht unfertig. */
                             <div className="flex h-full flex-col items-center justify-center gap-5">
                                 <div className="rounded-2xl bg-brand/10 p-5 ring-1 ring-brand/20">
                                     <Icon className="h-10 w-10 text-brand"/>
@@ -126,9 +112,9 @@ const BrowserFrame = ({
                             </div>
                         )}
 
-                        {/* Einbettbar: Vorschau im Rahmen starten.
-                            Nicht einbettbar: in neuem Tab öffnen. Beides derselbe
-                            Aufbau, damit die Folien gleich aussehen. */}
+                        {/* Einbettbar: Vorschau im Rahmen starten. Sonst: in
+                            neuem Tab oeffnen. Gleicher Aufbau, damit die Folien
+                            gleich aussehen. */}
                         {url && embeddable && (
                             <button
                                 onClick={onActivate}

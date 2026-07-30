@@ -4,9 +4,9 @@ import {GitBranch, Star, Check, Copy, Github} from "lucide-react"
 import {EASE} from "@/lib/motion"
 
 /**
- * Sticky "Repository-Leiste" – das Leitmotiv der Seite: die ganze Seite ist
- * als Git-Repository inszeniert. Branch-Pill, dateibaum-artige Navigation und
- * ein "git clone"-Befehl zum Kopieren.
+ * Fixierte "Repository-Leiste" – das Leitmotiv der Seite: sie ist als
+ * Git-Repository inszeniert. Branch-Pill, Navigation als Dateibaum, "git clone"
+ * zum Kopieren.
  */
 
 const GITHUB_USER = "https://github.com/JanVogt06"
@@ -62,12 +62,11 @@ const RepoBar = () => {
             transition={{duration: 0.6, ease: EASE, delay: 0.2}}
             className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-page/70 backdrop-blur-xl"
         >
-            {/* gap-1.5 auf Mobile: mit gap-2 brauchte die Leiste 377 px bei 375
-                verfuegbaren. overflow-hidden ist die harte Absicherung, damit die
-                fixierte Leiste die Seite nie seitwaerts scrollbar machen kann. */}
+            {/* overflow-hidden: die fixierte Leiste darf die Seite unter keinen
+                Umstaenden seitwaerts scrollbar machen. */}
             <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-1.5 overflow-hidden px-4 sm:gap-3 sm:px-6 lg:px-8">
-                {/* Repo-Pfad – wie auf GitHub zwei getrennte Links:
-                    der Benutzername fuehrt zum Profil, der Repo-Name zum Repo. */}
+                {/* Repo-Pfad – wie auf GitHub zwei getrennte Links: Benutzername
+                    zum Profil, Repo-Name zum Repo. */}
                 <div className="flex shrink-0 items-center gap-2 text-sm font-medium">
                     <a
                         href={GITHUB_USER}
@@ -132,10 +131,9 @@ const RepoBar = () => {
                 </button>
 
                 {/* Star */}
+                {/* Aufs Repo, nicht aufs Profil: einen Stern gibt man einem
+                    Repository. */}
                 <a
-                    /* Zeigt aufs Repo, nicht aufs Profil: einen Stern gibt man
-                       einem Repository. Das Profil erreicht man jetzt links
-                       ueber den Benutzernamen. */
                     href={GITHUB_REPO}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -9,8 +9,8 @@ import QualitySlider from "./QualitySlider"
 import {EASE, stagger, fadeUp} from "@/lib/motion"
 import useTypewriter from "@/lib/useTypewriter"
 
-/* Nur noch dekorative Endlos-/Hover-Effekte als CSS – alle Eintritts-
-   Animationen laufen über framer-motion. */
+/* Nur Endlos- und Hover-Effekte als CSS; alle Eintritts-Animationen laufen
+   ueber framer-motion. */
 const styles = `
 @keyframes gradient-shift {
     0%, 100% { background-position: 0% 50%; }
@@ -45,8 +45,8 @@ const styles = `
     animation: caret 1.1s steps(1, end) infinite;
 }
 
-/* Blinken ist fuer manche Menschen unangenehm bis ausloesend – bei
-   prefers-reduced-motion steht der Cursor einfach still. */
+/* Blinken kann unangenehm bis ausloesend sein – bei prefers-reduced-motion
+   steht der Cursor still. */
 @media (prefers-reduced-motion: reduce) {
     .animate-caret,
     .animate-pulse-glow,
@@ -56,9 +56,8 @@ const styles = `
 }
 `;
 
-/* Einträge der "git status"-Liste im Terminalfenster.
-   Einheitlich statt fünf verschiedener Gradients: in einem echten `git status`
-   sind die Einträge auch nicht farbcodiert. */
+/* Eintraege der "git status"-Liste im Terminalfenster. Einheitlich gestaltet –
+   in einem echten `git status` sind die Zeilen auch nicht farbcodiert. */
 const cards = [
     {icon: GraduationCap, text: "B.Sc. Informatik", subtext: "FSU Jena"},
     {icon: Briefcase, text: "Werkstudent", subtext: "Carl Zeiss Meditec AG."},
@@ -86,17 +85,14 @@ const PortraitGlow = () => {
 const COMMAND = "git status";
 
 /**
- * Terminalfenster, das den Werdegang als "git status" zeigt.
- *
- * Der Befehl tippt sich selbst, danach erscheint die Ausgabe – die Reihenfolge
- * ist damit die eines echten Terminals (Eingabe, dann Antwort) statt eines
- * gleichzeitigen Einblendens aller Zeilen. Der Cursor wandert am Ende in eine
- * neue Prompt-Zeile, so wie er es nach einem echten Befehl täte.
+ * Terminalfenster, das den Werdegang als "git status" zeigt. Der Befehl tippt
+ * sich selbst, DANN erscheint die Ausgabe – Reihenfolge wie in einem echten
+ * Terminal, und der Cursor wandert am Ende in eine neue Prompt-Zeile.
  */
 const StatusTerminal = () => {
     const reduced = useReducedMotion();
-    /* 700 ms Vorlauf: lang genug, dass das Fenster erst da ist, kurz genug,
-       dass die Ausgabe nach ~1,2 s steht und der Hero nicht leer wirkt. */
+    /* 700 ms Vorlauf: das Fenster ist da, bevor getippt wird, und die Ausgabe
+       steht nach ~1,2 s – der Hero wirkt nie leer. */
     const {typed, done} = useTypewriter(COMMAND, {startDelay: 700, cps: 20, enabled: !reduced});
 
     return (
@@ -179,9 +175,8 @@ const Hero = () => {
             <section id="hero" className="relative min-h-screen w-full overflow-hidden">
 
                 <div className="absolute inset-0">
-                    {/* Violett lebt nur hier und im Kontakt – die "menschlichen"
-                        Klammern der Seite. Endet auf --color-page, damit der
-                        Übergang in den Werdegang nahtlos ist. */}
+                    {/* Violett lebt nur hier und im Kontakt. Endet auf
+                        --color-page, damit der Uebergang nahtlos ist. */}
                     <div className="absolute inset-0 bg-gradient-to-b from-page via-[#160b2a] to-page"/>
                     <NebulaWebGL ref={nebulaRef} initialQuality={0.5}/>
                     <div

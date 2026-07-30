@@ -58,13 +58,13 @@ const ContactMethod = ({method}: { method: typeof contactMethods[0] }) => {
 
 const Contact = () => {
     return (
-        /* Bildschirmhöhe wie der Hero. min-h statt h, damit der Inhalt auf
-           kurzen Fenstern nicht abgeschnitten wird, sondern die Sektion mitwächst. */
+        /* min-h statt h: auf kurzen Fenstern waechst die Sektion mit, statt den
+           Inhalt abzuschneiden. */
         <section
             id="contact"
             className="relative flex min-h-screen items-center overflow-hidden py-16 md:py-24">
 
-            {/* Hintergrund-Blobs – Violett wie im Hero: die Seite schließt sich */}
+            {/* Violett wie im Hero: die Seite schliesst sich */}
             <div
                 className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-glow/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
             <div
@@ -81,13 +81,10 @@ const Contact = () => {
                     centered
                 />
 
-                {/* PR-Karte – Box statisch (wie das Hero-Terminal), Inhalte animieren
-                    über eigenständige Reveals (kein Erben durch eine bewegte Karte).
-
-                    Bewusst ein div und nicht die shadcn-Card: die bringt bg-card
-                    mit, und eine Utility schlaegt .surface aus dem
-                    Components-Layer – die Karte war deshalb weiss. .surface ist
-                    die einzige Quelle fuer Kartenoberflaechen auf der Seite. */}
+                {/* PR-Karte: die Box selbst ist statisch, die Inhalte animieren
+                    ueber eigene Reveals. .surface ist die einzige Quelle fuer
+                    Kartenoberflaechen – kein bg-* aus dem Utility-Layer, das
+                    wuerde sie ueberschreiben. */}
                 <div className="surface overflow-hidden rounded-2xl sm:rounded-3xl">
 
                     {/* PR-Kopfzeile mit Merge-Indikator */}
@@ -103,7 +100,7 @@ const Contact = () => {
                     </Reveal>
 
                     <div className="p-5 sm:p-6 md:p-8">
-                        {/* Kontaktwege als "Channels" – eigener Stagger-Container, direkte fadeUp-Kinder */}
+                        {/* Kontaktwege als "Channels" */}
                         <Reveal
                             variants={stagger(0.1)}
                             className="mb-6 grid gap-3 sm:grid-cols-2 sm:gap-4 md:mb-8"
