@@ -80,7 +80,16 @@
     }
 
     html {
-        scroll-behavior: smooth;
+        /**
+         * KEIN scroll-behavior: smooth.
+         *
+         * lib/smoothScroll.ts ruft window.scrollTo einmal pro Frame auf. Mit
+         * scroll-behavior: smooth wuerde der Browser jeden dieser Aufrufe selbst
+         * animieren – 60 sich ueberlagernde Animationen pro Sekunde, die
+         * Interpolation waere wirkungslos. Wer sanft scrollen soll, bekommt es
+         * dort; die Rueckfallebene setzt behavior ausdruecklich.
+         */
+
         /* Versatz, damit Anker-Sprünge nicht unter der fixierten RepoBar landen */
         scroll-padding-top: 4rem;
         /* Scrollbars, Formularelemente und Overscroll-Bereich dunkel */

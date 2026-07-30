@@ -4,8 +4,11 @@ import Hero from './components/Hero'
 import About from './components/About'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
+import {useSmoothScroll} from '@/lib/smoothScroll'
 
 function App() {
+    useSmoothScroll()
+
     return (
         /* reducedMotion="user": wer im System "Bewegung reduzieren" gesetzt hat,
            bekommt in JEDER motion-Komponente nur noch Ein-/Ausblenden statt

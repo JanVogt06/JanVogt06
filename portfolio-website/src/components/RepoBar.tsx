@@ -2,6 +2,7 @@ import {useEffect, useState} from "react"
 import {motion} from "framer-motion"
 import {GitBranch, Star, Check, Copy, Github} from "lucide-react"
 import {EASE} from "@/lib/motion"
+import {scrollToElement} from "@/lib/smoothScroll"
 
 /**
  * Fixierte "Repository-Leiste" – das Leitmotiv der Seite: sie ist als
@@ -53,7 +54,7 @@ const RepoBar = () => {
         }
     }
 
-    const go = (id: string) => document.getElementById(id)?.scrollIntoView({behavior: "smooth"})
+    const go = scrollToElement
 
     return (
         <motion.header

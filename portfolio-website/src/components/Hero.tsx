@@ -5,6 +5,7 @@ import portraitImage from "../data/images/portrait.webp"
 import NebulaWebGL from "./NebulaWebGL"
 import {EASE, stagger, fadeUp} from "@/lib/motion"
 import useTypewriter from "@/lib/useTypewriter"
+import {scrollToElement} from "@/lib/smoothScroll"
 
 /* Nur Endlos- und Hover-Effekte als CSS; alle Eintritts-Animationen laufen
    ueber framer-motion. */
@@ -265,7 +266,7 @@ const Hero = () => {
                             <Button
                                 size="lg"
                                 className="group relative overflow-hidden rounded-full bg-glow px-8 py-6 text-base font-semibold text-white transition-all hover:scale-105 hover:bg-glow/90 hover:shadow-[0_0_40px_rgba(139,92,246,0.4)]"
-                                onClick={() => document.getElementById('contact')?.scrollIntoView({behavior: 'smooth'})}
+                                onClick={() => scrollToElement('contact')}
                             >
                                 <span
                                     className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-[shimmer_0.75s_ease]"
@@ -278,7 +279,7 @@ const Hero = () => {
                                 size="lg"
                                 variant="outline"
                                 className="rounded-full border-white/[0.12] bg-white/[0.03] px-8 py-6 text-base font-semibold text-white backdrop-blur-sm transition-all hover:scale-105 hover:border-white/30 hover:bg-white/[0.07] hover:text-white"
-                                onClick={() => document.getElementById('projects')?.scrollIntoView({behavior: 'smooth'})}
+                                onClick={() => scrollToElement('projects')}
                             >
                                 Projekte
                             </Button>
@@ -323,7 +324,7 @@ const Hero = () => {
                         className="flex cursor-pointer flex-col items-center gap-2 text-white/30 transition-colors hover:text-white/50"
                         animate={{y: [0, 8, 0]}}
                         transition={{duration: 2, repeat: Infinity, ease: "easeInOut"}}
-                        onClick={() => document.getElementById('about')?.scrollIntoView({behavior: 'smooth'})}
+                        onClick={() => scrollToElement('about')}
                     >
                         <span className="text-xs uppercase tracking-widest">Scroll</span>
                         <ArrowDown className="h-4 w-4"/>
