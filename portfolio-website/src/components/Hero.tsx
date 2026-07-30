@@ -95,8 +95,11 @@ const Hero = () => {
                 >
                     <span className="text-status">$</span> {typed}
                     {!done && <Caret/>}
+                    {/* Der Zusatz erst ab sm: auf 375 px bricht die Zeile sonst um. */}
                     {done && (
-                        <span className="text-white/35"> — informatik · developer · referee</span>
+                        <span className="hidden text-white/35 sm:inline">
+                            {" "}— informatik · developer · referee
+                        </span>
                     )}
                 </motion.p>
 
