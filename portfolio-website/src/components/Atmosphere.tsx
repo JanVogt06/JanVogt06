@@ -1,4 +1,4 @@
-import {useCallback, useRef} from "react"
+import {useCallback, useRef, useState} from "react"
 import NebulaWebGL from "./NebulaWebGL"
 import useScrollProgress from "@/lib/useScrollProgress"
 
@@ -30,12 +30,19 @@ const WORK_CENTER = 0.52
 const WORK_SPREAD = 0.42
 const CONTACT_START = 0.76
 
+/* Der Nebel ist bei NEBULA_END ausgeblendet; erst ab NEBULA_PAUSE haelt der
+   Shader an. Der Abstand dazwischen ist Hysterese: ohne ihn wuerde ein Wackeln
+   um die Schwelle die Schleife dauernd an- und abschalten. */
+const NEBULA_END = 0.34
+const NEBULA_PAUSE = 0.4
+
 const Atmosphere = () => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
     const heroRef = useRef<HTMLDivElement>(null)
     const workRef = useRef<HTMLDivElement>(null)
     const contactRef = useRef<HTMLDivElement>(null)
     const nebulaRef = useRef<HTMLDivElement>(null)
+    const [nebulaPaused, setNebulaPaused] = useState(false)
 
     const onProgress = useCallback((p: number) => {
         if (heroRef.current) {
@@ -48,13 +55,13 @@ const Atmosphere = () => {
             contactRef.current.style.opacity = String(clamp01((p - CONTACT_START) / (1 - CONTACT_START)))
         }
         if (nebulaRef.current) {
-            /* Der Nebel bleibt als schwacher Rest ueber die ganze Seite stehen –
-               das haelt den Raum zusammen. Dazu eine Prise Drift nach oben, die
-               Tiefe erzeugt, ohne dass etwas zu erkennen "wandert". */
-            const fade = clamp01(1 - p / 0.3)
-            nebulaRef.current.style.opacity = String(0.14 + 0.86 * fade)
+            /* Drift nach oben erzeugt Tiefe, ohne dass etwas erkennbar
+               "wandert". Die Ebenen darunter tragen den Raum weiter, wenn der
+               Nebel ausgeblendet ist. */
+            nebulaRef.current.style.opacity = String(clamp01(1 - p / NEBULA_END))
             nebulaRef.current.style.transform = `translate3d(0, ${(-p * 5).toFixed(2)}vh, 0)`
         }
+        setNebulaPaused(p > NEBULA_PAUSE)
     }, [])
 
     useScrollProgress(pageRef, onProgress)
@@ -99,7 +106,7 @@ const Atmosphere = () => {
 
             {/* Nebel-Shader – einmal fuer die ganze Seite statt nur im Hero */}
             <div ref={nebulaRef} className="absolute inset-0 will-change-transform">
-                <NebulaWebGL/>
+                <NebulaWebGL paused={nebulaPaused}/>
             </div>
 
             {/* Raster und Rauschen liegen ueber allem, EINMAL statt pro Sektion */}

@@ -319,9 +319,27 @@ const pixelRatioFor = (quality: number, width: number) => {
 const SAMPLE_FRAMES = 60;
 const MIN_ACCEPTABLE_FPS = 45;
 
-const NebulaWebGL = ({className = ''}: {className?: string}) => {
+const NebulaWebGL = ({className = '', paused = false}: {className?: string; paused?: boolean}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const frameRef = useRef<number>(0);
+    /**
+     * `paused` von aussen, zusaetzlich zu Sichtbarkeit und Viewport.
+     *
+     * Seit das Canvas `fixed` hinter der ganzen Seite liegt, ist es immer im
+     * Viewport – der IntersectionObserver kann die Schleife also nie mehr
+     * anhalten. Ohne diesen Schalter liefe der Shader ueber die volle
+     * Seitenlaenge, auch wenn er fast ausgeblendet ist.
+     *
+     * Ueber Ref und nicht ueber die Dependency-Liste: eine Aenderung darf nur
+     * die Schleife umschalten, nicht den WebGL-Kontext neu aufbauen.
+     */
+    const pausedRef = useRef(paused);
+    const syncRef = useRef<() => void>(() => {});
+
+    useEffect(() => {
+        pausedRef.current = paused;
+        syncRef.current();
+    }, [paused]);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -424,7 +442,8 @@ const NebulaWebGL = ({className = ''}: {className?: string}) => {
         };
 
         const sync = () => {
-            const shouldRun = onScreen && document.visibilityState === 'visible';
+            const shouldRun =
+                onScreen && !pausedRef.current && document.visibilityState === 'visible';
             if (shouldRun === running) return;
             running = shouldRun;
             if (shouldRun) {
@@ -444,6 +463,8 @@ const NebulaWebGL = ({className = ''}: {className?: string}) => {
         });
         observer.observe(container);
         document.addEventListener('visibilitychange', sync);
+        // Damit der paused-Effect oben dieselbe sync-Funktion ausloesen kann.
+        syncRef.current = sync;
         sync();
 
         const handleResize = () => {
@@ -462,6 +483,7 @@ const NebulaWebGL = ({className = ''}: {className?: string}) => {
         return () => {
             window.removeEventListener('resize', handleResize);
             document.removeEventListener('visibilitychange', sync);
+            syncRef.current = () => {};
             observer.disconnect();
             cancelAnimationFrame(frameRef.current);
             geometry.dispose();
