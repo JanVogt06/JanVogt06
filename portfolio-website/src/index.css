@@ -144,10 +144,4 @@
     .cmd {
         @apply font-mono text-white/40;
     }
-
-    /* Damit ein Anker-Sprung auf eine Projekt-Folie sie nicht unter der
-       fixierten Repo-Leiste ablegt. */
-    .project-slide {
-        scroll-margin-top: 3.5rem;
-    }
 }

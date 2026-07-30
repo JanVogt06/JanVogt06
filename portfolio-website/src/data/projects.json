@@ -2,7 +2,6 @@
   {
     "slug": "riptide",
     "icon": "Waves",
-    "type": "feat",
     "hash": "e4a7b09",
     "title": "Riptide",
     "subtitle": "Interaktive Tsunami-Simulation",
@@ -24,7 +23,6 @@
   {
     "slug": "sattrak",
     "icon": "Satellite",
-    "type": "feat",
     "hash": "3f9a1c7",
     "title": "SatTrak",
     "subtitle": "3D Satellitenvisualisierung",
@@ -41,7 +39,6 @@
   {
     "slug": "solarflow",
     "icon": "Zap",
-    "type": "feat",
     "hash": "b2e8d40",
     "title": "SolarFlow",
     "subtitle": "Smart Energy Management",
@@ -60,7 +57,6 @@
   {
     "slug": "spesen-generator",
     "icon": "Receipt",
-    "type": "feat",
     "hash": "c7104af",
     "title": "TFV Spesen Generator",
     "subtitle": "Automatisierte Spesenabrechnung",
@@ -80,7 +76,6 @@
   {
     "slug": "cryptborne",
     "icon": "Sword",
-    "type": "feat(game)",
     "hash": "9d5b2e1",
     "title": "Cryptborne",
     "subtitle": "3D Dungeon-Crawler",
