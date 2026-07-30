@@ -308,28 +308,38 @@ interface NebulaProps {
     initialQuality?: number;
 }
 
+/**
+ * Aufloesung pro Qualitaetsstufe (0 = Eco ... 1 = Ultra). Auf schmalen
+ * Viewports niedriger, weil dort meist der schwaechere Chip sitzt.
+ */
+const PIXEL_RATIOS = {
+    mobile: [0.5, 0.75, 1.0, 1.5, 2.0],
+    desktop: [0.75, 1.0, 1.25, 1.75, 2.5],
+} as const;
+
+const pixelRatioFor = (quality: number, width: number) => {
+    const ratios = PIXEL_RATIOS[width < 768 ? 'mobile' : 'desktop'];
+    return Math.min(window.devicePixelRatio, ratios[Math.round(quality * 4)]);
+};
+
 const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', initialQuality = 0.5}, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const frameRef = useRef<number>(0);
     const materialRef = useRef<THREE.ShaderMaterial | null>(null);
     const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+    /* Die Startqualitaet darf den Effect NICHT neu ausloesen – das wuerde den
+       WebGL-Kontext samt Shader-Kompilat wegwerfen und neu aufbauen. */
+    const initialQualityRef = useRef(initialQuality);
 
     useImperativeHandle(ref, () => ({
         setQuality: (quality: number) => {
             if (materialRef.current) {
                 materialRef.current.uniforms.uQuality.value = quality;
             }
-            // Adjust pixel ratio based on 5 quality levels
             if (rendererRef.current && containerRef.current) {
-                const isMobile = containerRef.current.clientWidth < 768;
-                // Eco=0.5, Low=0.75, Mid=1.0, High=1.5, Ultra=2.0 (mobile)
-                // Eco=0.75, Low=1.0, Mid=1.25, High=1.75, Ultra=2.5 (desktop)
-                const ratios = isMobile
-                    ? [0.5, 0.75, 1.0, 1.5, 2.0]
-                    : [0.75, 1.0, 1.25, 1.75, 2.5];
-                const index = Math.round(quality * 4);
-                const pixelRatio = ratios[index];
-                rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
+                rendererRef.current.setPixelRatio(
+                    pixelRatioFor(quality, containerRef.current.clientWidth),
+                );
             }
         }
     }));
@@ -340,6 +350,7 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
         const container = containerRef.current;
         const width = container.clientWidth;
         const height = container.clientHeight;
+        const quality = initialQualityRef.current;
 
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -350,14 +361,7 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
             powerPreference: 'default',
         });
         renderer.setSize(width, height);
-
-        const isMobile = width < 768;
-        const ratios = isMobile
-            ? [0.5, 0.75, 1.0, 1.5, 2.0]
-            : [0.75, 1.0, 1.25, 1.75, 2.5];
-        const index = Math.round(initialQuality * 4);
-        const pixelRatio = ratios[index];
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, pixelRatio));
+        renderer.setPixelRatio(pixelRatioFor(quality, width));
         renderer.setClearColor(0x000000, 0);
         container.appendChild(renderer.domElement);
         rendererRef.current = renderer;
@@ -370,47 +374,74 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
             uniforms: {
                 uTime: {value: 0},
                 uResolution: {value: new THREE.Vector2(width, height)},
-                uQuality: {value: initialQuality},
+                uQuality: {value: quality},
             },
             transparent: true,
             depthWrite: false,
         });
         materialRef.current = material;
 
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
+        scene.add(new THREE.Mesh(geometry, material));
 
         const clock = new THREE.Clock();
-
-        const animate = () => {
-            frameRef.current = requestAnimationFrame(animate);
+        const render = () => {
             material.uniforms.uTime.value = clock.getElapsedTime();
             renderer.render(scene, camera);
         };
 
-        animate();
+        /**
+         * Der Shader ist teuer (bis zu sechs FBM-Oktaven pro Pixel). Er laeuft
+         * deshalb nur, wenn das Canvas wirklich zu sehen ist: nicht wenn es aus
+         * dem Viewport gescrollt wurde und nicht in einem Hintergrund-Tab.
+         * Vorher lief die Schleife bis zum Unmount durch.
+         */
+        let onScreen = true;
+        let running = false;
+
+        const loop = () => {
+            frameRef.current = requestAnimationFrame(loop);
+            render();
+        };
+
+        const sync = () => {
+            const shouldRun = onScreen && document.visibilityState === 'visible';
+            if (shouldRun === running) return;
+            running = shouldRun;
+            if (shouldRun) {
+                /* Die Uhr laeuft weiter, waehrend nicht gerendert wird – sonst
+                   springt die Animation beim Zurueckkehren nicht, sondern setzt
+                   dort fort, wo sie optisch stehengeblieben ist. */
+                loop();
+            } else {
+                cancelAnimationFrame(frameRef.current);
+            }
+        };
+
+        const observer = new IntersectionObserver(([entry]) => {
+            onScreen = entry.isIntersecting;
+            sync();
+        });
+        observer.observe(container);
+        document.addEventListener('visibilitychange', sync);
+        sync();
 
         const handleResize = () => {
-            if (!container) return;
             const newWidth = container.clientWidth;
             const newHeight = container.clientHeight;
-            const isMobileNow = newWidth < 768;
-            const currentQuality = material.uniforms.uQuality.value;
-            const ratiosNow = isMobileNow
-                ? [0.5, 0.75, 1.0, 1.5, 2.0]
-                : [0.75, 1.0, 1.25, 1.75, 2.5];
-            const idx = Math.round(currentQuality * 4);
-            const newPixelRatio = ratiosNow[idx];
-
             renderer.setSize(newWidth, newHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, newPixelRatio));
+            renderer.setPixelRatio(pixelRatioFor(material.uniforms.uQuality.value, newWidth));
             material.uniforms.uResolution.value.set(newWidth, newHeight);
+            /* Bei angehaltener Schleife wuerde die Groessenaenderung sonst erst
+               sichtbar, wenn das Canvas wieder in den Viewport kommt. */
+            if (!running) render();
         };
 
         window.addEventListener('resize', handleResize);
 
         return () => {
             window.removeEventListener('resize', handleResize);
+            document.removeEventListener('visibilitychange', sync);
+            observer.disconnect();
             cancelAnimationFrame(frameRef.current);
             geometry.dispose();
             material.dispose();
@@ -419,7 +450,7 @@ const NebulaWebGL = forwardRef<NebulaHandle, NebulaProps>(({className = '', init
                 container.removeChild(renderer.domElement);
             }
         };
-    }, [initialQuality]);
+    }, []);
 
     return (
         <div
