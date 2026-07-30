@@ -72,13 +72,18 @@ const Atmosphere = () => {
             {/* Grundton, immer da */}
             <div className="absolute inset-0 bg-page"/>
 
-            {/* Hero – Violett */}
+            {/* Hero – Violett.
+                Kraeftig genug, dass der Hero auch ohne den Shader nach etwas
+                aussieht: auf schwachen Geraeten laeuft er auf Stufe 0, bei
+                prefers-reduced-motion steht er still, und ohne WebGL fehlt er
+                ganz. Der Hintergrund darf in keinem dieser Faelle flach
+                schwarz sein. */}
             <div
                 ref={heroRef}
                 className="absolute inset-0"
                 style={{
                     background:
-                        "radial-gradient(120% 90% at 50% 0%, #1b0f33 0%, rgba(11,7,22,0.65) 45%, transparent 75%)",
+                        "radial-gradient(115% 80% at 50% -10%, #2a1552 0%, #150c2b 35%, rgba(9,7,20,0.6) 60%, transparent 80%)",
                 }}
             />
 
@@ -126,12 +131,15 @@ const Atmosphere = () => {
                 }}
             />
 
-            {/* Vignette: haelt den Blick in der Mitte */}
+            {/* Vignette: haelt den Blick in der Mitte. Absichtlich zurueckhaltend
+                und erst spaet einsetzend – eine kraeftigere Fassung hat die
+                Violett-Ebene am oberen Rand aufgefressen, genau dort, wo sie
+                leuchten soll. */}
             <div
                 className="absolute inset-0"
                 style={{
                     background:
-                        "radial-gradient(130% 100% at 50% 50%, transparent 55%, rgba(5,7,13,0.7) 100%)",
+                        "radial-gradient(140% 110% at 50% 45%, transparent 70%, rgba(5,7,13,0.55) 100%)",
                 }}
             />
         </div>

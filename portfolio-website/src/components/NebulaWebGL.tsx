@@ -256,46 +256,48 @@ const fragmentShader = `
         vec2 correctedUv = uv;
         correctedUv.x *= aspect;
         
-        // === NEBULA ===
-        vec3 col = nebula(correctedUv, time);
-        
-        // === STARS - layers based on quality ===
+        // === NEBEL ===
+        /* NEBULA_GAIN: der Nebel war als saftiges Magenta die lauteste Flaeche
+           der Seite – eher Gaming-Wallpaper als Weltraum. Heruntergezogen wird er
+           zu Schlieren, durch die man Sterne sieht, statt zu einer Wolke, die
+           alles einfaerbt. Die Sterne bleiben dabei voll hell: sie kosten fast
+           nichts und tragen den Weltraum-Eindruck allein. */
+        vec3 col = nebula(correctedUv, time) * 0.42;
+
+        // === STERNE – Ebenen je nach Qualitaet ===
         float starField = 0.0;
-        
-        // Layer 1: Always present
+
+        // Ebene 1: immer
         starField += stars(correctedUv, 80.0, 0.8);
-        
-        // Layer 2: Low+ (quality >= 0.25)
+
+        // Ebene 2: ab Low
         if (uQuality >= 0.2) {
             starField += stars(correctedUv + 0.5, 40.0, 1.0);
         }
-        
-        // Layer 3: High+ (quality >= 0.75)
+
+        // Ebene 3: ab High
         if (uQuality >= 0.7) {
             starField += stars(correctedUv + 0.25, 20.0, 1.2);
         }
-        
-        col += vec3(0.9, 0.95, 1.0) * starField;
-        
-        // === EDGE GLOW ===
-        col += vec3(0.3, 0.1, 0.5) * smoothstep(0.5, 0.0, uv.x) * 0.4;
-        col += vec3(0.5, 0.1, 0.4) * smoothstep(0.5, 1.0, uv.x) * 0.3;
-        col += vec3(0.2, 0.1, 0.3) * smoothstep(0.5, 1.0, uv.y) * 0.3;
-        
+
+        col += vec3(0.92, 0.96, 1.0) * starField;
+
+        // === RANDSCHIMMER – dezent, nur als Andeutung von Tiefe ===
+        col += vec3(0.16, 0.06, 0.30) * smoothstep(0.5, 0.0, uv.x) * 0.22;
+        col += vec3(0.10, 0.16, 0.26) * smoothstep(0.5, 1.0, uv.x) * 0.18;
+
         // === VIGNETTE ===
         vec2 vignetteUv = uv * (1.0 - uv);
         float vignette = vignetteUv.x * vignetteUv.y * 15.0;
         vignette = pow(vignette, 0.25);
         col *= vignette;
-        
-        // === FINAL ===
-        col = pow(col, vec3(0.95));
+
+        // === ABSCHLUSS ===
         col = clamp(col, 0.0, 1.0);
-        
-        float alpha = length(col) * 1.5;
-        alpha = clamp(alpha, 0.0, 0.95);
-        alpha *= smoothstep(0.0, 0.35, uv.y);
-        
+
+        float alpha = clamp(length(col) * 1.15, 0.0, 0.8);
+        alpha *= smoothstep(0.0, 0.3, uv.y);
+
         gl_FragColor = vec4(col, alpha);
     }
 `;

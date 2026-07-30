@@ -97,10 +97,21 @@
         background-color: var(--color-page);
     }
 
-    /* EIN Seitengrund: sonst blitzt beim Overscroll und zwischen den Sektionen
-       die Standardfarbe durch. */
+    /**
+     * body MUSS durchsichtig bleiben.
+     *
+     * Der Seitengrund steht am <html> darueber. Von dort wird er auf die
+     * Zeichenflaeche uebertragen und liegt damit hinter allem – auch beim
+     * Overscroll, weswegen er ueberhaupt gesetzt ist.
+     *
+     * Am body waere er dagegen ein gewoehnlicher Block-Hintergrund. In der
+     * Zeichenreihenfolge kommen die Hintergruende der Bloecke NACH den
+     * Stapelkontexten mit negativem z-index – ein deckender body-Hintergrund
+     * uebermalt also Atmosphere.tsx (-z-10) vollstaendig. Genau das war der Fall:
+     * Farbebenen und Nebel waren da, gemessen mit der richtigen Deckkraft, und
+     * trotzdem war die Seite flach schwarz.
+     */
     body {
-        background-color: var(--color-page);
         @apply text-white;
     }
 
