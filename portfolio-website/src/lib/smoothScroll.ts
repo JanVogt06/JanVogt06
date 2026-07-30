@@ -53,6 +53,19 @@ const maxScroll = () =>
 const clamp = (value: number) => Math.min(Math.max(value, 0), maxScroll())
 
 /**
+ * Scrollt an eine absolute Dokumentposition – gleitend, wenn das
+ * Smooth-Scrolling laeuft, sonst nativ. Fuer Ziele, die kein Element sind, etwa
+ * "der Punkt im Kristallfeld, an dem Stein 3 vor der Kamera steht".
+ */
+export const scrollToPosition = (top: number) => {
+    if (controller?.active) {
+        controller.scrollTo(top)
+        return
+    }
+    window.scrollTo({top, behavior: prefersReducedMotion() ? "auto" : "smooth"})
+}
+
+/**
  * Scrollt ein Element in den Blick – ueber das Ziel des Smooth-Scrollings, wenn
  * es laeuft, sonst native. Die Navigation ruft nur das hier auf und muss nichts
  * ueber die Mechanik wissen.

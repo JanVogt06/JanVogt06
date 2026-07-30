@@ -1,40 +1,34 @@
-import {useCallback, useRef, useState} from "react"
-import {ArrowRight} from "lucide-react"
+import {useCallback, useEffect, useRef, useState} from "react"
+import {ArrowRight, ArrowUpRight, Github, X} from "lucide-react"
 import Reveal from "./Reveal"
 import ProjectPanel from "./ProjectPanel"
 import {fadeUp} from "@/lib/motion"
 import {projects} from "@/lib/projects"
-import useMediaQuery from "@/lib/useMediaQuery"
+import {primaryLinkOf} from "@/lib/projects"
 import useScrollProgress from "@/lib/useScrollProgress"
+import {space} from "@/lib/space/controller"
+import {scrollToPosition} from "@/lib/smoothScroll"
 
 /**
- * Projekte als gepinnte Schiene: die Sektion bleibt stehen, die Projekte ziehen
- * seitwaerts durch, waehrend man vertikal scrollt.
+ * Projekte als Kristallfeld.
  *
- * Die Rechnung ist eine Zeile. Die Sektion ist so hoch wie die Anzahl der
- * Projekte in Bildschirmhoehen; darin klebt ein bildschirmhoher Rahmen. Damit
- * bleibt eine Pinn-Strecke von (n-1) Bildschirmhoehen – und genau (n-1)
- * Bildschirmbreiten muss die Schiene wandern. Vertikal und horizontal stehen
- * also 1:1, ohne Rest.
+ * Die Sektion ist so hoch wie die Anzahl der Projekte in Bildschirmhoehen; darin
+ * klebt ein bildschirmhoher Rahmen. Solange er klebt, laeuft der Fortschritt von
+ * 0 auf 1 – und daran haengt die Kamera, die durch das Feld fliegt. Ein
+ * Bildschirm Scrollen entspricht damit einem Stein.
  *
- * Warum der Kopf INNERHALB des klebenden Rahmens sitzt: stuende er darueber,
- * beginnt das Kleben erst, wenn er durchgescrollt ist – die Schiene faengt dann
- * zu spaet an und laeuft am Ende in eine leere Bildschirmhoehe. Genau das war
- * der Leerraum, an dem diese Idee hier schon einmal gescheitert ist.
+ * Die Steine selbst liegen NICHT hier, sondern in der Szene hinter der Seite
+ * (Atmosphere.tsx). Das ist eine Absicht: es gibt genau einen WebGL-Kontext fuer
+ * die ganze Seite, weil die Live-Vorschauen selbst welche brauchen. Hier liegt
+ * nur der Text, und der gehoert ins DOM – markierbar, vorlesbar, auffindbar.
  *
- * Unter lg wird gestapelt statt gepinnt: ein Projekt in 390 px Breite zu
- * zwingen, macht Text und Vorschau gleichzeitig unlesbar.
- *
- * Es ist immer nur EINE Live-Vorschau aktiv, deshalb liegt der Zustand hier und
- * nicht im Panel: fuenf gleichzeitig laufende Web-Apps waeren fuenf iframes im
- * Speicher, und im Hero ist schon ein WebGL-Kontext belegt.
+ * Alles ist ohne Maus bedienbar: die Fortschrittsstriche sind Knoepfe zum
+ * jeweiligen Stein, und "Projekt oeffnen" macht dasselbe wie ein Klick auf den
+ * Kristall. Ein Projekt, das man nur durch Klicken auf ein 3D-Objekt erreicht,
+ * waere fuer einen Teil der Besucher gar nicht erreichbar.
  */
 
-/* Wie stark ein Panel zurueticktritt, wenn es eine ganze Breite von der Mitte
-   entfernt ist. Genug, dass die Bewegung das Auge fuehrt; wenig genug, dass die
-   Nachbarn nicht wie ausgeschaltet wirken. */
-const OFF_CENTER_FADE = 0.75
-const OFF_CENTER_SCALE = 0.08
+const total = projects.length
 
 const SectionIntro = () => (
     <div className="flex items-end justify-between gap-6">
@@ -63,62 +57,146 @@ const SectionIntro = () => (
     </div>
 )
 
-const ProjectRail = ({
-    activeSlug,
-    setActiveSlug,
+/** Der Textblock zum Stein, der gerade vor der Kamera steht. */
+const FieldCaption = ({index, onOpen}: {index: number; onOpen: () => void}) => {
+    const project = projects[index]
+    const primary = primaryLinkOf(project.links)
+
+    return (
+        /* key am Wrapper: bei jedem Wechsel ein neues Element, dadurch laeuft die
+           Einblend-Animation erneut, statt dass der Text hart umspringt. */
+        <div key={project.slug} className="animate-caption max-w-lg">
+            <p className="mb-4 flex items-center gap-3 font-mono text-xs text-white/35">
+                <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
+                <span className="h-px w-6 bg-white/15"/>
+                <span>{project.hash}</span>
+            </p>
+
+            <h3 className="text-4xl font-semibold tracking-[-0.03em] text-white lg:text-5xl">
+                {project.title}
+            </h3>
+            <p className="mt-2 text-lg text-white/45">{project.subtitle}</p>
+            <p className="mt-5 leading-relaxed text-white/60">{project.description}</p>
+            <p className="mt-6 font-mono text-[11px] leading-relaxed text-white/40">
+                {project.tech.join("  ·  ")}
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <button
+                    onClick={onOpen}
+                    className="group inline-flex items-center gap-2 rounded-full bg-brand/10 px-5 py-2.5 text-sm font-medium text-brand ring-1 ring-brand/30 transition-colors hover:bg-brand/20 hover:text-white"
+                >
+                    Projekt öffnen
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
+                </button>
+
+                {project.links.github && (
+                    <a
+                        href={project.links.github}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
+                    >
+                        <Github className="h-4 w-4"/>
+                        Code
+                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                    </a>
+                )}
+                {primary && (
+                    <a
+                        href={primary.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
+                    >
+                        {primary.label}
+                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                    </a>
+                )}
+            </div>
+        </div>
+    )
+}
+
+const ProjectField = ({
+    selected,
+    onSelect,
 }: {
-    activeSlug: string | null
-    setActiveSlug: (slug: string | null) => void
+    selected: number | null
+    onSelect: (index: number | null) => void
 }) => {
     const sectionRef = useRef<HTMLDivElement>(null)
-    const trackRef = useRef<HTMLDivElement>(null)
-    const total = projects.length
-
-    /* Nur fuer die Beschriftung "03/05" – die aendert sich fuenfmal, nicht
-       sechzigmal pro Sekunde, deshalb darf sie React-State sein. */
     const [index, setIndex] = useState(0)
 
     const onProgress = useCallback((progress: number) => {
-        const track = trackRef.current
-        if (!track) return
-
-        /* Die Schiene ist `total` Bildschirme breit. Um sie um (total-1)
-           Bildschirme zu verschieben, sind das (total-1)/total ihrer eigenen
-           Breite. In Prozent, damit eine sichtbare Scrollbar die Rechnung nicht
-           verfaelscht, wie 100vw es taete. */
-        const shift = (progress * (total - 1) * 100) / total
-        track.style.transform = `translate3d(-${shift}%, 0, 0)`
-
-        // Panels treten zurueck, je weiter sie von der Mitte weg sind.
-        const position = progress * (total - 1)
-        for (let i = 0; i < track.children.length; i++) {
-            const panel = track.children[i] as HTMLElement
-            const distance = Math.min(1, Math.abs(position - i))
-            panel.style.opacity = String(1 - distance * OFF_CENTER_FADE)
-            panel.style.transform = `scale(${1 - distance * OFF_CENTER_SCALE})`
-        }
-
-        setIndex(Math.round(position))
-    }, [total])
+        space.setFieldProgress(progress)
+        setIndex(Math.round(progress * (total - 1)))
+    }, [])
 
     useScrollProgress(sectionRef, onProgress)
+
+    /* Das Feld nur beleben, wenn die Sektion in der Naehe ist – sonst laeuft die
+       Szene fuer Steine, die niemand sieht. */
+    useEffect(() => {
+        const el = sectionRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(
+            ([entry]) => space.setFieldVisible(entry.isIntersecting),
+            {rootMargin: "50% 0px"},
+        )
+        observer.observe(el)
+        return () => {
+            observer.disconnect()
+            space.setFieldVisible(false)
+        }
+    }, [])
+
+    // Kamera auf den gewaehlten Stein richten, solange das Panel offen ist.
+    useEffect(() => {
+        space.setFocus(selected)
+    }, [selected])
+
+    /** Zu Stein i scrollen – die Fortschrittsstriche sind Knoepfe. */
+    const goToCrystal = (target: number) => {
+        const el = sectionRef.current
+        if (!el) return
+        const travel = el.offsetHeight - window.innerHeight
+        const top = el.getBoundingClientRect().top + window.scrollY
+        scrollToPosition(top + (target / (total - 1)) * travel)
+    }
 
     return (
         <div ref={sectionRef} style={{height: `${total * 100}vh`}}>
             <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pt-8 sm:px-10 lg:px-16">
                     <SectionIntro/>
+                </div>
 
-                    {/* Fortschrittsleiste: ein Strich pro Projekt */}
-                    <div className="mt-6 flex items-center gap-4">
+                {/* Text links; rechts bleibt der Blick auf die Kristalle frei. */}
+                <div className="mx-auto flex w-full max-w-[88rem] flex-1 items-center px-6 sm:px-10 lg:px-16">
+                    <FieldCaption index={index} onOpen={() => onSelect(index)}/>
+                </div>
+
+                {/* Fortschritt: ein Knopf pro Projekt */}
+                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
+                    <div className="flex items-center gap-4">
                         <div className="flex flex-1 gap-1.5">
                             {projects.map((project, i) => (
-                                <span
+                                <button
                                     key={project.slug}
-                                    className={`h-px flex-1 transition-colors duration-500 ${
-                                        i <= index ? "bg-brand/70" : "bg-white/10"
-                                    }`}
-                                />
+                                    onClick={() => goToCrystal(i)}
+                                    aria-label={`Zu ${project.title}`}
+                                    aria-current={i === index}
+                                    className="group flex-1 py-3"
+                                >
+                                    <span
+                                        className={`block h-px w-full transition-colors duration-500 ${
+                                            i <= index
+                                                ? "bg-brand/70"
+                                                : "bg-white/10 group-hover:bg-white/30"
+                                        }`}
+                                    />
+                                </button>
                             ))}
                         </div>
                         <span className="shrink-0 font-mono text-xs text-white/35">
@@ -127,92 +205,132 @@ const ProjectRail = ({
                         </span>
                     </div>
                 </div>
-
-                <div className="relative min-h-0 flex-1">
-                    <div
-                        ref={trackRef}
-                        className="flex h-full will-change-transform"
-                        style={{width: `${total * 100}%`}}
-                    >
-                        {projects.map((project, i) => (
-                            <div
-                                key={project.slug}
-                                /* Breite als Bruchteil der SCHIENE, nicht w-full:
-                                   die Schiene ist `total` Bildschirme breit, ein
-                                   w-full-Panel waere also genauso breit statt
-                                   einen Bildschirm. */
-                                style={{width: `${100 / total}%`}}
-                                className="h-full shrink-0"
-                            >
-                                <ProjectPanel
-                                    project={project}
-                                    index={i}
-                                    total={total}
-                                    active={activeSlug === project.slug}
-                                    onActivate={() => setActiveSlug(project.slug)}
-                                    onClose={() => setActiveSlug(null)}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
             </div>
         </div>
     )
 }
 
-const ProjectStack = ({
-    activeSlug,
-    setActiveSlug,
-}: {
-    activeSlug: string | null
-    setActiveSlug: (slug: string | null) => void
-}) => (
-    <div className="pb-20 pt-24">
-        <div className="px-6 sm:px-10">
-            <SectionIntro/>
-        </div>
+/**
+ * Das geoeffnete Projekt.
+ *
+ * data-native-scroll: lib/smoothScroll.ts laesst das Rad diesem Element, statt
+ * die Seite darunter weiterzuschieben – sonst wandert das Kristallfeld unter dem
+ * Panel weg, waehrend man darin liest.
+ */
+const ProjectOverlay = ({index, onClose}: {index: number; onClose: () => void}) => {
+    /* Der Zustand liegt hier und nicht in Projects: das Panel wird beim
+       Schliessen ausgehaengt, damit setzt sich die Vorschau von selbst zurueck –
+       ohne einen Effect, der State aufraeumt. */
+    const [previewActive, setPreviewActive] = useState(false)
 
-        {projects.map((project, i) => (
-            <Reveal key={project.slug} variants={fadeUp} className="min-h-screen py-16">
-                <ProjectPanel
-                    project={project}
-                    index={i}
-                    total={projects.length}
-                    active={activeSlug === project.slug}
-                    onActivate={() => setActiveSlug(project.slug)}
-                    onClose={() => setActiveSlug(null)}
-                />
-            </Reveal>
-        ))}
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === "Escape") onClose()
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [onClose])
 
-        <div className="px-6 sm:px-10">
-            <a
-                href="https://github.com/JanVogt06?tab=repositories"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-2 font-mono text-sm text-brand transition-colors hover:text-white"
-            >
-                weitere Projekte auf GitHub
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
-            </a>
-        </div>
-    </div>
-)
+    /* Solange eine Live-Vorschau laeuft, haelt die Szene an. Riptide braucht
+       WebGL2 und Cryptborne ist ein Unity-Build – beide wollen einen eigenen
+       Kontext, und die Zahl gleichzeitiger Kontexte ist knapp. */
+    useEffect(() => {
+        space.setPaused(previewActive)
+        return () => space.setPaused(false)
+    }, [previewActive])
 
-const Projects = () => {
-    const [activeSlug, setActiveSlug] = useState<string | null>(null)
-    const pinned = useMediaQuery("(min-width: 1024px)")
+    const project = projects[index]
 
     return (
-        <section id="projects" className="relative">
-            {pinned ? (
-                <ProjectRail activeSlug={activeSlug} setActiveSlug={setActiveSlug}/>
-            ) : (
-                <ProjectStack activeSlug={activeSlug} setActiveSlug={setActiveSlug}/>
-            )}
-        </section>
+        <div
+            data-native-scroll
+            role="dialog"
+            aria-modal="true"
+            aria-label={project.title}
+            className="animate-overlay fixed inset-0 z-40 overflow-y-auto bg-page/80 backdrop-blur-xl"
+        >
+            <button
+                onClick={onClose}
+                aria-label="Projekt schließen"
+                className="fixed right-6 top-20 z-10 rounded-full border border-white/10 bg-white/[0.04] p-2.5 text-white/60 transition-colors hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
+            >
+                <X className="h-4 w-4"/>
+            </button>
+
+            <div className="min-h-screen pt-20">
+                <ProjectPanel
+                    project={project}
+                    index={index}
+                    total={total}
+                    active={previewActive}
+                    onActivate={() => setPreviewActive(true)}
+                    onClose={() => setPreviewActive(false)}
+                />
+            </div>
+        </div>
     )
 }
+
+/** Rueckfallebene: gestapelte Liste, wenn die Szene nicht laeuft. */
+const ProjectStack = () => {
+    const [activeSlug, setActiveSlug] = useState<string | null>(null)
+
+    return (
+        <div className="pb-20 pt-24">
+            <div className="px-6 sm:px-10">
+                <SectionIntro/>
+            </div>
+
+            {projects.map((project, i) => (
+                <Reveal key={project.slug} variants={fadeUp} className="min-h-screen py-16">
+                    <ProjectPanel
+                        project={project}
+                        index={i}
+                        total={total}
+                        active={activeSlug === project.slug}
+                        onActivate={() => setActiveSlug(project.slug)}
+                        onClose={() => setActiveSlug(null)}
+                    />
+                </Reveal>
+            ))}
+
+            <div className="px-6 sm:px-10">
+                <a
+                    href="https://github.com/JanVogt06?tab=repositories"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group inline-flex items-center gap-2 font-mono text-sm text-brand transition-colors hover:text-white"
+                >
+                    weitere Projekte auf GitHub
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
+                </a>
+            </div>
+        </div>
+    )
+}
+
+const Projects = ({
+    crystals,
+    selected,
+    onSelect,
+}: {
+    /** Laeuft die Kristall-Szene? Sonst gestapelte Liste. */
+    crystals: boolean
+    selected: number | null
+    onSelect: (index: number | null) => void
+}) => (
+    <section id="projects" className="relative">
+        {crystals ? (
+            <>
+                <ProjectField selected={selected} onSelect={onSelect}/>
+                {selected !== null && (
+                    <ProjectOverlay index={selected} onClose={() => onSelect(null)}/>
+                )}
+            </>
+        ) : (
+            <ProjectStack/>
+        )}
+    </section>
+)
 
 export default Projects

@@ -1,8 +1,17 @@
-import {useEffect, useRef} from 'react';
-import * as THREE from 'three';
-import {detectQuality, stepDown} from '@/lib/quality';
+/**
+ * Nebel-Hintergrund als Fragment-Shader.
+ *
+ * Unveraendert aus NebulaWebGL.tsx uebernommen, nur aus der Komponente
+ * herausgelost: die Szene rendert jetzt Hintergrund UND Kristalle, und ein
+ * 300-Zeilen-Shader-String hat in einer React-Komponente ohnehin nichts zu
+ * suchen.
+ *
+ * uQuality steuert die Zahl der FBM-Oktaven und der Sternebenen (0 = Eco bis
+ * 1 = Ultra); die Stufe bestimmt lib/quality.ts und korrigiert sich an der
+ * gemessenen Bildrate nach unten.
+ */
 
-const vertexShader = `
+export const nebulaVertexShader = `
     varying vec2 vUv;
     
     void main() {
@@ -11,10 +20,14 @@ const vertexShader = `
     }
 `;
 
-const fragmentShader = `
+export const nebulaFragmentShader = `
     uniform float uTime;
     uniform vec2 uResolution;
     uniform float uQuality; // 0.0=Eco, 0.25=Low, 0.5=Mid, 0.75=High, 1.0=Ultra
+    /* Deckkraft. Muss im Shader liegen und nicht als opacity am Wrapper:
+       dieselbe Canvas traegt jetzt auch die Kristalle, die NICHT mitausblenden
+       sollen. */
+    uniform float uFade;
     
     varying vec2 vUv;
     
@@ -298,212 +311,6 @@ const fragmentShader = `
         float alpha = clamp(length(col) * 1.15, 0.0, 0.8);
         alpha *= smoothstep(0.0, 0.3, uv.y);
 
-        gl_FragColor = vec4(col, alpha);
+        gl_FragColor = vec4(col, alpha * uFade);
     }
 `;
-
-/**
- * Aufloesung pro Qualitaetsstufe (0 = Eco ... 1 = Ultra). Auf schmalen
- * Viewports niedriger, weil dort meist der schwaechere Chip sitzt.
- */
-const PIXEL_RATIOS = {
-    mobile: [0.5, 0.75, 1.0, 1.5, 2.0],
-    desktop: [0.75, 1.0, 1.25, 1.75, 2.5],
-} as const;
-
-const pixelRatioFor = (quality: number, width: number) => {
-    const ratios = PIXEL_RATIOS[width < 768 ? 'mobile' : 'desktop'];
-    return Math.min(window.devicePixelRatio, ratios[Math.round(quality * 4)]);
-};
-
-/* Messfenster und Schwelle der Selbstkorrektur: 45 fps ist der Punkt, ab dem
-   eine Hintergrundanimation anfaengt, sich zaeh anzufuehlen. */
-const SAMPLE_FRAMES = 60;
-const MIN_ACCEPTABLE_FPS = 45;
-
-const NebulaWebGL = ({className = '', paused = false}: {className?: string; paused?: boolean}) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const frameRef = useRef<number>(0);
-    /**
-     * `paused` von aussen, zusaetzlich zu Sichtbarkeit und Viewport.
-     *
-     * Seit das Canvas `fixed` hinter der ganzen Seite liegt, ist es immer im
-     * Viewport – der IntersectionObserver kann die Schleife also nie mehr
-     * anhalten. Ohne diesen Schalter liefe der Shader ueber die volle
-     * Seitenlaenge, auch wenn er fast ausgeblendet ist.
-     *
-     * Ueber Ref und nicht ueber die Dependency-Liste: eine Aenderung darf nur
-     * die Schleife umschalten, nicht den WebGL-Kontext neu aufbauen.
-     */
-    const pausedRef = useRef(paused);
-    const syncRef = useRef<() => void>(() => {});
-
-    useEffect(() => {
-        pausedRef.current = paused;
-        syncRef.current();
-    }, [paused]);
-
-    useEffect(() => {
-        if (!containerRef.current) return;
-
-        const container = containerRef.current;
-        const width = container.clientWidth;
-        const height = container.clientHeight;
-        let quality = detectQuality();
-
-        const scene = new THREE.Scene();
-        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
-        const renderer = new THREE.WebGLRenderer({
-            antialias: false,
-            alpha: true,
-            powerPreference: 'default',
-        });
-        renderer.setSize(width, height);
-        renderer.setPixelRatio(pixelRatioFor(quality, width));
-        renderer.setClearColor(0x000000, 0);
-        container.appendChild(renderer.domElement);
-
-        const geometry = new THREE.PlaneGeometry(2, 2);
-
-        const material = new THREE.ShaderMaterial({
-            vertexShader,
-            fragmentShader,
-            uniforms: {
-                uTime: {value: 0},
-                uResolution: {value: new THREE.Vector2(width, height)},
-                uQuality: {value: quality},
-            },
-            transparent: true,
-            depthWrite: false,
-        });
-        scene.add(new THREE.Mesh(geometry, material));
-
-        const clock = new THREE.Clock();
-        const render = () => {
-            material.uniforms.uTime.value = clock.getElapsedTime();
-            renderer.render(scene, camera);
-        };
-
-        /**
-         * Selbstkorrektur nach unten.
-         *
-         * detectQuality() raet anhand von Kernzahl und RAM – beides sagt nichts
-         * ueber die GPU, und genau die entscheidet hier. Statt zu raten und
-         * dabei zu bleiben, wird die echte Bildrate gemessen und die Stufe
-         * gesenkt, solange sie nicht reicht.
-         *
-         * Nur abwaerts: ein Hoch- und Runterschalten wuerde pendeln, sobald die
-         * Bildrate um die Schwelle herum liegt.
-         */
-        let frames = 0;
-        let sampleStart = 0;
-
-        const adapt = (now: number) => {
-            if (quality === 0) return;
-            if (frames === 0) sampleStart = now;
-            if (++frames < SAMPLE_FRAMES) return;
-
-            const fps = (frames * 1000) / (now - sampleStart);
-            frames = 0;
-            if (fps >= MIN_ACCEPTABLE_FPS) return;
-
-            const lower = stepDown(quality);
-            if (lower === null) return;
-            quality = lower;
-            material.uniforms.uQuality.value = quality;
-            renderer.setPixelRatio(pixelRatioFor(quality, container.clientWidth));
-        };
-
-        /* Bewegung reduziert: EIN Bild, danach nichts mehr. Ein sich ewig
-           umwaelzender Nebel ist genau die Art Bewegung, die gemeint ist. */
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            render();
-            return () => {
-                geometry.dispose();
-                material.dispose();
-                renderer.dispose();
-                if (container.contains(renderer.domElement)) {
-                    container.removeChild(renderer.domElement);
-                }
-            };
-        }
-
-        /**
-         * Der Shader ist teuer (bis zu sechs FBM-Oktaven pro Pixel). Er laeuft
-         * deshalb nur, wenn das Canvas wirklich zu sehen ist: nicht wenn es aus
-         * dem Viewport gescrollt wurde und nicht in einem Hintergrund-Tab.
-         */
-        let onScreen = true;
-        let running = false;
-
-        const loop = (now: number) => {
-            frameRef.current = requestAnimationFrame(loop);
-            adapt(now);
-            render();
-        };
-
-        const sync = () => {
-            const shouldRun =
-                onScreen && !pausedRef.current && document.visibilityState === 'visible';
-            if (shouldRun === running) return;
-            running = shouldRun;
-            if (shouldRun) {
-                /* Messung neu beginnen: die Pause haette sonst als ein sehr
-                   langsames Bild in den Durchschnitt gezaehlt und die Stufe
-                   grundlos gesenkt. */
-                frames = 0;
-                frameRef.current = requestAnimationFrame(loop);
-            } else {
-                cancelAnimationFrame(frameRef.current);
-            }
-        };
-
-        const observer = new IntersectionObserver(([entry]) => {
-            onScreen = entry.isIntersecting;
-            sync();
-        });
-        observer.observe(container);
-        document.addEventListener('visibilitychange', sync);
-        // Damit der paused-Effect oben dieselbe sync-Funktion ausloesen kann.
-        syncRef.current = sync;
-        sync();
-
-        const handleResize = () => {
-            const newWidth = container.clientWidth;
-            const newHeight = container.clientHeight;
-            renderer.setSize(newWidth, newHeight);
-            renderer.setPixelRatio(pixelRatioFor(material.uniforms.uQuality.value, newWidth));
-            material.uniforms.uResolution.value.set(newWidth, newHeight);
-            /* Bei angehaltener Schleife wuerde die Groessenaenderung sonst erst
-               sichtbar, wenn das Canvas wieder in den Viewport kommt. */
-            if (!running) render();
-        };
-
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            document.removeEventListener('visibilitychange', sync);
-            syncRef.current = () => {};
-            observer.disconnect();
-            cancelAnimationFrame(frameRef.current);
-            geometry.dispose();
-            material.dispose();
-            renderer.dispose();
-            if (container.contains(renderer.domElement)) {
-                container.removeChild(renderer.domElement);
-            }
-        };
-    }, []);
-
-    return (
-        <div
-            ref={containerRef}
-            className={`absolute inset-0 pointer-events-none ${className}`}
-            style={{zIndex: 0}}
-        />
-    );
-};
-
-export default NebulaWebGL;

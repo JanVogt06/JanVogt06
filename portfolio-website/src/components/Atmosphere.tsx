@@ -1,20 +1,20 @@
-import {useCallback, useRef, useState} from "react"
-import NebulaWebGL from "./NebulaWebGL"
+import {useCallback, useEffect, useRef, useState} from "react"
+import {SpaceScene} from "@/lib/space/SpaceScene"
+import {attachScene} from "@/lib/space/controller"
 import useScrollProgress from "@/lib/useScrollProgress"
 
 /**
  * Der Hintergrund der GANZEN Seite – eine Schicht, die ueber alle Sektionen
  * hinweg stehen bleibt und sich mit dem Scroll wandelt.
  *
- * Vorher hat jede Sektion ihren eigenen Hintergrund gemalt: zwei weichgezeichnete
- * Farbflecken, ein Raster, teils eine Rauschebene – vier Mal derselbe Aufbau mit
- * anderen Werten. Genau daran sah man die Naht zwischen den Sektionen, und genau
- * das laesst eine Seite zusammengesetzt statt gebaut wirken.
+ * Vorher hat jede Sektion ihren eigenen Hintergrund gemalt: zwei
+ * weichgezeichnete Farbflecken, ein Raster, teils eine Rauschebene – vier Mal
+ * derselbe Aufbau mit anderen Werten. Genau daran sah man die Naht zwischen den
+ * Sektionen, und genau das laesst eine Seite zusammengesetzt statt gebaut wirken.
  *
- * Jetzt gibt es EINEN Raum, durch den man sich bewegt. Die Farbe wandert mit dem
- * Fortschritt: Violett im Hero, Cyan durch Werdegang und Projekte (die Farbe der
- * Arbeit), Violett wieder zum Kontakt – die Seite schliesst sich damit dort, wo
- * sie angefangen hat.
+ * Jetzt gibt es EINEN Raum: Farbebenen aus CSS, darauf die WebGL-Szene mit Nebel
+ * und Kristallen. Die Stimmung wandert mit dem Fortschritt – Violett im Hero,
+ * Cyan durch Werdegang und Projekte, Violett wieder zum Kontakt.
  *
  * Die Deckkraft der Ebenen wird pro Frame direkt geschrieben, nicht ueber
  * React-State: das sind drei style-Zuweisungen statt eines Renderbaums.
@@ -22,27 +22,57 @@ import useScrollProgress from "@/lib/useScrollProgress"
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
 
-/* Wo die drei Stimmungen ihren Hoehepunkt haben, als Anteil der Seitenlaenge.
-   HERO_END etwas hinter dem ersten Bildschirm, damit das Violett nicht schon
-   verschwunden ist, wenn der Hero noch zu sehen ist. */
+/* Wo die drei Stimmungen ihren Hoehepunkt haben, als Anteil der Seitenlaenge. */
 const HERO_END = 0.24
 const WORK_CENTER = 0.52
 const WORK_SPREAD = 0.42
 const CONTACT_START = 0.76
 
-/* Der Nebel ist bei NEBULA_END ausgeblendet; erst ab NEBULA_PAUSE haelt der
-   Shader an. Der Abstand dazwischen ist Hysterese: ohne ihn wuerde ein Wackeln
-   um die Schwelle die Schleife dauernd an- und abschalten. */
-const NEBULA_END = 0.34
-const NEBULA_PAUSE = 0.4
-
-const Atmosphere = () => {
+const Atmosphere = ({
+    scene: sceneEnabled,
+    crystalCount,
+    onSelectCrystal,
+}: {
+    /** Laeuft die WebGL-Szene (Nebel)? Sonst bleibt es bei den CSS-Ebenen. */
+    scene: boolean
+    /** Anzahl anklickbarer Steine. 0 = Nebel ohne Kristalle. */
+    crystalCount: number
+    onSelectCrystal: (index: number) => void
+}) => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
     const heroRef = useRef<HTMLDivElement>(null)
     const workRef = useRef<HTMLDivElement>(null)
     const contactRef = useRef<HTMLDivElement>(null)
-    const nebulaRef = useRef<HTMLDivElement>(null)
-    const [nebulaPaused, setNebulaPaused] = useState(false)
+    const canvasRef = useRef<HTMLDivElement>(null)
+    const sceneRef = useRef<SpaceScene | null>(null)
+
+    const [hovered, setHovered] = useState<number | null>(null)
+
+    /* Die Callbacks liegen in Refs, damit ein neuer onSelectCrystal nicht die
+       Szene neu aufbaut – das waere jedes Mal ein neuer WebGL-Kontext. */
+    const selectRef = useRef(onSelectCrystal)
+    useEffect(() => {
+        selectRef.current = onSelectCrystal
+    }, [onSelectCrystal])
+
+    useEffect(() => {
+        if (!canvasRef.current || !sceneEnabled) return
+
+        const scene = new SpaceScene({
+            container: canvasRef.current,
+            count: crystalCount,
+            onHover: setHovered,
+            onSelect: (index) => selectRef.current(index),
+        })
+        sceneRef.current = scene
+        attachScene(scene)
+
+        return () => {
+            attachScene(null)
+            sceneRef.current = null
+            scene.dispose()
+        }
+    }, [sceneEnabled, crystalCount])
 
     const onProgress = useCallback((p: number) => {
         if (heroRef.current) {
@@ -54,14 +84,7 @@ const Atmosphere = () => {
         if (contactRef.current) {
             contactRef.current.style.opacity = String(clamp01((p - CONTACT_START) / (1 - CONTACT_START)))
         }
-        if (nebulaRef.current) {
-            /* Drift nach oben erzeugt Tiefe, ohne dass etwas erkennbar
-               "wandert". Die Ebenen darunter tragen den Raum weiter, wenn der
-               Nebel ausgeblendet ist. */
-            nebulaRef.current.style.opacity = String(clamp01(1 - p / NEBULA_END))
-            nebulaRef.current.style.transform = `translate3d(0, ${(-p * 5).toFixed(2)}vh, 0)`
-        }
-        setNebulaPaused(p > NEBULA_PAUSE)
+        sceneRef.current?.setPageProgress(p)
     }, [])
 
     useScrollProgress(pageRef, onProgress)
@@ -73,11 +96,10 @@ const Atmosphere = () => {
             <div className="absolute inset-0 bg-page"/>
 
             {/* Hero – Violett.
-                Kraeftig genug, dass der Hero auch ohne den Shader nach etwas
-                aussieht: auf schwachen Geraeten laeuft er auf Stufe 0, bei
-                prefers-reduced-motion steht er still, und ohne WebGL fehlt er
-                ganz. Der Hintergrund darf in keinem dieser Faelle flach
-                schwarz sein. */}
+                Kraeftig genug, dass der Hero auch ohne die Szene nach etwas
+                aussieht: auf schwachen Geraeten laeuft sie auf Stufe 0, bei
+                prefers-reduced-motion gar nicht, und ohne WebGL fehlt sie ganz.
+                Der Hintergrund darf in keinem dieser Faelle flach schwarz sein. */}
             <div
                 ref={heroRef}
                 className="absolute inset-0"
@@ -109,10 +131,8 @@ const Atmosphere = () => {
                 }}
             />
 
-            {/* Nebel-Shader – einmal fuer die ganze Seite statt nur im Hero */}
-            <div ref={nebulaRef} className="absolute inset-0 will-change-transform">
-                <NebulaWebGL paused={nebulaPaused}/>
-            </div>
+            {/* Nebel und Kristalle – eine Canvas, ein WebGL-Kontext */}
+            <div ref={canvasRef} className="absolute inset-0"/>
 
             {/* Raster und Rauschen liegen ueber allem, EINMAL statt pro Sektion */}
             <div
@@ -131,10 +151,9 @@ const Atmosphere = () => {
                 }}
             />
 
-            {/* Vignette: haelt den Blick in der Mitte. Absichtlich zurueckhaltend
-                und erst spaet einsetzend – eine kraeftigere Fassung hat die
-                Violett-Ebene am oberen Rand aufgefressen, genau dort, wo sie
-                leuchten soll. */}
+            {/* Vignette: haelt den Blick in der Mitte. Zurueckhaltend und spaet
+                einsetzend – eine kraeftigere Fassung hat die Violett-Ebene am
+                oberen Rand aufgefressen, genau dort, wo sie leuchten soll. */}
             <div
                 className="absolute inset-0"
                 style={{
@@ -142,8 +161,25 @@ const Atmosphere = () => {
                         "radial-gradient(140% 110% at 50% 45%, transparent 70%, rgba(5,7,13,0.55) 100%)",
                 }}
             />
+
+            {/* Zeigt an, dass ein Stein anklickbar ist. Die Canvas selbst kann
+                keinen cursor setzen, weil sie hinter dem Inhalt liegt und keine
+                Zeiger-Ereignisse bekommt – deshalb haengt der Zeiger am body. */}
+            {hovered !== null && <CursorHint/>}
         </div>
     )
+}
+
+/** Setzt den Zeiger auf "anklickbar", solange ein Stein unter ihm liegt. */
+const CursorHint = () => {
+    useEffect(() => {
+        const previous = document.body.style.cursor
+        document.body.style.cursor = "pointer"
+        return () => {
+            document.body.style.cursor = previous
+        }
+    }, [])
+    return null
 }
 
 export default Atmosphere
