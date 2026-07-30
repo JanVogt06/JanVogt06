@@ -2,12 +2,22 @@ import {useEffect} from "react"
 import type {RefObject} from "react"
 
 /**
+ * Wie weit die Strecke reicht, ueber die gemessen wird.
+ *
+ * `pin`  – Elementhoehe minus ein Fenster: die Strecke, auf der ein
+ *          `position: sticky`-Kind darin oben festklebt. Fuer die gepinnte
+ *          Projekt-Schiene.
+ * `exit` – die ganze Elementhoehe: 1 ist erreicht, wenn das Element oben ganz
+ *          hinausgescrollt ist. Fuer bildschirmhohe Abschnitte wie den Hero, wo
+ *          `pin` eine Strecke von null ergaebe.
+ */
+export type ProgressMode = "pin" | "exit"
+
+/**
  * Scroll-Fortschritt eines Elements, 0 bis 1.
  *
- * 0, sobald die Oberkante des Elements die Oberkante des Fensters erreicht;
- * 1, sobald seine Unterkante die Unterkante des Fensters erreicht. Genau ueber
- * diese Strecke steht ein `position: sticky`-Kind darin oben fest – der
- * Fortschritt beschreibt also die Zeit, in der die Sektion gepinnt ist.
+ * 0, sobald die Oberkante des Elements die Oberkante des Fensters erreicht; 1 am
+ * Ende der Strecke, die `mode` festlegt.
  *
  * Angetrieben von scroll-Ereignissen, nicht von einer Dauerschleife: der
  * Fortschritt kann sich nur aendern, wenn gescrollt wird. Eine rAF-Stufe
@@ -23,6 +33,7 @@ import type {RefObject} from "react"
 export const useScrollProgress = (
     ref: RefObject<HTMLElement | null>,
     onProgress: (progress: number) => void,
+    mode: ProgressMode = "pin",
 ) => {
     useEffect(() => {
         const el = ref.current
@@ -32,9 +43,8 @@ export const useScrollProgress = (
         let last = -1
 
         const measure = () => {
-            /* Strecke, auf der gepinnt wird: Elementhoehe minus ein Fenster. Ist
-               das Element nicht hoeher als das Fenster, gibt es keine Strecke. */
-            const travel = el.offsetHeight - window.innerHeight
+            const travel =
+                mode === "exit" ? el.offsetHeight : el.offsetHeight - window.innerHeight
             const progress =
                 travel <= 0
                     ? 0
@@ -66,7 +76,7 @@ export const useScrollProgress = (
             window.removeEventListener("resize", request)
             if (frame) cancelAnimationFrame(frame)
         }
-    }, [ref, onProgress])
+    }, [ref, onProgress, mode])
 }
 
 export default useScrollProgress

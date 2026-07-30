@@ -1,4 +1,5 @@
 import {MotionConfig} from 'framer-motion'
+import Atmosphere from './components/Atmosphere'
 import RepoBar from './components/RepoBar'
 import Hero from './components/Hero'
 import About from './components/About'
@@ -14,6 +15,8 @@ function App() {
            bekommt in JEDER motion-Komponente nur noch Ein-/Ausblenden statt
            Transforms – auch in allem, was spaeter dazukommt. */
         <MotionConfig reducedMotion="user">
+            {/* Ein Hintergrund fuer alle Sektionen – siehe Atmosphere.tsx */}
+            <Atmosphere/>
             <RepoBar/>
             <Hero/>
             <About/>

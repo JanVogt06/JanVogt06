@@ -105,25 +105,7 @@ const AwardsCard = ({className = ""}: { className?: string }) => (
 
 const About = () => {
     return (
-        <section id="about" className="relative overflow-hidden py-20 md:py-28">
-
-            {/* Hintergrund – Cyan steht auf der Seite fuer Arbeit/Technik */}
-            <div className="absolute inset-0">
-                <div
-                    className="absolute -right-1/4 top-0 h-[600px] w-[600px] rounded-full bg-brand/10 blur-[150px]"/>
-                <div
-                    className="absolute -left-1/4 bottom-0 h-[500px] w-[500px] rounded-full bg-brand-deep/10 blur-[150px]"/>
-            </div>
-
-            {/* Punktraster */}
-            <div
-                className="absolute inset-0 opacity-[0.02]"
-                style={{
-                    backgroundImage: 'radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px)',
-                    backgroundSize: '30px 30px'
-                }}
-            />
-
+        <section id="about" className="relative py-20 md:py-28">
             <div className="relative mx-auto max-w-[88rem] px-4 sm:px-6 lg:px-8">
 
                 <SectionHeader

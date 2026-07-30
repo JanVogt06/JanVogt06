@@ -145,3 +145,37 @@
         @apply font-mono text-white/40;
     }
 }
+
+/**
+ * Endlos laufende Deko-Animationen.
+ *
+ * Standen als <style>-Block in Hero.tsx – also in einem String im Modul, den
+ * React bei jedem Mount erneut in den <head> schreibt. Keyframes sind
+ * Stylesheet-Inhalt und gehoeren hierher.
+ */
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.animate-gradient-shift {
+    animation: gradient-shift 8s ease infinite;
+    background-size: 200% 200%;
+}
+
+@keyframes caret {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0; }
+}
+
+.animate-caret {
+    animation: caret 1.1s steps(1, end) infinite;
+}
+
+/* Blinken kann unangenehm bis ausloesend sein – dann steht der Cursor still. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-caret,
+    .animate-gradient-shift {
+        animation: none;
+    }
+}

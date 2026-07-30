@@ -62,14 +62,7 @@ const Contact = () => {
            Inhalt abzuschneiden. */
         <section
             id="contact"
-            className="relative flex min-h-screen items-center overflow-hidden py-16 md:py-24">
-
-            {/* Violett wie im Hero: die Seite schliesst sich */}
-            <div
-                className="absolute -left-1/4 top-0 h-[600px] w-[600px] animate-pulse rounded-full bg-glow/20 blur-[150px] md:h-[800px] md:w-[800px]"/>
-            <div
-                className="absolute -right-1/4 bottom-0 h-[400px] w-[400px] animate-pulse rounded-full bg-brand/10 blur-[150px] md:h-[600px] md:w-[600px]"
-                style={{animationDelay: '1s'}}/>
+            className="relative flex min-h-screen items-center py-16 md:py-24">
 
             <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
