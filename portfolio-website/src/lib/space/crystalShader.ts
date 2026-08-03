@@ -67,17 +67,25 @@ export const crystalFragmentShader = `
            alle Steine im Gleichschritt pulsieren. */
         float breathe = 0.9 + 0.1 * sin(uTime * 0.7 + vWorldPosition.z * 0.6);
 
-        vec3 col = uCore * core * 0.55 + uRim * fresnel * 1.5;
+        /* Drei Anteile statt zwei. Mit nur Kante und Kern blieben die Flaechen
+           fast durchsichtig und die Steine sahen wie Drahtgitter aus, nicht wie
+           Steine. "body" gibt jeder Facette einen Grundton, unabhaengig vom
+           Blickwinkel – das ist die Masse, die es vorher nicht gab.
+           (Keine Backticks in diesem Kommentar: der GLSL-Code steht in einem
+           Template-Literal, sie wuerden es beenden.) */
+        float body = 0.16 + 0.20 * facing;
+
+        vec3 col = uCore * (core * 0.95 + body) + uRim * fresnel * 1.9;
 
         // Angefasst: Kante deutlich heller, Kern etwas waermer.
-        col += uRim * fresnel * uHighlight * 1.3;
-        col += uCore * core * uHighlight * 0.35;
+        col += uRim * fresnel * uHighlight * 1.4;
+        col += uCore * core * uHighlight * 0.45;
 
         col *= breathe;
 
-        /* Deckkraft folgt der Helligkeit: dunkle Flaechen werden durchsichtig,
-           dadurch sieht man Sterne durch den Stein. */
-        float alpha = clamp(fresnel * 0.9 + core * 0.35, 0.0, 1.0);
+        /* Deckkraft folgt der Helligkeit: dunkle Flaechen bleiben
+           durchscheinend, dadurch sieht man Sterne durch den Stein. */
+        float alpha = clamp(fresnel * 0.95 + core * 0.45 + body * 0.8, 0.0, 1.0);
 
         gl_FragColor = vec4(col, alpha * uFade);
     }
