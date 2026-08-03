@@ -5,6 +5,7 @@ import {
 } from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
+import {HudCorners, HudLabel} from "./Hud"
 import {projects, primaryLinkOf} from "@/lib/projects"
 import {space} from "@/lib/space/controller"
 
@@ -44,17 +45,6 @@ const screenshots = import.meta.glob<string>(
 
 const screenshotFor = (slug: string) =>
     Object.entries(screenshots).find(([path]) => path.includes(`/${slug}.`))?.[1]
-
-/** Eckklammer – vier davon rahmen die Tafel, ohne sie einzukasteln. */
-const Corner = ({at}: {at: "tl" | "tr" | "bl" | "br"}) => {
-    const sides = {
-        tl: "left-0 top-0 border-l border-t",
-        tr: "right-0 top-0 border-r border-t",
-        bl: "left-0 bottom-0 border-l border-b",
-        br: "right-0 bottom-0 border-r border-b",
-    }[at]
-    return <span aria-hidden="true" className={`absolute h-5 w-5 border-brand/50 ${sides}`}/>
-}
 
 const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
     const project = projects[index]
@@ -98,18 +88,15 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
         >
             <div className="surface relative flex w-full max-w-[84rem] flex-col p-5 sm:p-8">
-                <Corner at="tl"/>
-                <Corner at="tr"/>
-                <Corner at="bl"/>
-                <Corner at="br"/>
+                <HudCorners/>
 
                 {/* Kopfzeile: Kennung und Schliessen */}
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
                     <div className="min-w-0">
-                        <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-brand/80">
-                            // Projekt {String(index + 1).padStart(2, "0")}
+                        <HudLabel tone="text-brand/80" className="!text-[11px]">
+                            Projekt {String(index + 1).padStart(2, "0")}
                             <span className="text-white/25"> · {project.hash}</span>
-                        </p>
+                        </HudLabel>
                         <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
                             {project.title}
                         </h2>
@@ -138,9 +125,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     <div className="flex min-h-0 flex-col overflow-y-auto lg:col-span-5">
                         <p className="leading-relaxed text-white/65">{project.description}</p>
 
-                        <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.28em] text-white/30">
-                            // Stack
-                        </p>
+                        <HudLabel className="mt-6">Stack</HudLabel>
                         <ul className="mt-3 grid grid-cols-2 border border-white/[0.07]">
                             {project.tech.map((tech) => (
                                 <li

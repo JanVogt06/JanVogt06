@@ -7,6 +7,7 @@ import CrystalCallouts from "./CrystalCallouts"
 import {fadeUp} from "@/lib/motion"
 import {projects} from "@/lib/projects"
 import useScrollProgress from "@/lib/useScrollProgress"
+import {HudSectionHeader} from "./Hud"
 import {space} from "@/lib/space/controller"
 import {scrollToPosition} from "@/lib/smoothScroll"
 
@@ -33,27 +34,23 @@ const total = projects.length
 
 const SectionIntro = () => (
     <div className="flex items-end justify-between gap-6">
-        <div>
-            <p className="mb-3 font-mono text-sm text-white/40">
-                <span className="text-status">$</span> git log
-                <span className="text-white/25"> --oneline projekte/</span>
-            </p>
-            <h2 className="text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
-                Meine{" "}
-                <span className="bg-gradient-to-r from-brand to-brand-deep bg-clip-text text-transparent">
-                    Projekte
-                </span>
-            </h2>
-        </div>
+        <HudSectionHeader
+            id="02"
+            command="git log"
+            argument="--oneline projekte/"
+            title="Meine"
+            accent="Projekte"
+            className="min-w-0 flex-1"
+        />
 
         <a
             href="https://github.com/JanVogt06?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="group hidden shrink-0 items-center gap-2 font-mono text-sm text-white/40 transition-colors hover:text-brand sm:inline-flex"
+            className="group hidden shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35 transition-colors hover:text-brand sm:inline-flex"
         >
             alle Repositories
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
         </a>
     </div>
 )

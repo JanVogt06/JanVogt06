@@ -35,15 +35,24 @@
  * Tokens referenziert keine Komponente der Seite.
  */
 @theme inline {
-    /* Die Radius-Skala bleibt vollstaendig: sie ueberschreibt Tailwinds
-       Standardwerte fuer rounded-xl/2xl/3xl, die die Seite ueberall benutzt. */
-    --radius-sm: calc(var(--radius) - 4px);
-    --radius-md: calc(var(--radius) - 2px);
-    --radius-lg: var(--radius);
-    --radius-xl: calc(var(--radius) + 4px);
-    --radius-2xl: calc(var(--radius) + 8px);
-    --radius-3xl: calc(var(--radius) + 12px);
-    --radius-4xl: calc(var(--radius) + 16px);
+    /**
+     * Rechte Winkel fuer die ganze Seite.
+     *
+     * Ein Schalter statt einer Aufraeumaktion in zwanzig Komponenten: die Skala
+     * ueberschreibt Tailwinds Standardwerte fuer rounded-sm bis rounded-3xl, und
+     * die Seite benutzt diese Klassen ueberall. Weiche Ecken lesen sich freundlich
+     * und app-artig; eine Instrumententafel im Weltraum ist beides nicht.
+     *
+     * rounded-full ist davon unberuehrt (eigener Wert, 9999px) – Punkte, Pillen
+     * und runde Knoepfe bleiben rund, wo sie rund sein muessen.
+     */
+    --radius-sm: 0px;
+    --radius-md: 1px;
+    --radius-lg: 2px;
+    --radius-xl: 2px;
+    --radius-2xl: 2px;
+    --radius-3xl: 3px;
+    --radius-4xl: 3px;
     --color-background: var(--background);
     --color-foreground: var(--foreground);
     --color-primary: var(--primary);
