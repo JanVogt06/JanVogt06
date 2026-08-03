@@ -19,6 +19,20 @@ import {space} from "@/lib/space/controller"
  * data-native-scroll: lib/smoothScroll.ts laesst das Rad diesem Element, statt
  * die Seite darunter weiterzuschieben. Sonst dreht sich der Ring unter dem HUD
  * weg, waehrend man darin liest.
+ *
+ * HOEHE
+ *
+ * Die Tafel ist immer so hoch wie das Fenster, nie hoeher – man soll darin nicht
+ * scrollen muessen. Vorher war sie es: fester Innenabstand von 6 rem oben und
+ * unten plus eine Vorschau von 58vh plus Kopfzeile und Datenblock ergaben
+ * zwangslaeufig mehr als eine Bildschirmhoehe.
+ *
+ * Jetzt rechnet sie sich aus dem verfuegbaren Platz: der Rahmen ist ein
+ * flex-Container mit max-h-full, Kopf- und Fusszeile sind shrink-0, und der
+ * Mittelteil bekommt min-h-0 flex-1. Ohne min-h-0 waere er nicht kleiner als
+ * sein Inhalt – das ist die Voreinstellung bei flex und der haeufigste Grund,
+ * warum solche Layouts doch ueberlaufen. Die Vorschau bekommt h-full statt einer
+ * vh-Hoehe und fuellt damit genau, was uebrig ist.
  */
 
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
@@ -77,102 +91,107 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             role="dialog"
             aria-modal="true"
             aria-label={project.title}
-            className="animate-hud fixed inset-0 z-40 overflow-y-auto bg-page/85 backdrop-blur-xl"
+            /* items-stretch (Voreinstellung, deshalb kein items-center): die Tafel
+               fuellt die Hoehe, die der Innenabstand uebrig laesst. Mit
+               items-center war sie nur so hoch wie ihr Inhalt – auf 950 px
+               Fensterhoehe blieben 455 px leer und die Vorschau war 311 px hoch. */
+            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
         >
-            <div className="mx-auto max-w-[84rem] px-6 py-24 sm:px-10">
-                <div className="relative surface p-6 sm:p-10">
-                    <Corner at="tl"/>
-                    <Corner at="tr"/>
-                    <Corner at="bl"/>
-                    <Corner at="br"/>
+            <div className="surface relative flex w-full max-w-[84rem] flex-col p-5 sm:p-8">
+                <Corner at="tl"/>
+                <Corner at="tr"/>
+                <Corner at="bl"/>
+                <Corner at="br"/>
 
-                    {/* Kopfzeile: Kennung und Schliessen */}
-                    <div className="flex items-start justify-between gap-6 border-b border-white/[0.07] pb-5">
-                        <div className="min-w-0">
-                            <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-brand/80">
-                                // Projekt {String(index + 1).padStart(2, "0")}
-                                <span className="text-white/25"> · {project.hash}</span>
-                            </p>
-                            <h2 className="mt-3 truncate text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">
-                                {project.title}
-                            </h2>
-                            <p className="mt-1 text-white/45">{project.subtitle}</p>
-                        </div>
+                {/* Kopfzeile: Kennung und Schliessen */}
+                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
+                    <div className="min-w-0">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-brand/80">
+                            // Projekt {String(index + 1).padStart(2, "0")}
+                            <span className="text-white/25"> · {project.hash}</span>
+                        </p>
+                        <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
+                            {project.title}
+                        </h2>
+                        <p className="mt-1 truncate text-sm text-white/45">{project.subtitle}</p>
+                    </div>
 
+                    <div className="flex shrink-0 items-center gap-4">
+                        <span className="hidden font-mono text-[10px] uppercase tracking-[0.28em] text-white/25 lg:inline">
+                            Esc
+                        </span>
                         <button
                             ref={closeRef}
                             onClick={onClose}
                             aria-label="Projekt schließen"
-                            className="shrink-0 rounded-sm border border-white/10 p-2.5 text-white/60 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                            className="border border-white/10 p-2.5 text-white/60 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
                         >
                             <X className="h-4 w-4"/>
                         </button>
                     </div>
-
-                    <div className="mt-8 grid gap-10 lg:grid-cols-12">
-                        {/* Datenblock */}
-                        <div className="lg:col-span-5">
-                            <p className="leading-relaxed text-white/65">{project.description}</p>
-
-                            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.28em] text-white/30">
-                                // Stack
-                            </p>
-                            <ul className="mt-3 grid grid-cols-2 gap-px overflow-hidden border border-white/[0.07]">
-                                {project.tech.map((tech) => (
-                                    <li
-                                        key={tech}
-                                        className="bg-white/[0.02] px-3 py-2 font-mono text-[11px] text-white/60 outline outline-1 outline-white/[0.05]"
-                                    >
-                                        {tech}
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                                {primary && (
-                                    <a
-                                        href={primary.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
-                                    >
-                                        {primary.label}
-                                        <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
-                                    </a>
-                                )}
-                                {project.links.github && (
-                                    <a
-                                        href={project.links.github}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-white/50 transition-colors hover:text-white"
-                                    >
-                                        <Github className="h-3.5 w-3.5"/>
-                                        Code
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Laufende Anwendung */}
-                        <div className="relative aspect-[16/10] lg:col-span-7 lg:aspect-auto lg:h-[58vh]">
-                            <BrowserFrame
-                                url={primary?.href}
-                                embeddable={project.embed !== false}
-                                poster={screenshotFor(project.slug)}
-                                icon={Icon}
-                                note={project.previewNote}
-                                active={previewActive}
-                                onActivate={() => setPreviewActive(true)}
-                                onClose={() => setPreviewActive(false)}
-                            />
-                        </div>
-                    </div>
                 </div>
 
-                <p className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.28em] text-white/25">
-                    Esc zum Schließen
-                </p>
+                {/* min-h-0: sonst waere der Mittelteil nie kleiner als sein Inhalt */}
+                <div className="mt-5 grid min-h-0 flex-1 gap-6 lg:grid-cols-12 lg:gap-8">
+                    {/* Datenblock. Auf kurzen Fenstern darf NUR diese Spalte
+                        scrollen – die Tafel selbst bleibt bildschirmhoch. */}
+                    <div className="flex min-h-0 flex-col overflow-y-auto lg:col-span-5">
+                        <p className="leading-relaxed text-white/65">{project.description}</p>
+
+                        <p className="mt-6 font-mono text-[10px] uppercase tracking-[0.28em] text-white/30">
+                            // Stack
+                        </p>
+                        <ul className="mt-3 grid grid-cols-2 border border-white/[0.07]">
+                            {project.tech.map((tech) => (
+                                <li
+                                    key={tech}
+                                    className="border-b border-r border-white/[0.05] bg-white/[0.02] px-3 py-2 font-mono text-[11px] text-white/60"
+                                >
+                                    {tech}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+                            {primary && (
+                                <a
+                                    href={primary.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
+                                >
+                                    {primary.label}
+                                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                </a>
+                            )}
+                            {project.links.github && (
+                                <a
+                                    href={project.links.github}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-white/50 transition-colors hover:text-white"
+                                >
+                                    <Github className="h-3.5 w-3.5"/>
+                                    Code
+                                </a>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Laufende Anwendung – fuellt genau, was uebrig bleibt. */}
+                    <div className="relative min-h-[14rem] lg:col-span-7 lg:min-h-0">
+                        <BrowserFrame
+                            url={primary?.href}
+                            embeddable={project.embed !== false}
+                            poster={screenshotFor(project.slug)}
+                            icon={Icon}
+                            note={project.previewNote}
+                            active={previewActive}
+                            onActivate={() => setPreviewActive(true)}
+                            onClose={() => setPreviewActive(false)}
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     )
