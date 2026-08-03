@@ -90,13 +90,13 @@ const RepoBar = () => {
                 </div>
 
                 {/* Branch-Pill */}
-                <span className="hidden items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 font-mono text-xs font-medium text-brand md:inline-flex">
+                <span className="hidden items-center gap-1.5 border border-brand/25 bg-brand/10 px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.14em] text-brand md:inline-flex">
                     <GitBranch className="h-3.5 w-3.5"/>
                     main
                 </span>
 
                 {/* Datei-/Abschnitts-Navigation */}
-                <nav className="ml-auto flex min-w-0 items-center gap-0.5 font-mono text-[11px] sm:gap-1 sm:text-sm">
+                <nav className="ml-auto flex min-w-0 items-center gap-0.5 font-mono text-[11px] uppercase tracking-[0.12em] sm:gap-1 sm:text-xs">
                     {sections.map((s) => {
                         const isActive = active === s.id
                         return (
@@ -112,7 +112,7 @@ const RepoBar = () => {
                                 {isActive && (
                                     <motion.span
                                         layoutId="repobar-active"
-                                        className="absolute inset-x-1 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand to-brand-deep"
+                                        className="absolute inset-x-1 -bottom-px h-px bg-gradient-to-r from-brand to-brand-deep"
                                         transition={{type: "spring", stiffness: 400, damping: 32}}
                                     />
                                 )}
@@ -125,7 +125,7 @@ const RepoBar = () => {
                 <button
                     onClick={copyClone}
                     title={CLONE_CMD}
-                    className="ml-1 hidden shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 font-mono text-xs text-white/60 transition-colors hover:border-white/20 hover:bg-white/[0.07] hover:text-white lg:flex"
+                    className="ml-1 hidden shrink-0 items-center gap-1.5 border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-white/55 transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand lg:flex"
                 >
                     {copied ? <Check className="h-3.5 w-3.5 text-status"/> : <Copy className="h-3.5 w-3.5"/>}
                     <span>{copied ? "kopiert!" : "git clone"}</span>
@@ -138,7 +138,7 @@ const RepoBar = () => {
                     href={GITHUB_REPO}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex shrink-0 items-center gap-1.5 rounded-md border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 text-xs font-medium text-white/70 transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
+                    className="flex shrink-0 items-center gap-1.5 border border-white/[0.08] bg-white/[0.03] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-white/60 transition-colors hover:border-brand/30 hover:bg-brand/10 hover:text-brand"
                 >
                     <Star className="h-3.5 w-3.5"/>
                     <span className="hidden sm:inline">Star</span>
