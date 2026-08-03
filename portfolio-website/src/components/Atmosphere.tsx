@@ -1,6 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import {SpaceScene} from "@/lib/space/SpaceScene"
-import {attachScene} from "@/lib/space/controller"
+import {attachScene, emitAnchor} from "@/lib/space/controller"
 import useScrollProgress from "@/lib/useScrollProgress"
 
 /**
@@ -63,6 +63,7 @@ const Atmosphere = ({
             count: crystalCount,
             onHover: setHovered,
             onSelect: (index) => selectRef.current(index),
+            onAnchor: emitAnchor,
         })
         sceneRef.current = scene
         attachScene(scene)
@@ -74,7 +75,9 @@ const Atmosphere = ({
         }
     }, [sceneEnabled, crystalCount])
 
-    const onProgress = useCallback((p: number) => {
+    const onProgress = useCallback((raw: number) => {
+        // useScrollProgress begrenzt nicht mehr – hier ist 0..1 gewollt.
+        const p = clamp01(raw)
         if (heroRef.current) {
             heroRef.current.style.opacity = String(clamp01(1 - p / HERO_END))
         }

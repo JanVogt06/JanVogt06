@@ -212,6 +212,16 @@
     animation: overlay-in 0.3s ease;
 }
 
+/* Das HUD faehrt aus der Tiefe heran, wie eine eingeblendete Tafel. */
+@keyframes hud-in {
+    from { opacity: 0; transform: scale(0.985); }
+    to   { opacity: 1; transform: none; }
+}
+
+.animate-hud {
+    animation: hud-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Blinken kann unangenehm bis ausloesend sein – dann steht der Cursor still.
    Die Ein-Animationen bleiben als reines Einblenden, ohne Verschieben. */
 @media (prefers-reduced-motion: reduce) {
@@ -220,7 +230,8 @@
         animation: none;
     }
 
-    .animate-caption {
+    .animate-caption,
+    .animate-hud {
         animation-name: overlay-in;
     }
 }

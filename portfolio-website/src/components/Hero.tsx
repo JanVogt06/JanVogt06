@@ -1,33 +1,31 @@
 import {useCallback, useRef} from "react"
 import {ArrowDown, ArrowRight} from "lucide-react"
 import {motion, useReducedMotion} from "framer-motion"
-import portraitImage from "../data/images/portrait.webp"
 import {EASE} from "@/lib/motion"
 import useTypewriter from "@/lib/useTypewriter"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {scrollToElement} from "@/lib/smoothScroll"
 
 /**
- * Hero als Titelkarte: Atmosphaere, ein riesiger Name, eine Zeile, weiter.
+ * Hero als Titelkarte: der Name, eine Zeile, der Kristallring dahinter.
  *
- * Vorher standen hier vier Dinge gleichzeitig um Aufmerksamkeit: das Portrait
- * mittig, der Nebel, ein Terminalfenster rechts und der Qualitaets-Regler oben
- * rechts. Auf einem 1280er-Fenster hat das Portrait die Ueberschrift beschnitten.
+ * Hier standen einmal vier Dinge gleichzeitig um Aufmerksamkeit: Portrait mittig,
+ * Nebel, Terminalfenster rechts, Qualitaets-Regler oben rechts.
  *
- * Das Terminalfenster ist ganz weg, nicht nur verschoben. Es zeigte als
- * `git status` genau die fuenf Punkte, die der Werdegang direkt darunter
- * ausfuehrlich erzaehlt – B.Sc., Werkstudent, Oberliga, Wurzel, Bad Berka. Die
- * gleiche Liste zweimal auf zwei Bildschirmen ist keine Verdichtung, sondern
- * Wiederholung. Vom Terminal bleibt die Idee an der Stelle, wo sie etwas kostet:
- * die `$ whoami`-Zeile tippt sich selbst.
+ * Das Terminalfenster ist ganz weg, nicht verschoben. Es zeigte als `git status`
+ * genau die fuenf Punkte, die der Werdegang direkt darunter ausfuehrlich
+ * erzaehlt. Dieselbe Liste zweimal ist keine Verdichtung, sondern Wiederholung.
+ * Vom Terminal bleibt die Idee da, wo sie etwas kostet: die `$ whoami`-Zeile
+ * tippt sich selbst.
  *
- * Das Portrait bleibt – ein Portfolio ohne Gesicht ist aermer –, aber rechts und
- * angeschnitten statt mittig, damit es die Typografie rahmt statt mit ihr zu
- * konkurrieren.
+ * Das Portrait ist ebenfalls raus. Der Kristallring der Projekte ist jetzt ueber
+ * die ganze Seite sichtbar und kreist im Hero genau dort, wo das Portrait stand –
+ * beide auf der rechten Haelfte. Zwei Blickfaenger auf derselben Flaeche gewinnt
+ * keiner. Die Datei portrait.webp bleibt liegen, falls es woanders einen Platz
+ * bekommt.
  *
- * Beim Scrollen zieht der Text schneller weg als das Portrait und blendet aus.
- * Das ist derselbe Griff wie bei der Projekt-Schiene: die Bewegung gehoert dem
- * Scroll, nicht einer Zeitachse.
+ * Beim Scrollen zieht der Text weg und blendet aus, waehrend der Ring naeher
+ * kommt: die Bewegung gehoert dem Scroll, nicht einer Zeitachse.
  */
 
 const COMMAND = "whoami"
@@ -35,20 +33,16 @@ const COMMAND = "whoami"
 const Hero = () => {
     const sectionRef = useRef<HTMLElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
-    const portraitRef = useRef<HTMLDivElement>(null)
     const reduced = useReducedMotion()
 
     const {typed, done} = useTypewriter(COMMAND, {startDelay: 550, cps: 18, enabled: !reduced})
 
-    const onProgress = useCallback((p: number) => {
+    const onProgress = useCallback((raw: number) => {
+        // useScrollProgress begrenzt nicht mehr; oberhalb des Hero ist raw < 0.
+        const p = Math.min(Math.max(raw, 0), 1)
         if (contentRef.current) {
             contentRef.current.style.transform = `translate3d(0, ${(-p * 18).toFixed(2)}vh, 0)`
             contentRef.current.style.opacity = String(Math.max(0, 1 - p * 1.6))
-        }
-        if (portraitRef.current) {
-            // Langsamer als der Text: dadurch entsteht Tiefe.
-            portraitRef.current.style.transform = `translate3d(0, ${(-p * 7).toFixed(2)}vh, 0)`
-            portraitRef.current.style.opacity = String(Math.max(0, 1 - p * 1.15))
         }
     }, [])
 
@@ -56,32 +50,6 @@ const Hero = () => {
 
     return (
         <section ref={sectionRef} id="hero" className="relative min-h-screen w-full overflow-hidden">
-
-            {/* Portrait: rechts, angeschnitten, hinter dem Text */}
-            <div
-                ref={portraitRef}
-                className="pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[55%] justify-end will-change-transform md:flex"
-            >
-                <motion.img
-                    src={portraitImage}
-                    alt="Jan Vogt"
-                    initial={{opacity: 0, scale: 1.04}}
-                    animate={{opacity: 1, scale: 1}}
-                    transition={{duration: 1.2, delay: 0.15, ease: EASE}}
-                    className="h-full w-auto self-end object-contain object-bottom"
-                    style={{
-                        /* Nach links und oben ausblenden, damit keine Kante
-                           entsteht und der Text auf jedem Untergrund lesbar
-                           bleibt. */
-                        maskImage:
-                            "linear-gradient(to left, black 55%, transparent 100%), linear-gradient(to top, black 70%, transparent 100%)",
-                        maskComposite: "intersect",
-                        WebkitMaskImage:
-                            "linear-gradient(to left, black 55%, transparent 100%), linear-gradient(to top, black 70%, transparent 100%)",
-                        WebkitMaskComposite: "source-in",
-                    }}
-                />
-            </div>
 
             <div
                 ref={contentRef}

@@ -14,10 +14,14 @@ import type {RefObject} from "react"
 export type ProgressMode = "pin" | "exit"
 
 /**
- * Scroll-Fortschritt eines Elements, 0 bis 1.
+ * Scroll-Fortschritt eines Elements. 0, sobald seine Oberkante die Oberkante des
+ * Fensters erreicht; 1 am Ende der Strecke, die `mode` festlegt.
  *
- * 0, sobald die Oberkante des Elements die Oberkante des Fensters erreicht; 1 am
- * Ende der Strecke, die `mode` festlegt.
+ * ABSICHTLICH NICHT auf 0..1 begrenzt. Vor dem Element ist der Wert negativ,
+ * danach groesser als 1 – und genau das braucht man: mit Begrenzung stand der
+ * Wert vor dem Element konstant auf 0, der Rueckruf feuerte nicht mehr, und
+ * Effekte, die sich beim HERANSCROLLEN aufbauen sollen, konnten nicht wissen, wie
+ * weit es noch ist. Wer nur 0..1 will, begrenzt selbst.
  *
  * Angetrieben von scroll-Ereignissen, nicht von einer Dauerschleife: der
  * Fortschritt kann sich nur aendern, wenn gescrollt wird. Eine rAF-Stufe
@@ -45,10 +49,7 @@ export const useScrollProgress = (
         const measure = () => {
             const travel =
                 mode === "exit" ? el.offsetHeight : el.offsetHeight - window.innerHeight
-            const progress =
-                travel <= 0
-                    ? 0
-                    : Math.min(Math.max(-el.getBoundingClientRect().top / travel, 0), 1)
+            const progress = travel <= 0 ? 0 : -el.getBoundingClientRect().top / travel
 
             // Nur melden, wenn sich sichtbar etwas geaendert hat.
             if (Math.abs(progress - last) < 0.0001) return

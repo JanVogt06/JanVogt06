@@ -4,7 +4,7 @@ import {nebulaVertexShader, nebulaFragmentShader} from "./nebulaShader"
 import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
 
 /**
- * Die Weltraum-Szene: Nebel-Hintergrund und schwebende Kristalle in EINEM
+ * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
  * WebGL-Kontext.
  *
  * Warum ein Kontext und nicht zwei Canvas: Browser erlauben nur eine Handvoll
@@ -13,31 +13,83 @@ import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
  * heisst, dass eine Vorschau keinen mehr bekommt.
  *
  * Gerendert wird in zwei Durchgaengen in dieselbe Canvas: erst der Hintergrund
- * mit einer orthografischen Kamera (bildschirmfuellendes Rechteck), dann die
- * Kristalle mit einer perspektivischen. Zwischen beiden wird nur der Tiefen-,
- * nicht der Farbpuffer geleert – so liegt der Nebel hinter den Steinen.
+ * mit einer orthografischen Kamera, dann die Kristalle mit einer perspektivischen.
+ * Zwischen beiden wird nur der Tiefen-, nicht der Farbpuffer geleert.
+ *
+ * AUFBAU DES RINGS
+ *
+ * Zwei verschachtelte Gruppen, und das ist der Trick, auf dem alles beruht:
+ *
+ *   tiltGroup (rotation.x = RING_TILT, fest)
+ *     └ spinGroup (rotation.y = Ringwinkel, vom Scroll)
+ *         └ die Steine auf einem Kreis
+ *
+ * Dadurch ist die Stelle, an der ein Stein "vorne" ankommt, ein FESTER Punkt in
+ * der Welt. Die Kamera kann dort stehenbleiben, waehrend der Ring sich unter ihr
+ * dreht – genau das gibt das Gefuehl, dass man an einem Stein ankommt, statt ihm
+ * nachzufahren. Mit einer einzigen Gruppe muesste die Kamera jeden Frame
+ * mitwandern.
  *
  * Bewusst ohne React: die Klasse laeuft in ihrer eigenen rAF-Schleife und
- * bekommt von aussen nur Zahlen. Sechzig Zustandsaenderungen pro Sekunde durch
- * einen Komponentenbaum zu schicken waere Unsinn.
+ * bekommt von aussen nur Zahlen.
  */
 
-/** Abstand der Steine auf der z-Achse; auch die Strecke pro Projekt. */
-const SPACING = 9
+/** Radius des Rings. */
+const RING_RADIUS = 5.4
 
-/** Wie weit die Kamera vor dem jeweils aktuellen Stein steht. */
-const CAMERA_DISTANCE = 6
+/** Neigung des Rings – ohne sie saehe man einen Strich statt einer Ellipse. */
+const RING_TILT = 0.30
 
-/** Ruheposition der Steine: rechts der Mitte, damit links der Text Platz hat. */
-const CRYSTAL_X = 2.15
+/**
+ * Kameraabstand zum vorderen Stein: im Hero weit weg, im Feld naeher, beim
+ * Heranzoomen am naechsten.
+ *
+ * FOCUS_DISTANCE stand zuerst auf 4,6 – bei 46 Grad Blickwinkel sind das 3,9
+ * Einheiten Sichthoehe, und der Stein war mit ~4 Einheiten hoeher als der
+ * Bildschirm. Die Beschriftungsfahnen setzen am Steinrand an und landeten
+ * dadurch ausserhalb des Fensters (Titel bei x = 1746 auf 1440 px Breite).
+ * Bei 6,4 nimmt der Stein etwa ein Drittel der Bildhoehe ein.
+ */
+const HERO_DISTANCE = 17
+const FIELD_DISTANCE = 11
+const FOCUS_DISTANCE = 6.4
 
-/** Ab wann der Nebel ganz ausgeblendet ist, als Anteil der Seitenlaenge. */
-const NEBULA_END = 0.34
+/**
+ * Eigenbewegung des Rings, wenn nicht gescrollt wird: ein langsames Pendeln um
+ * ±0,12 rad, kein Weiterdrehen.
+ *
+ * Erst driftete der Ring frei weiter. Das bricht aber die Ausrichtung: die
+ * Kamera schaut auf einen FESTEN Punkt, an dem die Steine ankommen, und nach
+ * zehn Sekunden stand Stein 0 gut 26 Grad daneben. Damit zeigte der Zaehler ein
+ * anderes Projekt als der Stein vor der Kamera, und die Beschriftungsfahnen
+ * landeten ausserhalb des Bildes.
+ *
+ * Ein Pendeln ist begrenzt und kehrt immer zurueck. Es wird ausserdem mit
+ * (1 - enter) ausgeblendet: in der Projekt-Sektion steht die Drehung damit
+ * ausschliesslich am Scroll, und Stein i steht bei Station i exakt vorne.
+ */
+const IDLE_SWAY = 0.12
+const IDLE_SWAY_SPEED = 0.1
 
-/* Farbpaare der fuenf Steine. Sie bleiben im Farbraum der Seite – Cyan als
-   Primaerakzent, Violett als Gegenpol – und variieren nur innerhalb dessen.
-   Fuenf frei gewaehlte Buntfarben waeren genau der Fehler, den die Seite
-   vorher an jeder Karte gemacht hat. */
+/** Seitlicher Kamera-Versatz im Hero, damit links der Name Platz hat. */
+const HERO_LATERAL = 2.6
+
+/**
+ * Der Nebel bleibt ueber die ganze Seite stehen und wird nur leiser.
+ *
+ * Vorher war er bei 34 % der Seitenlaenge ganz ausgeblendet – dann steht der
+ * Kristallring im Nichts, und die Seite faellt genau in der Mitte auseinander.
+ * Der Weltraum muss durchgehen.
+ */
+const NEBULA_MIN = 0.55
+
+const SAMPLE_FRAMES = 60
+const MIN_ACCEPTABLE_FPS = 45
+const SHARD_COUNT = 20
+
+/* Farbpaare der Steine – im Farbraum der Seite (Cyan als Primaerakzent,
+   Violett als Gegenpol). Fuenf frei gewaehlte Buntfarben waeren genau der
+   Fehler, den die Seite vorher an jeder Karte gemacht hat. */
 const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#0b3a5c", rim: "#22d3ee"},
     {core: "#2a1b52", rim: "#a78bfa"},
@@ -46,30 +98,36 @@ const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#123a5e", rim: "#38bdf8"},
 ]
 
-/** Kleine Splitter im Hintergrund – reine Tiefenwirkung, nicht anklickbar. */
-const SHARD_COUNT = 16
-
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-/* Deterministischer Pseudo-Zufall: die Splitter sollen bei jedem Laden gleich
-   liegen (Math.random waere bei jedem Reload eine andere Szene). */
+/* Deterministischer Pseudo-Zufall: die Szene soll bei jedem Laden gleich
+   aussehen (Math.random waere jedes Mal eine andere). */
 const hash = (n: number) => {
     const x = Math.sin(n * 127.1) * 43758.5453
     return x - Math.floor(x)
 }
 
-const SAMPLE_FRAMES = 60
-const MIN_ACCEPTABLE_FPS = 45
+/** Wo der vordere Stein im Bild steht – fuer die Beschriftungspfeile im DOM. */
+export type Anchor = {
+    /** Index des Steins, der vorne steht. */
+    index: number
+    /** Bildschirmposition seines Mittelpunkts, in CSS-Pixeln. */
+    x: number
+    y: number
+    /** Halbe Hoehe des Steins in Pixeln – Ansatzpunkt fuer die Pfeile. */
+    radius: number
+    /** 1 wenn ein Stein genau vorne steht, 0 dazwischen. */
+    strength: number
+}
 
 export type SpaceSceneOptions = {
     container: HTMLElement
-    /** Anzahl anklickbarer Steine – ein Stein pro Projekt. */
     count: number
-    /** Zeiger steht auf Stein i, oder auf keinem. */
     onHover: (index: number | null) => void
-    /** Stein i wurde angeklickt. */
     onSelect: (index: number) => void
+    /** Jeden Frame: wo steht der vordere Stein im Bild? */
+    onAnchor: (anchor: Anchor) => void
 }
 
 export class SpaceScene {
@@ -77,22 +135,30 @@ export class SpaceScene {
     private readonly renderer: THREE.WebGLRenderer
     private readonly onHover: SpaceSceneOptions["onHover"]
     private readonly onSelect: SpaceSceneOptions["onSelect"]
+    private readonly onAnchor: SpaceSceneOptions["onAnchor"]
 
     private readonly bgScene = new THREE.Scene()
     private readonly bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     private readonly bgMaterial: THREE.ShaderMaterial
+    private readonly bgGeometry = new THREE.PlaneGeometry(2, 2)
 
     private readonly scene = new THREE.Scene()
     private readonly camera: THREE.PerspectiveCamera
+    private readonly tiltGroup = new THREE.Group()
+    private readonly spinGroup = new THREE.Group()
+
     private readonly crystals: THREE.Mesh[] = []
-    private readonly shards: THREE.Mesh[] = []
-    private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
-    private readonly shardGeometry = new THREE.TetrahedronGeometry(1, 0)
+    private readonly baseScales: THREE.Vector3[] = []
     private readonly materials: THREE.ShaderMaterial[] = []
+    private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
+
+    private readonly shards: THREE.Mesh[] = []
+    private readonly shardGeometry = new THREE.TetrahedronGeometry(1, 0)
     private readonly shardMaterial: THREE.ShaderMaterial
 
     private readonly raycaster = new THREE.Raycaster()
     private readonly pointer = new THREE.Vector2()
+    private readonly projected = new THREE.Vector3()
     private pointerInside = false
 
     private readonly clock = new THREE.Clock()
@@ -100,26 +166,24 @@ export class SpaceScene {
     private frame = 0
     private running = false
     private disposed = false
-
     private frames = 0
     private sampleStart = 0
 
-    /* Zielwerte von aussen und die nachlaufenden Istwerte. Das Nachlaufen ist
-       derselbe Griff wie beim traegen Scrollen: nichts springt. */
     private pageProgress = 0
-    private fieldProgress = 0
     private fieldTarget = 0
-    private fieldVisible = false
-    private fadeCurrent = 0
-    private focusIndex: number | null = null
-    private focusBlend = 0
+    private fieldProgress = 0
+    private approachTarget = 0
+    private enter = 0
     private hovered: number | null = null
+    private selected: number | null = null
+    private selectBlend = 0
     private paused = false
 
-    constructor({container, count, onHover, onSelect}: SpaceSceneOptions) {
+    constructor({container, count, onHover, onSelect, onAnchor}: SpaceSceneOptions) {
         this.container = container
         this.onHover = onHover
         this.onSelect = onSelect
+        this.onAnchor = onAnchor
         this.quality = detectQuality()
 
         const width = container.clientWidth
@@ -133,8 +197,6 @@ export class SpaceScene {
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.renderer.setClearColor(0x000000, 0)
-        /* Wir leeren selbst: erst alles, dann zwischen den Durchgaengen nur die
-           Tiefe, damit der zweite Durchgang auf dem ersten liegt. */
         this.renderer.autoClear = false
         container.appendChild(this.renderer.domElement)
 
@@ -152,11 +214,15 @@ export class SpaceScene {
             depthWrite: false,
             depthTest: false,
         })
-        this.bgScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.bgMaterial))
+        this.bgScene.add(new THREE.Mesh(this.bgGeometry, this.bgMaterial))
 
-        // --- Kristalle ---
-        this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 200)
+        // --- Ring ---
+        this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 300)
+        this.tiltGroup.rotation.x = RING_TILT
+        this.tiltGroup.add(this.spinGroup)
+        this.scene.add(this.tiltGroup)
 
+        const step = (Math.PI * 2) / Math.max(count, 1)
         for (let i = 0; i < count; i++) {
             const {core, rim} = CRYSTAL_COLORS[i % CRYSTAL_COLORS.length]
             const material = new THREE.ShaderMaterial({
@@ -167,7 +233,7 @@ export class SpaceScene {
                     uRim: {value: new THREE.Color(rim)},
                     uTime: {value: 0},
                     uHighlight: {value: 0},
-                    uFade: {value: 0},
+                    uFade: {value: 1},
                 },
                 transparent: true,
                 /* Additiv und ohne Tiefenschreiben: ueberlappende Steine
@@ -178,22 +244,26 @@ export class SpaceScene {
             this.materials.push(material)
 
             const mesh = new THREE.Mesh(this.geometry, material)
-            mesh.position.set(
-                CRYSTAL_X + Math.sin(i * 1.3) * 0.3,
-                Math.sin(i * 1.9) * 0.5,
-                -i * SPACING,
+            const angle = i * step
+            // theta = 0 liegt vorne (Richtung Kamera, +z).
+            mesh.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS)
+            /* Ungleichmaessig skaliert: ein Kristall ist kein Ball. Gleiche
+               Geometrie, trotzdem sieht jeder Stein anders aus. */
+            const scale = new THREE.Vector3(
+                0.62 + hash(i) * 0.12,
+                0.9 + hash(i + 5) * 0.3,
+                0.62 + hash(i + 2) * 0.1,
             )
-            /* Ungleichmaessig skaliert: ein Kristall ist kein Ball. Die
-               Grundform bleibt dieselbe Geometrie, jeder Stein sieht trotzdem
-               anders aus. */
-            mesh.scale.set(1.25, 1.6 + hash(i) * 0.5, 1.25)
-            mesh.rotation.set(hash(i) * Math.PI, hash(i + 9) * Math.PI, hash(i + 3) * 0.6)
+            mesh.scale.copy(scale)
+            this.baseScales.push(scale)
+            mesh.rotation.set(hash(i) * Math.PI, hash(i + 9) * Math.PI, hash(i + 3) * 0.5)
             mesh.userData.index = i
-            this.scene.add(mesh)
+
+            this.spinGroup.add(mesh)
             this.crystals.push(mesh)
         }
 
-        // --- Splitter im Hintergrund ---
+        // --- Splitter, nur Tiefenwirkung ---
         this.shardMaterial = new THREE.ShaderMaterial({
             vertexShader: crystalVertexShader,
             fragmentShader: crystalFragmentShader,
@@ -202,7 +272,7 @@ export class SpaceScene {
                 uRim: {value: new THREE.Color("#7dd3fc")},
                 uTime: {value: 0},
                 uHighlight: {value: 0},
-                uFade: {value: 0},
+                uFade: {value: 0.45},
             },
             transparent: true,
             blending: THREE.AdditiveBlending,
@@ -211,15 +281,16 @@ export class SpaceScene {
 
         for (let i = 0; i < SHARD_COUNT; i++) {
             const mesh = new THREE.Mesh(this.shardGeometry, this.shardMaterial)
+            const angle = hash(i * 1.7) * Math.PI * 2
+            const radius = RING_RADIUS * (1.5 + hash(i * 2.9) * 1.4)
             mesh.position.set(
-                (hash(i * 2.1) - 0.5) * 16,
-                (hash(i * 3.7) - 0.5) * 10,
-                -hash(i * 5.3) * (count * SPACING),
+                Math.sin(angle) * radius,
+                (hash(i * 3.7) - 0.5) * 9,
+                Math.cos(angle) * radius,
             )
-            const s = 0.15 + hash(i * 7.9) * 0.28
-            mesh.scale.setScalar(s)
+            mesh.scale.setScalar(0.12 + hash(i * 7.9) * 0.24)
             mesh.rotation.set(hash(i) * 6.28, hash(i + 4) * 6.28, 0)
-            this.scene.add(mesh)
+            this.spinGroup.add(mesh)
             this.shards.push(mesh)
         }
 
@@ -233,33 +304,36 @@ export class SpaceScene {
 
     // ---------------------------------------------------------------- Steuerung
 
-    /** Fortschritt der ganzen Seite, 0 bis 1 – steuert den Nebel. */
     setPageProgress(progress: number) {
         this.pageProgress = progress
         this.sync()
     }
 
-    /** Fortschritt der Projekt-Sektion, 0 bis 1 – fliegt durch das Feld. */
     setFieldProgress(progress: number) {
         this.fieldTarget = progress
         this.sync()
     }
 
-    /** Ist das Kristallfeld ueberhaupt in der Naehe des Fensters? */
-    setFieldVisible(visible: boolean) {
-        this.fieldVisible = visible
+    /**
+     * Wie weit der Ring herangezogen ist: 0 = Hero-Abstand, 1 = Sektion steht.
+     *
+     * Kommt vom Scroll-Fortschritt der Projekt-Sektion, nicht von einem
+     * IntersectionObserver – dessen Rueckruf kann verspaetet kommen, und dann
+     * bliebe der Ring im Hero-Abstand stehen und die Beschriftung unsichtbar.
+     */
+    setApproach(approach: number) {
+        this.approachTarget = approach
         this.sync()
     }
 
-    /** Von aussen anhalten – z.B. solange eine Live-Vorschau laeuft. */
     setPaused(paused: boolean) {
         this.paused = paused
         this.sync()
     }
 
-    /** Stein i in den Blick nehmen, oder zurueck zum Scroll-Verlauf. */
-    setFocus(index: number | null) {
-        this.focusIndex = index
+    /** Stein i ist geoeffnet (HUD offen), oder keiner. */
+    setSelected(index: number | null) {
+        this.selected = index
         this.sync()
     }
 
@@ -267,25 +341,13 @@ export class SpaceScene {
 
     private pixelRatio() {
         const mobile = this.container.clientWidth < 768
-        const ratios = mobile
-            ? [0.5, 0.75, 1.0, 1.5, 2.0]
-            : [0.75, 1.0, 1.25, 1.75, 2.5]
+        const ratios = mobile ? [0.5, 0.75, 1.0, 1.5, 2.0] : [0.75, 1.0, 1.25, 1.75, 2.5]
         return Math.min(window.devicePixelRatio, ratios[Math.round(this.quality * 4)])
-    }
-
-    private nebulaFade() {
-        return clamp01(1 - this.pageProgress / NEBULA_END)
-    }
-
-    /** Laeuft ueberhaupt noch etwas Sichtbares? */
-    private hasVisibleWork() {
-        return this.nebulaFade() > 0.01 || this.fadeCurrent > 0.01 || this.fieldVisible
     }
 
     private sync = () => {
         if (this.disposed) return
-        const shouldRun =
-            !this.paused && document.visibilityState === "visible" && this.hasVisibleWork()
+        const shouldRun = !this.paused && document.visibilityState === "visible"
         if (shouldRun === this.running) return
         this.running = shouldRun
         if (shouldRun) {
@@ -301,11 +363,9 @@ export class SpaceScene {
         if (this.quality === 0) return
         if (this.frames === 0) this.sampleStart = now
         if (++this.frames < SAMPLE_FRAMES) return
-
         const fps = (this.frames * 1000) / (now - this.sampleStart)
         this.frames = 0
         if (fps >= MIN_ACCEPTABLE_FPS) return
-
         const lower = stepDown(this.quality)
         if (lower === null) return
         this.quality = lower
@@ -318,84 +378,131 @@ export class SpaceScene {
         this.adapt(now)
         this.update()
         this.render()
+    }
 
-        /* Wenn nichts mehr zu sehen ist, haelt die Schleife sich selbst an –
-           z.B. wenn der Nebel ausgeblendet ist und das Feld ausser Sicht. */
-        if (!this.hasVisibleWork()) {
-            this.running = false
-            cancelAnimationFrame(this.frame)
-            this.frame = 0
-        }
+    /** Fester Weltpunkt, an dem ein Stein "vorne" ankommt. */
+    private frontPoint() {
+        return new THREE.Vector3(
+            0,
+            -RING_RADIUS * Math.sin(RING_TILT),
+            RING_RADIUS * Math.cos(RING_TILT),
+        )
     }
 
     private update() {
         const time = this.clock.getElapsedTime()
-
-        // Nebel
-        this.bgMaterial.uniforms.uTime.value = time
-        this.bgMaterial.uniforms.uFade.value = this.nebulaFade()
-
-        // Nachlaufende Werte
-        this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.12)
-        this.fadeCurrent = lerp(this.fadeCurrent, this.fieldVisible ? 1 : 0, 0.08)
-        this.focusBlend = lerp(this.focusBlend, this.focusIndex === null ? 0 : 1, 0.09)
-
         const count = this.crystals.length
-        const scrollZ = CAMERA_DISTANCE - this.fieldProgress * (count - 1) * SPACING
 
-        /* Beim Fokussieren wandert die Kamera vor den gewaehlten Stein und
-           etwas naeher heran; ausserhalb des Fokus folgt sie dem Scroll. */
-        let targetZ = scrollZ
-        let targetX = 0
-        if (this.focusIndex !== null) {
-            const focused = this.crystals[this.focusIndex]
-            targetZ = lerp(scrollZ, focused.position.z + CAMERA_DISTANCE * 0.62, this.focusBlend)
-            targetX = lerp(0, focused.position.x * 0.45, this.focusBlend)
-        }
-        this.camera.position.set(targetX, 0, targetZ)
-        this.camera.lookAt(targetX * 0.4, 0, targetZ - CAMERA_DISTANCE)
 
-        // Steine: drehen, atmen, ein- und ausblenden
+        // --- Nebel: bleibt ueber die ganze Seite stehen, wird nur leiser ---
+        this.bgMaterial.uniforms.uTime.value = time
+        this.bgMaterial.uniforms.uFade.value = lerp(1, NEBULA_MIN, clamp01(this.pageProgress))
+
+        // --- Nachlaufende Werte ---
+        this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
+        this.enter = lerp(this.enter, this.approachTarget, 0.09)
+        this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
+
+        // --- Ring drehen: Stein `station` kommt nach vorn ---
+        const step = (Math.PI * 2) / Math.max(count, 1)
+        const station = this.fieldProgress * Math.max(count - 1, 1)
+        const sway = Math.sin(time * IDLE_SWAY_SPEED) * IDLE_SWAY * (1 - this.enter)
+        this.spinGroup.rotation.y = -station * step + sway
+
+        /* --- Kamera ---
+           Sie bleibt an dem festen Punkt stehen, an dem die Steine vorbeikommen,
+           und zieht nur heran: im Hero weit weg (ganzer Ring zu sehen), im Feld
+           naeher, und noch einmal deutlich naeher, wenn ein Stein GENAU vorne
+           steht. Daraus entsteht das Heranzoomen an jeden Stein. */
+        const front = this.frontPoint()
+        const nearest = Math.round(station)
+        const offCentre = Math.abs(station - nearest)
+        const centred = clamp01(1 - offCentre * 2.4)
+
+        const base = lerp(HERO_DISTANCE, FIELD_DISTANCE, this.enter)
+        const distance = lerp(base, FOCUS_DISTANCE, centred * this.enter)
+        // Bei offenem HUD noch ein Stueck naeher.
+        const finalDistance = lerp(distance, FOCUS_DISTANCE * 0.82, this.selectBlend)
+
+        /* Seitlicher Versatz im Hero: die Kamera steht links, blickt aber parallel
+           nach vorn – dadurch rueckt der Ring nach rechts im Bild und laesst
+           links Platz fuer den Namen. In der Projekt-Sektion faellt der Versatz
+           weg, damit die Beschriftungsfahnen nach beiden Seiten Platz haben.
+           Das Blickziel muss mitwandern, sonst schwenkt die Kamera ein. */
+        const lateral = HERO_LATERAL * (1 - this.enter)
+        this.camera.position.set(front.x - lateral, front.y + 0.55, front.z + finalDistance)
+        this.camera.lookAt(front.x - lateral, front.y, front.z)
+
+        // --- Steine ---
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
             const material = this.materials[i]
 
-            mesh.rotation.y += 0.0022 + i * 0.0003
-            mesh.rotation.x = Math.sin(time * 0.25 + i) * 0.14
-            mesh.position.y = Math.sin(i * 1.9) * 0.5 + Math.sin(time * 0.5 + i * 1.4) * 0.16
+            /* Eigendrehung am Scroll: der Stein, der vorne steht, dreht sich,
+               waehrend man scrollt. Dazu eine sehr langsame Grunddrehung, damit
+               er auch im Stillstand lebt. */
+            mesh.rotation.y = hash(i + 9) * Math.PI + station * 2.4 + time * 0.06
+            mesh.rotation.x = hash(i) * Math.PI + Math.sin(time * 0.25 + i) * 0.1
 
-            /* Nur Steine in der Naehe der Kamera sind voll da. Ohne das wuerden
-               alle fuenf gleichzeitig leuchten und die Tiefe waere weg. */
-            const distance = Math.abs(mesh.position.z + CAMERA_DISTANCE - this.camera.position.z)
-            const near = clamp01(1 - distance / (SPACING * 1.15))
-
+            const isNearest = i === nearest
+            const highlightTarget = this.hovered === i || this.selected === i ? 1 : 0
             material.uniforms.uTime.value = time
-            material.uniforms.uFade.value = this.fadeCurrent * near
             material.uniforms.uHighlight.value = lerp(
                 material.uniforms.uHighlight.value,
-                this.hovered === i || this.focusIndex === i ? 1 : 0,
+                highlightTarget,
                 0.12,
             )
+            /* Der vordere Stein tritt hervor, die anderen bleiben sichtbar –
+               es ist ein Ring, kein Karussell mit nur einem Bild. */
+            material.uniforms.uFade.value = lerp(
+                material.uniforms.uFade.value,
+                isNearest ? 1 : lerp(0.5, 0.32, this.enter),
+                0.08,
+            )
 
-            const focusScale = this.focusIndex === i ? 1 + 0.12 * this.focusBlend : 1
-            mesh.scale.set(1.25 * focusScale, (1.6 + hash(i) * 0.5) * focusScale, 1.25 * focusScale)
+            const grow = isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1
+            mesh.scale.copy(this.baseScales[i]).multiplyScalar(grow)
         }
 
-        // Splitter
         this.shardMaterial.uniforms.uTime.value = time
-        this.shardMaterial.uniforms.uFade.value = this.fadeCurrent * 0.5
-        for (let i = 0; i < this.shards.length; i++) {
-            this.shards[i].rotation.y += 0.0009 + hash(i) * 0.001
-        }
+
+        // --- Ankerpunkt fuer die Beschriftung im DOM ---
+        /* strength enthaelt `enter`: ausserhalb der Projekt-Sektion ist der
+           Fortschritt auf 0 bzw. 1 geklemmt, damit stuende dort rechnerisch immer
+           ein Stein genau vorne – die Beschriftung wuerde schon im Hero
+           auftauchen. */
+        this.camera.updateMatrixWorld()
+        this.reportAnchor(nearest, centred * this.enter)
 
         if (this.pointerInside) this.updateHover()
+    }
+
+    private reportAnchor(index: number, strength: number) {
+        const mesh = this.crystals[index]
+        if (!mesh) return
+
+        const rect = this.renderer.domElement.getBoundingClientRect()
+        mesh.getWorldPosition(this.projected)
+        this.projected.project(this.camera)
+
+        const x = ((this.projected.x + 1) / 2) * rect.width
+        const y = ((1 - this.projected.y) / 2) * rect.height
+
+        /* Halbe Hoehe in Pixeln: denselben Punkt noch einmal um die Steinhoehe
+           nach oben versetzt projizieren und den Abstand messen. Rechnet die
+           Perspektive automatisch mit. */
+        const top = mesh.getWorldPosition(new THREE.Vector3())
+        top.y += mesh.scale.y
+        top.project(this.camera)
+        const topY = ((1 - top.y) / 2) * rect.height
+
+        this.onAnchor({index, x, y, radius: Math.abs(y - topY), strength})
     }
 
     private updateHover() {
         this.raycaster.setFromCamera(this.pointer, this.camera)
         const hit = this.raycaster.intersectObjects(this.crystals, false)[0]
         const index = hit ? (hit.object.userData.index as number) : null
-        // Nur melden, wenn sich etwas geaendert hat – sonst rendert React dauernd.
         if (index === this.hovered) return
         this.hovered = index
         this.onHover(index)
@@ -409,8 +516,6 @@ export class SpaceScene {
     }
 
     /**
-     * Zeigerposition merken.
-     *
      * Die Canvas liegt hinter dem Inhalt (negativer z-index) und kann selbst
      * keine Klicks bekommen. Deshalb haengen die Zeiger-Ereignisse am window –
      * ausser wenn der Zeiger auf etwas Bedienbarem steht, dann gehoert er dem.
@@ -430,7 +535,6 @@ export class SpaceScene {
             -((event.clientY - rect.top) / rect.height) * 2 + 1,
         )
         this.pointerInside = true
-        // Bei angehaltener Schleife trotzdem einmal pruefen.
         if (!this.running) this.updateHover()
     }
 
@@ -468,12 +572,10 @@ export class SpaceScene {
 
         this.geometry.dispose()
         this.shardGeometry.dispose()
+        this.bgGeometry.dispose()
         this.bgMaterial.dispose()
         this.shardMaterial.dispose()
         this.materials.forEach((m) => m.dispose())
-        this.bgScene.traverse((o) => {
-            if (o instanceof THREE.Mesh) o.geometry.dispose()
-        })
         this.renderer.dispose()
         if (this.container.contains(this.renderer.domElement)) {
             this.container.removeChild(this.renderer.domElement)

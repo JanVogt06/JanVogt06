@@ -270,12 +270,14 @@ export const nebulaFragmentShader = `
         correctedUv.x *= aspect;
         
         // === NEBEL ===
-        /* NEBULA_GAIN: der Nebel war als saftiges Magenta die lauteste Flaeche
-           der Seite – eher Gaming-Wallpaper als Weltraum. Heruntergezogen wird er
-           zu Schlieren, durch die man Sterne sieht, statt zu einer Wolke, die
-           alles einfaerbt. Die Sterne bleiben dabei voll hell: sie kosten fast
-           nichts und tragen den Weltraum-Eindruck allein. */
-        vec3 col = nebula(correctedUv, time) * 0.42;
+        /* Der Nebel war urspruenglich ein saftiges Magenta, das alles eingefaerbt
+           hat – eher Gaming-Wallpaper als Weltraum. Ein erster Versuch, ihn zu
+           beruhigen, hat ihn dann DOPPELT gedaempft: Farbe auf 42 % und
+           gleichzeitig den Alpha-Faktor gesenkt. Da Alpha aus der Helligkeit
+           berechnet wird, hat sich beides multipliziert und vom Nebel blieben
+           ~13 % – also nichts Sichtbares.
+           0.72 nimmt die Saettigung heraus, ohne ihn wegzunehmen. */
+        vec3 col = nebula(correctedUv, time) * 0.72;
 
         // === STERNE – Ebenen je nach Qualitaet ===
         float starField = 0.0;
@@ -295,9 +297,9 @@ export const nebulaFragmentShader = `
 
         col += vec3(0.92, 0.96, 1.0) * starField;
 
-        // === RANDSCHIMMER – dezent, nur als Andeutung von Tiefe ===
-        col += vec3(0.16, 0.06, 0.30) * smoothstep(0.5, 0.0, uv.x) * 0.22;
-        col += vec3(0.10, 0.16, 0.26) * smoothstep(0.5, 1.0, uv.x) * 0.18;
+        // === RANDSCHIMMER – Andeutung von Tiefe, kuehler als vorher ===
+        col += vec3(0.20, 0.08, 0.38) * smoothstep(0.5, 0.0, uv.x) * 0.30;
+        col += vec3(0.10, 0.20, 0.32) * smoothstep(0.5, 1.0, uv.x) * 0.24;
 
         // === VIGNETTE ===
         vec2 vignetteUv = uv * (1.0 - uv);
@@ -308,8 +310,14 @@ export const nebulaFragmentShader = `
         // === ABSCHLUSS ===
         col = clamp(col, 0.0, 1.0);
 
-        float alpha = clamp(length(col) * 1.15, 0.0, 0.8);
-        alpha *= smoothstep(0.0, 0.3, uv.y);
+        /* Alpha aus der Helligkeit. Wichtig: hier NICHT zusaetzlich daempfen –
+           die Farbe ist oben schon gedaempft, und beides multipliziert sich. */
+        float alpha = clamp(length(col) * 1.6, 0.0, 0.92);
+
+        /* Nur der unterste Rand laeuft weich aus, damit die Canvas-Kante nicht
+           zu sehen ist. Vorher lief das ueber die unteren 30 % und hat als
+           dunkles Band die halbe Flaeche gekostet. */
+        alpha *= smoothstep(0.0, 0.1, uv.y);
 
         gl_FragColor = vec4(col, alpha * uFade);
     }
