@@ -120,6 +120,19 @@ const IDLE_SWAY_SPEED = 0.1
 const HERO_LATERAL = 2.6
 
 /**
+ * Ab welchem Heranziehen die Steine ueberhaupt anfassbar sind.
+ *
+ * Der Ring liegt die ganze Zeit in der Szene – er ist im Hero und im Werdegang
+ * nur weit weg. Ohne diese Schwelle trifft der Raycast ihn trotzdem: ein Klick
+ * irgendwo im Hero oeffnete ein Projekt, und der Zeiger wurde dort schon zur
+ * Hand. Entfernung interessiert einen Strahl nicht.
+ *
+ * 0.75 heisst: erst wenn die Projekt-Sektion praktisch steht. Unterhalb davon
+ * gehoert die Szene zur Kulisse und nimmt keine Eingaben.
+ */
+const INTERACTIVE_ENTER = 0.75
+
+/**
  * Der Nebel bleibt ueber die ganze Seite stehen und wird nur leiser.
  *
  * Vorher war er bei 34 % der Seitenlaenge ganz ausgeblendet – dann steht der
@@ -293,9 +306,9 @@ export class SpaceScene {
             GALAXY_POINTS[Math.round(this.quality * 4)],
             GALAXY_RADIUS,
         )
-        this.galaxy.points.position.z = GALAXY_Z
-        this.galaxy.material.uniforms.uPixelRatio.value = this.renderer.getPixelRatio()
-        this.scene.add(this.galaxy.points)
+        this.galaxy.object.position.z = GALAXY_Z
+        this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
+        this.scene.add(this.galaxy.object)
 
         /* --- Wegpunkte des Werdegangs ---
            Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
@@ -491,6 +504,7 @@ export class SpaceScene {
         this.quality = lower
         this.bgMaterial.uniforms.uQuality.value = lower
         this.renderer.setPixelRatio(this.pixelRatio())
+        this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
     }
 
     private loop = (now: number) => {
@@ -598,10 +612,10 @@ export class SpaceScene {
         }
 
         // --- Galaxie ---
-        this.galaxy.material.uniforms.uTime.value = time
+        this.galaxy.setTime(time)
         /* Beim Ankommen am Ring ausblenden: sonst liegt die Scheibe als helles
            Feld hinter den Steinen und frisst deren Kanten. */
-        this.galaxy.material.uniforms.uOpacity.value = 1 - this.enter * 0.75
+        this.galaxy.setOpacity(1 - this.enter * 0.8)
 
         // --- Wegpunkte des Werdegangs ---
         const station3 = this.aboutProgress * Math.max(WAYPOINT_COUNT - 1, 1)
@@ -671,7 +685,19 @@ export class SpaceScene {
         this.onAnchor({kind, index, x, y, radius: Math.abs(y - topY), strength})
     }
 
+    /** Sind die Steine gerade anfassbar? Nur in der Projekt-Sektion. */
+    private get interactive() {
+        return this.enter >= INTERACTIVE_ENTER
+    }
+
     private updateHover() {
+        if (!this.interactive) {
+            if (this.hovered !== null) {
+                this.hovered = null
+                this.onHover(null)
+            }
+            return
+        }
         this.raycaster.setFromCamera(this.pointer, this.camera)
         const hit = this.raycaster.intersectObjects(this.crystals, false)[0]
         const index = hit ? (hit.object.userData.index as number) : null
@@ -711,6 +737,7 @@ export class SpaceScene {
     }
 
     private handleClick = (event: MouseEvent) => {
+        if (!this.interactive) return
         if (this.isOverInteractive(event.target)) return
         if (this.hovered === null) return
         this.onSelect(this.hovered)
@@ -728,6 +755,7 @@ export class SpaceScene {
         const height = this.container.clientHeight
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
+        this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.bgMaterial.uniforms.uResolution.value.set(width, height)
         this.camera.aspect = width / height
         this.camera.updateProjectionMatrix()
