@@ -4,36 +4,65 @@ import * as THREE from "three"
  * Eine Spiralgalaxie aus Punkten, durch die man hindurchfliegt.
  *
  * Sie ist der Grund, warum die Seite ueberhaupt eine Reise sein kann: vorher gab
- * es einen Nebel als Tapete und einen Kristallring, und dazwischen nichts. Der
- * Weg vom Hero zu den Projekten war eine Leerstelle, in die der Werdegang
- * hineingesetzt wurde – und genau das hat man gesehen. Jetzt liegt dort etwas,
- * das man durchquert.
+ * es einen Nebel als Tapete und einen Kristallring, und dazwischen nichts.
  *
- * Aufbau: zwei Arme, logarithmisch aufgewickelt, mit Streuung nach aussen hin.
- * Die Scheibe liegt in der XY-Ebene, die Kamera fliegt entlang -Z hinein – so
- * sieht man die Spirale als Spirale und nicht von der Kante.
+ * WARUM SIE ZUERST FAST UNSICHTBAR WAR
  *
- * Bewusst Punkte und keine Geometrie: 6000 Punkte kosten einen Draw-Call und
- * kein Licht. Additiv gemischt ueberlagern sie sich zu dichten Kernen, ohne dass
- * dafuer etwas gerechnet werden muss.
+ * Die Punktgroesse stand auf `aSize * pixelRatio * (14 / dist)`. Bei den
+ * tatsaechlichen Abstaenden (~30 Einheiten) und aSize um 1,5 ergibt das gut EINEN
+ * Pixel – und ein Pixel mit weichem Rand und additiver Mischung ist nichts. Die
+ * Galaxie war da, nur eben als Staub in Subpixelgroesse. Jetzt traegt die Formel
+ * einen deutlich groesseren Faktor, und die Helligkeit steckt in einem eigenen
+ * Attribut statt in der Groesse.
+ *
+ * WIE SIE REALISTISCHER WIRD
+ *
+ * Eine echte Spiralgalaxie ist nicht ein Muster aus gleich hellen Punkten. Sie
+ * hat drei Bestandteile, und die haben hier jeweils ihre eigene Verteilung:
+ *
+ *   Bulge   – dichter, kugeliger Kern. Alte Sterne, deshalb warm-gelblich.
+ *             Radial stark zur Mitte verdichtet.
+ *   Scheibe – die Arme. Junge Sterne, deshalb blau-weiss. Logarithmische
+ *             Spirale mit Klumpung: echte Arme sind keine glatten Linien,
+ *             sondern Ketten von Sternentstehungsgebieten.
+ *   Halo    – wenige, schwache Sterne weit ausserhalb der Scheibe. Ohne ihn
+ *             hoert die Galaxie an einer sichtbaren Kante auf.
+ *
+ * Dazu ein paar helle rosa Knoten in den Armen – HII-Regionen, das auffaelligste
+ * Merkmal echter Spiralarme. Und ein weicher Kernschein als eigene Flaeche, weil
+ * ein Haufen Punkte allein keinen leuchtenden Kern ergibt.
+ *
+ * Additiv gemischt: ueberlagerte Punkte summieren sich zu dichten, hellen
+ * Bereichen, ohne dass dafuer etwas gerechnet werden muss.
  */
 
 const ARMS = 2
-const ARM_WIND = 0.42
-const CORE_RADIUS = 1.5
 
-/* Farben von innen nach aussen: warmes Weiss im Kern, Cyan in der Scheibe,
-   Violett an den Raendern. Bleibt im Farbraum der Seite. */
-const COLOR_CORE = new THREE.Color("#fff4e6")
-const COLOR_DISC = new THREE.Color("#22d3ee")
-const COLOR_EDGE = new THREE.Color("#8b5cf6")
+/** Wie stark die Arme aufgewickelt sind. Kleiner = offener. */
+const ARM_WIND = 0.5
+
+/** Anteile der drei Bestandteile. */
+const BULGE_SHARE = 0.3
+const HALO_SHARE = 0.12
+
+/* Farben. Warm im Kern (alte Sterne), blau-weiss in den Armen (junge Sterne) –
+   das ist die echte Farbverteilung einer Spiralgalaxie. Cyan als Primaerakzent
+   der Seite sitzt in den Armen, Violett/Rosa in den HII-Knoten. */
+const COLOR_BULGE = new THREE.Color("#ffd9a0")
+const COLOR_INNER = new THREE.Color("#fff2df")
+const COLOR_ARM = new THREE.Color("#9fd8f5")
+const COLOR_OUTER = new THREE.Color("#4aa8d8")
+const COLOR_HII = new THREE.Color("#ff8fc4")
+const COLOR_HALO = new THREE.Color("#8ea8c8")
 
 const vertexShader = `
     attribute float aSize;
+    attribute float aBright;
     attribute vec3 aColor;
 
     uniform float uTime;
     uniform float uPixelRatio;
+    uniform float uSizeScale;
 
     varying vec3 vColor;
     varying float vFade;
@@ -41,22 +70,31 @@ const vertexShader = `
     void main() {
         vColor = aColor;
 
-        /* Langsame Eigenrotation um die Scheibenachse. Sie laeuft in der
-           Vertex-Stufe, damit dafuer nichts pro Frame auf die CPU faellt. */
-        float angle = uTime * 0.035;
+        /* Rotation um die Scheibenachse, innen schneller als aussen – so drehen
+           sich echte Galaxien (differentielle Rotation), und die Arme scheren
+           dabei leicht. Laeuft in der Vertex-Stufe, damit dafuer nichts pro Frame
+           auf die CPU faellt. */
+        float r = length(position.xy);
+        float angle = uTime * (0.10 / (1.0 + r * 0.16));
         float s = sin(angle);
         float c = cos(angle);
         vec3 spun = vec3(position.x * c - position.y * s, position.x * s + position.y * c, position.z);
 
         vec4 view = modelViewMatrix * vec4(spun, 1.0);
-
-        /* Punkte direkt an der Kamera ausblenden: sonst schiebt sich beim
-           Durchflug ein einzelner Punkt als riesige Flaeche vor das Bild. */
         float dist = -view.z;
-        vFade = smoothstep(0.0, 3.5, dist) * (1.0 - smoothstep(60.0, 110.0, dist));
+
+        /* Nahe Punkte ausblenden, BEVOR sie gross werden. Die Groesse waechst mit
+           1/dist, also verdoppelt jede Halbierung des Abstands den Durchmesser:
+           bei zwei Einheiten Abstand waeren es rechnerisch ueber 100 px, und ein
+           einzelner Stern wuerde beim Durchflug durch die Scheibe das Bild
+           fuellen. Die Ausblendung laeuft deshalb ueber 0…9 Einheiten. */
+        vFade = aBright * smoothstep(0.0, 9.0, dist) * (1.0 - smoothstep(90.0, 160.0, dist));
 
         gl_Position = projectionMatrix * view;
-        gl_PointSize = aSize * uPixelRatio * (14.0 / max(dist, 0.6));
+
+        /* Zusaetzlich hart begrenzt: die Ausblendung allein genuegt nicht, weil ein
+           sehr heller Stern auch halbtransparent noch als Flaeche auffaellt. */
+        gl_PointSize = min(aSize * uPixelRatio * uSizeScale / max(dist, 1.0), 34.0);
     }
 `
 
@@ -69,18 +107,25 @@ const fragmentShader = `
     uniform float uOpacity;
 
     void main() {
-        // Weicher runder Punkt statt eines Quadrats.
-        float d = length(gl_PointCoord - 0.5);
-        float alpha = smoothstep(0.5, 0.06, d);
-        if (alpha <= 0.001) discard;
+        /* Weicher runder Punkt mit heissem Zentrum: der Verlauf ist quadratisch,
+           dadurch hat jeder Stern einen Kern und einen Hof statt einer flachen
+           Scheibe. Das laesst dichte Bereiche zusammenlaufen, wie bei echten
+           Sternfeldern. */
+        float d = length(gl_PointCoord - 0.5) * 2.0;
+        if (d > 1.0) discard;
+        float a = 1.0 - d;
+        a = a * a;
 
-        gl_FragColor = vec4(vColor, alpha * vFade * uOpacity);
+        gl_FragColor = vec4(vColor, a * vFade * uOpacity);
     }
 `
 
 export type Galaxy = {
-    points: THREE.Points
-    material: THREE.ShaderMaterial
+    /** Sterne und Kernschein zusammen, gekippt. Das haengt in die Szene. */
+    object: THREE.Object3D
+    setPixelRatio: (ratio: number) => void
+    setOpacity: (opacity: number) => void
+    setTime: (time: number) => void
     dispose: () => void
 }
 
@@ -92,6 +137,7 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const sizes = new Float32Array(count)
+    const brights = new Float32Array(count)
 
     /* Deterministisch: die Galaxie soll bei jedem Laden gleich aussehen.
        Math.random waere jedes Mal eine andere. */
@@ -100,41 +146,95 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
         seed = (seed * 16807) % 2147483647
         return seed / 2147483647
     }
+    /* Zwei Zufallszahlen gemittelt ergeben eine Haeufung um die Mitte – billiger
+       Ersatz fuer eine Normalverteilung, und genau das braucht der Bulge. */
+    const gauss = () => (rand() + rand() - 1)
 
+    const bulgeCount = Math.floor(count * BULGE_SHARE)
+    const haloCount = Math.floor(count * HALO_SHARE)
     const color = new THREE.Color()
 
     for (let i = 0; i < count; i++) {
-        /* Wurzel-Verteilung: sonst sitzen fast alle Punkte am Rand, weil die
-           Flaeche eines Rings mit dem Radius waechst. */
-        const t = Math.sqrt(rand())
-        const r = CORE_RADIUS + t * radius
+        let x: number
+        let y: number
+        let z: number
+        let size: number
+        let bright: number
 
-        const arm = i % ARMS
-        const spread = 0.25 + t * 0.9
-        const angle =
-            (arm / ARMS) * Math.PI * 2 + r * ARM_WIND + (rand() - 0.5) * spread
+        if (i < bulgeCount) {
+            // --- Bulge: kugelig, stark zur Mitte verdichtet ---
+            const t = Math.pow(rand(), 2.4)
+            const r = t * radius * 0.3
+            const theta = rand() * Math.PI * 2
+            const phi = Math.acos(gauss())
+            x = r * Math.sin(phi) * Math.cos(theta)
+            y = r * Math.sin(phi) * Math.sin(theta)
+            z = r * Math.cos(phi) * 0.6
 
-        // Dicke: innen dick, aussen flach – wie eine echte Scheibe.
-        const thickness = (1 - t * 0.75) * 1.6
+            color.copy(COLOR_BULGE).lerp(COLOR_INNER, rand() * 0.5)
+            size = 1.1 + rand() * 1.4
+            bright = 0.55 + rand() * 0.45
+        } else if (i < bulgeCount + haloCount) {
+            // --- Halo: wenige, schwache Sterne weit draussen ---
+            const r = radius * (0.5 + rand() * 0.9)
+            const theta = rand() * Math.PI * 2
+            x = Math.cos(theta) * r
+            y = Math.sin(theta) * r
+            z = gauss() * radius * 0.22
 
-        positions[i * 3] = Math.cos(angle) * r + (rand() - 0.5) * spread
-        positions[i * 3 + 1] = Math.sin(angle) * r + (rand() - 0.5) * spread
-        positions[i * 3 + 2] = (rand() - 0.5) * thickness
+            color.copy(COLOR_HALO)
+            size = 0.7 + rand() * 0.8
+            bright = 0.1 + rand() * 0.22
+        } else {
+            // --- Scheibe: logarithmische Arme mit Klumpung ---
+            const t = Math.sqrt(rand())
+            const r = radius * (0.12 + t * 0.88)
+            const arm = i % ARMS
 
-        color.copy(COLOR_CORE).lerp(COLOR_DISC, Math.min(1, t * 1.8))
-        if (t > 0.55) color.lerp(COLOR_EDGE, (t - 0.55) / 0.45 * 0.7)
+            /* Streuung waechst nach aussen, und ein Sinus entlang des Arms
+               verdichtet ihn stellenweise – dadurch entstehen Ketten statt einer
+               glatten Linie. */
+            const clump = 0.55 + 0.45 * Math.sin(r * 1.7 + arm * 2.1)
+            const spread = (0.10 + t * 0.5) * clump
+
+            const theta =
+                (arm / ARMS) * Math.PI * 2 + Math.log(1 + r) * ARM_WIND * 3.2 + gauss() * spread
+
+            x = Math.cos(theta) * r
+            y = Math.sin(theta) * r
+            // Die Scheibe ist innen dicker als aussen.
+            z = gauss() * (1 - t * 0.7) * 1.3
+
+            color.copy(COLOR_INNER).lerp(COLOR_ARM, Math.min(1, t * 2.1))
+            if (t > 0.5) color.lerp(COLOR_OUTER, (t - 0.5) / 0.5)
+
+            size = 0.8 + rand() * 1.1
+            bright = 0.28 + rand() * 0.5
+
+            /* HII-Regionen: einzelne, deutlich hellere rosa Knoten in den Armen.
+               Das auffaelligste Merkmal echter Spiralarme. */
+            if (rand() > 0.982) {
+                color.copy(COLOR_HII)
+                size *= 2.4
+                bright = 1
+            }
+        }
+
+        positions[i * 3] = x
+        positions[i * 3 + 1] = y
+        positions[i * 3 + 2] = z
         colors[i * 3] = color.r
         colors[i * 3 + 1] = color.g
         colors[i * 3 + 2] = color.b
-
-        // Der Kern bekommt die groesseren Punkte.
-        sizes[i] = 0.5 + (1 - t) * 1.5 + rand() * 0.5
+        sizes[i] = size
+        brights[i] = bright
     }
 
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
     geometry.setAttribute("aColor", new THREE.BufferAttribute(colors, 3))
     geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1))
+    geometry.setAttribute("aBright", new THREE.BufferAttribute(brights, 1))
 
     const material = new THREE.ShaderMaterial({
         vertexShader,
@@ -143,6 +243,18 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
             uTime: {value: 0},
             uPixelRatio: {value: 1},
             uOpacity: {value: 1},
+            /**
+             * Der Faktor, an dem es zuerst gescheitert ist – der Regler fuer die
+             * Sichtbarkeit der Galaxie.
+             *
+             * Er stand auf 14. Bei aSize um 1 und den tatsaechlichen Abstaenden
+             * (30 Einheiten im Hero, 13 im Anflug) sind das 0,5 bis 1 Pixel: die
+             * Galaxie war vorhanden, aber in Subpixelgroesse.
+             *
+             * 80 ergibt rund 4 px im Hero und 9 px im Anflug – ein Stern mit Hof.
+             * Groesser wird es schnell teigig, kleiner verschwindet es wieder.
+             */
+            uSizeScale: {value: 80},
         },
         transparent: true,
         depthWrite: false,
@@ -150,15 +262,59 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
     })
 
     const points = new THREE.Points(geometry, material)
-    // Leicht gekippt: frontal waere die Spirale ein flaches Ornament.
-    points.rotation.set(0.42, 0.2, 0)
+
+    /**
+     * Kernschein.
+     *
+     * Ein Haufen Punkte ergibt keinen leuchtenden Kern – dafuer braucht es eine
+     * Flaeche. Ein Sprite ist immer zur Kamera gedreht, also bleibt der Schein
+     * rund, auch wenn man die Scheibe schraeg oder von der Kante sieht.
+     */
+    const coreCanvas = document.createElement("canvas")
+    coreCanvas.width = coreCanvas.height = 128
+    const ctx = coreCanvas.getContext("2d")
+    if (ctx) {
+        const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+        gradient.addColorStop(0, "rgba(255,246,225,0.95)")
+        gradient.addColorStop(0.25, "rgba(255,214,150,0.45)")
+        gradient.addColorStop(0.6, "rgba(180,140,255,0.12)")
+        gradient.addColorStop(1, "rgba(0,0,0,0)")
+        ctx.fillStyle = gradient
+        ctx.fillRect(0, 0, 128, 128)
+    }
+    const coreTexture = new THREE.CanvasTexture(coreCanvas)
+    const coreMaterial = new THREE.SpriteMaterial({
+        map: coreTexture,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+        transparent: true,
+    })
+    const core = new THREE.Sprite(coreMaterial)
+    core.scale.setScalar(radius * 0.85)
+
+    // Gekippt: frontal waere die Spirale ein flaches Ornament.
+    const group = new THREE.Group()
+    group.rotation.set(0.5, 0.25, 0.15)
+    group.add(points)
+    group.add(core)
 
     return {
-        points,
-        material,
+        object: group,
+        setPixelRatio: (ratio) => {
+            material.uniforms.uPixelRatio.value = ratio
+        },
+        setOpacity: (opacity) => {
+            material.uniforms.uOpacity.value = opacity
+            coreMaterial.opacity = opacity
+        },
+        setTime: (time) => {
+            material.uniforms.uTime.value = time
+        },
         dispose: () => {
             geometry.dispose()
             material.dispose()
+            coreTexture.dispose()
+            coreMaterial.dispose()
         },
     }
 }
