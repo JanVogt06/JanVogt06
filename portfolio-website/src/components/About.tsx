@@ -88,8 +88,6 @@ type Chapter = {
     accent: string
     image: string
     alt: string
-    /** Wie das Bild in seinem Rahmen sitzt – Aufnahme oder freigestellt. */
-    fit: "cover" | "contain"
     body: ReactNode
 }
 
@@ -101,7 +99,6 @@ const chapters: Chapter[] = [
         accent: "Weg",
         image: skiJumpImage,
         alt: "Jan Vogt beim Skifahren",
-        fit: "cover",
         body: (
             <div>
                 {timeline.map((row) => (
@@ -117,7 +114,6 @@ const chapters: Chapter[] = [
         accent: "Studium",
         image: refereeImage,
         alt: "Jan Vogt als Schiedsrichter",
-        fit: "contain",
         body: (
             <div>
                 {engagement.map((row) => (
@@ -133,7 +129,6 @@ const chapters: Chapter[] = [
         accent: "Auszeichnungen",
         image: portraitImage,
         alt: "Jan Vogt",
-        fit: "contain",
         body: (
             <div>
                 {awards.map((row) => (
@@ -153,32 +148,22 @@ const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const APPROACH = 0.14
 
 /**
- * Aufnahme, die in den Raum ausblendet.
+ * Die Aufnahme zum Kapitel.
  *
- * Ohne Rahmen – eine Kante wuerde das Bild als Objekt VOR dem Raum zeigen statt
- * als etwas, das darin schwebt.
+ * Ohne Maske und ohne Rahmen. Hier lief einmal ein radialer Verlauf, der die
+ * Raender wegblendete – ein Notbehelf, weil das Skisprung-Bild einen
+ * fotografischen Hintergrund hatte und als hartes Rechteck im Weltraum sass. Der
+ * Notbehelf loest das Problem aber nicht, er verwischt es nur: ein weggeblendeter
+ * Hintergrund ist immer noch ein Hintergrund.
  *
- * DIE MASKE MUSS INNERHALB DES BILDES AUSLAUFEN
- *
- * Erst stand hier `ellipse 78% 78%`. Bei dieser Schreibweise sind 78 % die
- * Halbachsen bezogen auf Breite und Hoehe – die Ellipse reicht also weit ueber
- * das Bild hinaus. Am Bildrand war der Verlauf erst bei 64 % seiner Strecke und
- * damit noch zu zwei Dritteln deckend: sichtbar blieb ein Rechteck mit harten
- * Kanten, genau das, was die Maske verhindern sollte.
- *
- * Ohne Groessenangabe gilt `farthest-corner`: 100 % liegt in der Bildecke, der
- * Bildrand also bei 71 %. Ein Verlauf, der bis 78 % durchsichtig wird, laeuft
- * damit INNERHALB des Bildes aus – Raender und Ecken loesen sich auf.
+ * Die Bilder sind freigestellt, deshalb genuegt das Bild selbst. `object-contain`
+ * fuer alle drei: bei freigestellten Motiven gibt es nichts zuzuschneiden.
  */
-const IMAGE_MASK =
-    "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,1) 30%, rgba(0,0,0,0.55) 58%, rgba(0,0,0,0) 78%)"
-
 const FloatingImage = ({chapter}: {chapter: Chapter}) => (
     <img
         src={chapter.image}
         alt={chapter.alt}
-        className={`h-full w-full ${chapter.fit === "cover" ? "object-cover" : "object-contain object-bottom"}`}
-        style={{maskImage: IMAGE_MASK, WebkitMaskImage: IMAGE_MASK}}
+        className="h-full w-full object-contain object-center"
     />
 )
 
