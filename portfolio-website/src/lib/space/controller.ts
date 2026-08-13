@@ -15,22 +15,26 @@ import type {SpaceScene, Anchor} from "./SpaceScene"
  */
 
 let current: SpaceScene | null = null
-let anchorListener: ((anchor: Anchor) => void) | null = null
+
+/* Mehrere Zuhoerer, weil es zwei Arten von Ankern gibt: die Kristalle der
+   Projekte und die Wegpunkte des Werdegangs. Jeder Zuhoerer filtert selbst nach
+   `kind`. */
+const anchorListeners = new Set<(anchor: Anchor) => void>()
 
 export const attachScene = (scene: SpaceScene | null) => {
     current = scene
 }
 
-/** Von der Szene aufgerufen, jeden Frame. */
+/** Von der Szene aufgerufen, jeden Frame – einmal je Anker-Art. */
 export const emitAnchor = (anchor: Anchor) => {
-    anchorListener?.(anchor)
+    anchorListeners.forEach((listener) => listener(anchor))
 }
 
-/** Auf die Position des vorderen Steins hoeren. Gibt die Abmeldung zurueck. */
+/** Auf Anker-Positionen hoeren. Gibt die Abmeldung zurueck. */
 export const subscribeAnchor = (listener: (anchor: Anchor) => void) => {
-    anchorListener = listener
+    anchorListeners.add(listener)
     return () => {
-        if (anchorListener === listener) anchorListener = null
+        anchorListeners.delete(listener)
     }
 }
 
@@ -38,6 +42,8 @@ export const subscribeAnchor = (listener: (anchor: Anchor) => void) => {
 export const space = {
     hasScene: () => current !== null,
     setFieldProgress: (progress: number) => current?.setFieldProgress(progress),
+    /** Flug durch die Galaxie: 0 = Hero-Position, 1 = vor dem Kristallring. */
+    setAboutProgress: (progress: number) => current?.setAboutProgress(progress),
     /** 0 = Ring weit weg, 1 = Sektion steht. Steuert das Heranziehen. */
     setApproach: (approach: number) => current?.setApproach(approach),
     setPaused: (paused: boolean) => current?.setPaused(paused),

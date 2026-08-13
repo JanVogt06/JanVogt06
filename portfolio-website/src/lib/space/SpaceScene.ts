@@ -2,6 +2,8 @@ import * as THREE from "three"
 import {detectQuality, stepDown} from "@/lib/quality"
 import {nebulaVertexShader, nebulaFragmentShader} from "./nebulaShader"
 import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
+import {createGalaxy} from "./galaxy"
+import type {Galaxy} from "./galaxy"
 
 /**
  * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
@@ -30,9 +32,52 @@ import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
  * nachzufahren. Mit einer einzigen Gruppe muesste die Kamera jeden Frame
  * mitwandern.
  *
+ * DIE REISE
+ *
+ * Der Raum ist EINE Strecke entlang -Z, und alles liegt darauf:
+ *
+ *   z = +12       die Kamera im Hero, ausserhalb
+ *   z = -30       die Galaxie, durch die man hindurchfliegt
+ *   z = -16…-42   drei Wegpunkte darin – das ist der Werdegang
+ *   z = -70       der Kristallring mit den Projekten
+ *
+ * Vorher stand die Kamera im Hero-Abstand still, bis die Projekt-Sektion sie
+ * heranzog. Zwischen Hero und Projekten passierte im Raum also nichts, waehrend
+ * der Werdegang im DOM eine ganze Sektion lang etwas tat. Genau daran merkte man,
+ * dass er obendrauf gesetzt war.
+ *
+ * Jetzt fuehrt der Scroll die Kamera durchgehend: der Werdegang IST der Flug
+ * durch die Galaxie, und seine Kapitel haengen an Wegpunkten, die dabei
+ * vorbeikommen.
+ *
  * Bewusst ohne React: die Klasse laeuft in ihrer eigenen rAF-Schleife und
  * bekommt von aussen nur Zahlen.
  */
+
+/** Wo der Kristallring im Raum liegt – am Ende der Reise. */
+const RING_Z = -70
+
+/** Wo die Galaxie liegt und wie weit ihre Scheibe reicht. */
+const GALAXY_Z = -18
+const GALAXY_RADIUS = 26
+
+/**
+ * Abstand, in dem ein Wegpunkt vor der Kamera steht, wenn sein Kapitel dran ist.
+ *
+ * Die z-Werte der Wegpunkte werden daraus GERECHNET und nicht gesetzt: sonst
+ * muesste man sie jedes Mal nachziehen, wenn sich die Reiselaenge aendert, und
+ * ein Kapitel stuende neben seinem Wegpunkt statt davor.
+ */
+const WAYPOINT_VIEW_DISTANCE = 9
+
+/** Wie viele Punkte die Galaxie je Qualitaetsstufe bekommt. */
+const GALAXY_POINTS = [1800, 3000, 4500, 6000, 8000]
+
+/** Anzahl der Werdegang-Wegpunkte – muss zu den Kapiteln in About.tsx passen. */
+export const WAYPOINT_COUNT = 3
+
+/** Kamera-z im Hero: weit ausserhalb, die Galaxie liegt als Scheibe voraus. */
+const CAMERA_Z_HERO = 12
 
 /** Radius des Rings. */
 const RING_RADIUS = 5.4
@@ -108,9 +153,15 @@ const hash = (n: number) => {
     return x - Math.floor(x)
 }
 
-/** Wo der vordere Stein im Bild steht – fuer die Beschriftungspfeile im DOM. */
+/**
+ * Wo ein Objekt im Bild steht – fuer die Beschriftungen im DOM.
+ *
+ * Kristalle und Werdegang-Wegpunkte nehmen denselben Weg: die Szene projiziert,
+ * das DOM haengt Text daran. Deshalb ein Typ mit `kind` statt zweier Kanaele.
+ */
 export type Anchor = {
-    /** Index des Steins, der vorne steht. */
+    kind: "crystal" | "waypoint"
+    /** Index innerhalb seiner Art. */
     index: number
     /** Bildschirmposition seines Mittelpunkts, in CSS-Pixeln. */
     x: number
@@ -126,7 +177,7 @@ export type SpaceSceneOptions = {
     count: number
     onHover: (index: number | null) => void
     onSelect: (index: number) => void
-    /** Jeden Frame: wo steht der vordere Stein im Bild? */
+    /** Jeden Frame: wo stehen der vordere Stein und der naechste Wegpunkt? */
     onAnchor: (anchor: Anchor) => void
 }
 
@@ -152,6 +203,15 @@ export class SpaceScene {
     private readonly materials: THREE.ShaderMaterial[] = []
     private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
 
+    private readonly galaxy: Galaxy
+
+    private readonly waypoints: THREE.Mesh[] = []
+    private readonly waypointMaterials: THREE.ShaderMaterial[] = []
+    private readonly waypointGeometry = new THREE.OctahedronGeometry(1, 0)
+
+    /** z, an dem die Reise durch die Galaxie endet und der Ring uebernimmt. */
+    private readonly journeyEnd: number
+
     private readonly shards: THREE.Mesh[] = []
     private readonly shardGeometry = new THREE.TetrahedronGeometry(1, 0)
     private readonly shardMaterial: THREE.ShaderMaterial
@@ -174,6 +234,8 @@ export class SpaceScene {
     private fieldProgress = 0
     private approachTarget = 0
     private enter = 0
+    private aboutTarget = 0
+    private aboutProgress = 0
     private hovered: number | null = null
     private selected: number | null = null
     private selectBlend = 0
@@ -219,8 +281,57 @@ export class SpaceScene {
         // --- Ring ---
         this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 300)
         this.tiltGroup.rotation.x = RING_TILT
+        this.tiltGroup.position.z = RING_Z
         this.tiltGroup.add(this.spinGroup)
         this.scene.add(this.tiltGroup)
+
+        // Ende der Reise: dort, wo die Ring-Kamera bei enter = 0 stehen wuerde.
+        this.journeyEnd = this.frontPoint().z + HERO_DISTANCE
+
+        // --- Galaxie ---
+        this.galaxy = createGalaxy(
+            GALAXY_POINTS[Math.round(this.quality * 4)],
+            GALAXY_RADIUS,
+        )
+        this.galaxy.points.position.z = GALAXY_Z
+        this.galaxy.material.uniforms.uPixelRatio.value = this.renderer.getPixelRatio()
+        this.scene.add(this.galaxy.points)
+
+        /* --- Wegpunkte des Werdegangs ---
+           Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
+           steht, wenn Kapitel i dran ist. */
+        for (let i = 0; i < WAYPOINT_COUNT; i++) {
+            const material = new THREE.ShaderMaterial({
+                vertexShader: crystalVertexShader,
+                fragmentShader: crystalFragmentShader,
+                uniforms: {
+                    uCore: {value: new THREE.Color("#1b3f63")},
+                    uRim: {value: new THREE.Color("#7dd3fc")},
+                    uTime: {value: 0},
+                    uHighlight: {value: 0},
+                    uFade: {value: 0},
+                },
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            })
+            this.waypointMaterials.push(material)
+
+            const mesh = new THREE.Mesh(this.waypointGeometry, material)
+            const t = i / (WAYPOINT_COUNT - 1)
+            /* x relativ zur Kamera, nicht absolut: die Kamera steht auf der
+               Reise um HERO_LATERAL nach links versetzt (damit links der Text
+               Platz hat). Absolute x-Werte um +2,5 landeten dadurch am rechten
+               Bildrand statt rechts der Mitte. */
+            mesh.position.set(
+                -HERO_LATERAL + 1.8 + hash(i * 3.1) * 0.7,
+                -1.05 + (hash(i * 5.7) - 0.5) * 1.4,
+                lerp(CAMERA_Z_HERO, this.journeyEnd, t) - WAYPOINT_VIEW_DISTANCE,
+            )
+            mesh.scale.setScalar(0.75 + hash(i) * 0.25)
+            this.scene.add(mesh)
+            this.waypoints.push(mesh)
+        }
 
         const step = (Math.PI * 2) / Math.max(count, 1)
         for (let i = 0; i < count; i++) {
@@ -321,6 +432,15 @@ export class SpaceScene {
      * IntersectionObserver – dessen Rueckruf kann verspaetet kommen, und dann
      * bliebe der Ring im Hero-Abstand stehen und die Beschriftung unsichtbar.
      */
+    /**
+     * Fortschritt durch den Werdegang, 0 bis 1 – fliegt die Kamera durch die
+     * Galaxie. 0 = Hero-Position, 1 = direkt vor dem Kristallring.
+     */
+    setAboutProgress(progress: number) {
+        this.aboutTarget = progress
+        this.sync()
+    }
+
     setApproach(approach: number) {
         this.approachTarget = approach
         this.sync()
@@ -380,12 +500,16 @@ export class SpaceScene {
         this.render()
     }
 
-    /** Fester Weltpunkt, an dem ein Stein "vorne" ankommt. */
+    /**
+     * Fester Weltpunkt, an dem ein Stein "vorne" ankommt.
+     *
+     * Enthaelt RING_Z: der Ring liegt am Ende der Reise, nicht im Ursprung.
+     */
     private frontPoint() {
         return new THREE.Vector3(
             0,
             -RING_RADIUS * Math.sin(RING_TILT),
-            RING_RADIUS * Math.cos(RING_TILT),
+            RING_Z + RING_RADIUS * Math.cos(RING_TILT),
         )
     }
 
@@ -401,6 +525,7 @@ export class SpaceScene {
         // --- Nachlaufende Werte ---
         this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
         this.enter = lerp(this.enter, this.approachTarget, 0.09)
+        this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
         // --- Ring drehen: Stein `station` kommt nach vorn ---
@@ -430,8 +555,16 @@ export class SpaceScene {
            weg, damit die Beschriftungsfahnen nach beiden Seiten Platz haben.
            Das Blickziel muss mitwandern, sonst schwenkt die Kamera ein. */
         const lateral = HERO_LATERAL * (1 - this.enter)
-        this.camera.position.set(front.x - lateral, front.y + 0.55, front.z + finalDistance)
-        this.camera.lookAt(front.x - lateral, front.y, front.z)
+
+        /* Die Reise: vom Hero durch die Galaxie bis dorthin, wo die Ring-Kamera
+           bei enter = 0 stehen wuerde. Weil journeyEnd genau dieser Punkt ist,
+           ist die Uebergabe an das Ring-Verhalten nahtlos – es gibt keinen Sprung
+           zwischen "durch die Galaxie fliegen" und "am Ring ankommen". */
+        const journeyZ = lerp(CAMERA_Z_HERO, this.journeyEnd, this.aboutProgress)
+        const z = lerp(journeyZ, front.z + finalDistance, this.enter)
+
+        this.camera.position.set(front.x - lateral, front.y + 0.55, z)
+        this.camera.lookAt(front.x - lateral, front.y, z - 10)
 
         // --- Steine ---
         for (let i = 0; i < count; i++) {
@@ -464,6 +597,34 @@ export class SpaceScene {
             mesh.scale.copy(this.baseScales[i]).multiplyScalar(grow)
         }
 
+        // --- Galaxie ---
+        this.galaxy.material.uniforms.uTime.value = time
+        /* Beim Ankommen am Ring ausblenden: sonst liegt die Scheibe als helles
+           Feld hinter den Steinen und frisst deren Kanten. */
+        this.galaxy.material.uniforms.uOpacity.value = 1 - this.enter * 0.75
+
+        // --- Wegpunkte des Werdegangs ---
+        const station3 = this.aboutProgress * Math.max(WAYPOINT_COUNT - 1, 1)
+        const nearestWaypoint = Math.round(station3)
+        const waypointCentred = clamp01(1 - Math.abs(station3 - nearestWaypoint) * 2.4)
+
+        for (let i = 0; i < this.waypoints.length; i++) {
+            const mesh = this.waypoints[i]
+            const material = this.waypointMaterials[i]
+            mesh.rotation.y = hash(i * 2.3) * Math.PI + station3 * 1.8 + time * 0.08
+            mesh.rotation.x = Math.sin(time * 0.3 + i) * 0.2
+
+            /* Nur der Wegpunkt, der gerade dran ist, leuchtet voll – und alles
+               blendet aus, sobald der Ring uebernimmt. */
+            const own = i === nearestWaypoint ? 1 : 0.25
+            material.uniforms.uTime.value = time
+            material.uniforms.uFade.value = lerp(
+                material.uniforms.uFade.value,
+                own * (1 - this.enter),
+                0.08,
+            )
+        }
+
         this.shardMaterial.uniforms.uTime.value = time
 
         // --- Ankerpunkt fuer die Beschriftung im DOM ---
@@ -472,13 +633,24 @@ export class SpaceScene {
            ein Stein genau vorne – die Beschriftung wuerde schon im Hero
            auftauchen. */
         this.camera.updateMatrixWorld()
-        this.reportAnchor(nearest, centred * this.enter)
+        this.reportAnchor("crystal", this.crystals, nearest, centred * this.enter)
+        this.reportAnchor(
+            "waypoint",
+            this.waypoints,
+            nearestWaypoint,
+            waypointCentred * (1 - this.enter),
+        )
 
         if (this.pointerInside) this.updateHover()
     }
 
-    private reportAnchor(index: number, strength: number) {
-        const mesh = this.crystals[index]
+    private reportAnchor(
+        kind: Anchor["kind"],
+        meshes: THREE.Mesh[],
+        index: number,
+        strength: number,
+    ) {
+        const mesh = meshes[index]
         if (!mesh) return
 
         const rect = this.renderer.domElement.getBoundingClientRect()
@@ -496,7 +668,7 @@ export class SpaceScene {
         top.project(this.camera)
         const topY = ((1 - top.y) / 2) * rect.height
 
-        this.onAnchor({index, x, y, radius: Math.abs(y - topY), strength})
+        this.onAnchor({kind, index, x, y, radius: Math.abs(y - topY), strength})
     }
 
     private updateHover() {
@@ -571,6 +743,9 @@ export class SpaceScene {
         document.removeEventListener("visibilitychange", this.sync)
 
         this.geometry.dispose()
+        this.waypointGeometry.dispose()
+        this.waypointMaterials.forEach((m) => m.dispose())
+        this.galaxy.dispose()
         this.shardGeometry.dispose()
         this.bgGeometry.dispose()
         this.bgMaterial.dispose()

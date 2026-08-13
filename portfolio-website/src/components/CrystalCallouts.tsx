@@ -42,7 +42,10 @@ const CrystalCallouts = () => {
     const shownIndex = useRef<number>(-1)
 
     useEffect(() => {
-        return subscribeAnchor(({index, x, y, radius, strength}) => {
+        return subscribeAnchor(({kind, index, x, y, radius, strength}) => {
+            // Die Szene meldet auch die Werdegang-Wegpunkte; die gehen hier nicht.
+            if (kind !== "crystal") return
+
             // Texte nur bei Wechsel anfassen – nicht jeden Frame.
             if (index !== shownIndex.current) {
                 shownIndex.current = index

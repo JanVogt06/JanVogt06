@@ -66,8 +66,23 @@
          * dort; die Rueckfallebene setzt behavior ausdruecklich.
          */
 
-        /* Versatz, damit Anker-Sprünge nicht unter der fixierten RepoBar landen */
+        /* Versatz, damit Anker-Sprünge nicht unter der fixierten Kopfzeile landen */
         scroll-padding-top: 4rem;
+
+        /**
+         * clip, NICHT hidden.
+         *
+         * Die fixierten Ebenen (Atmosphaere, Kopfzeile, Beschriftungen) spannen
+         * `inset-0` und werden dabei so breit wie das Fenster INKLUSIVE
+         * Scrollleiste – gemessen 391 px bei 375 px Inhaltsbreite. Die 16 px
+         * Differenz machten die Seite seitwaerts scrollbar.
+         *
+         * overflow-x: hidden waere der naheliegende Griff, erzeugt aber einen
+         * Scroll-Container. Damit klebten alle `position: sticky`-Sektionen an
+         * diesem Container statt am Fenster – Werdegang und Projekte haengen
+         * genau daran. `clip` schneidet ab, ohne scrollbar zu werden.
+         */
+        overflow-x: clip;
         /* Scrollbars, Formularelemente und Overscroll-Bereich dunkel */
         color-scheme: dark;
         background-color: var(--color-page);
