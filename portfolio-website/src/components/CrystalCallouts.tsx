@@ -6,8 +6,13 @@ import {projects} from "@/lib/projects"
  * Beschriftungspfeile am vorderen Kristall.
  *
  * Wie eine technische Zeichnung: eine kurze Fahne geht vom Stein weg, knickt
- * einmal ab und endet an einer Beschriftung. Drei davon – der Projekttitel und
- * zwei Schlagworte.
+ * einmal ab und endet an einer Beschriftung. Zwei davon – der Projekttitel und
+ * eine Zeile, die sagt, was das Projekt tut.
+ *
+ * Hier standen erst drei Fahnen: Titel plus die ersten zwei Technologien als
+ * Schlagworte ("C++", "WebAssembly"). Das war die falsche Auskunft an dieser
+ * Stelle – wer an einem Stein vorbeifliegt, will wissen, was das Projekt MACHT,
+ * nicht womit. Der Stack steht im HUD, wo man ihn nachschlagen kann.
  *
  * Der Anker kommt jeden Frame aus der Szene (Bildschirmposition des vorderen
  * Steins, in CSS-Pixeln) und wird direkt in style geschrieben. Ueber React-State
@@ -25,8 +30,7 @@ import {projects} from "@/lib/projects"
    Bildschirmraum (y zeigt nach unten). */
 const CALLOUTS = [
     {dx: 1, dy: -0.62, length: 210, role: "title" as const},
-    {dx: -1, dy: -0.28, length: 180, role: "tag" as const},
-    {dx: 0.85, dy: 0.9, length: 170, role: "tag" as const},
+    {dx: 0.9, dy: 0.78, length: 185, role: "tagline" as const},
 ]
 
 type Line = {
@@ -38,7 +42,7 @@ type Line = {
 const CrystalCallouts = () => {
     const refs = useRef<Line[]>(CALLOUTS.map(() => ({line: null, dot: null, label: null})))
     const titleRef = useRef<HTMLSpanElement>(null)
-    const tagRefs = useRef<(HTMLSpanElement | null)[]>([])
+    const taglineRef = useRef<HTMLSpanElement>(null)
     const shownIndex = useRef<number>(-1)
 
     useEffect(() => {
@@ -52,9 +56,7 @@ const CrystalCallouts = () => {
                 const project = projects[index]
                 if (project) {
                     if (titleRef.current) titleRef.current.textContent = project.title
-                    tagRefs.current.forEach((node, i) => {
-                        if (node) node.textContent = project.tech[i] ?? ""
-                    })
+                    if (taglineRef.current) taglineRef.current.textContent = project.tagline
                 }
             }
 
@@ -83,10 +85,9 @@ const CrystalCallouts = () => {
                 label.style.top = `${y1}px`
                 label.style.transform = `translate(${toRight ? "0" : "-100%"}, -50%)`
 
-                /* Die Fahnen laufen versetzt ein: die erste (Titel) fuehrt, die
-                   Schlagworte folgen. Ohne Versatz erscheinen drei Beschriftungen
-                   gleichzeitig und es wirkt wie ein Aufblitzen. */
-                const stagger = clamp01((strength - i * 0.12) / (1 - i * 0.12))
+                /* Versetzt einlaufen: der Titel fuehrt, die Beschreibung folgt.
+                   Gleichzeitig waere es ein Aufblitzen. */
+                const stagger = clamp01((strength - i * 0.15) / (1 - i * 0.15))
                 line.style.opacity = String(stagger)
                 dot.style.opacity = String(stagger)
                 label.style.opacity = String(stagger)
@@ -110,7 +111,7 @@ const CrystalCallouts = () => {
                                 refs.current[i].line = node
                             }}
                             fill="none"
-                            stroke={callout.role === "title" ? "#22d3ee" : "rgba(255,255,255,0.35)"}
+                            stroke={callout.role === "title" ? "#22d3ee" : "rgba(255,255,255,0.32)"}
                             strokeWidth={1}
                             points=""
                         />
@@ -133,7 +134,9 @@ const CrystalCallouts = () => {
                     ref={(node) => {
                         refs.current[i].label = node
                     }}
-                    className="absolute whitespace-nowrap"
+                    /* Der Titel darf nie umbrechen, die Beschreibungszeile
+                       muss es duerfen – sonst schiebt sie sich aus dem Bild. */
+                    className={`absolute ${callout.role === "title" ? "whitespace-nowrap" : ""}`}
                     style={{opacity: 0, visibility: "hidden"}}
                 >
                     {callout.role === "title" ? (
@@ -142,12 +145,7 @@ const CrystalCallouts = () => {
                             className="block text-2xl font-semibold tracking-[-0.02em] text-white"
                         />
                     ) : (
-                        <span
-                            ref={(node) => {
-                                tagRefs.current[i - 1] = node
-                            }}
-                            className="block font-mono text-[11px] uppercase tracking-[0.22em] text-white/50"
-                        />
+                        <span ref={taglineRef} className="block max-w-[20rem] text-sm text-white/55"/>
                     )}
                 </div>
             ))}

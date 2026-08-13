@@ -10,6 +10,13 @@ export interface Project {
     icon: string;
     title: string;
     subtitle: string;
+    /**
+     * Eine Zeile, die sagt, was das Projekt TUT – fuer die Beschriftung am
+     * Kristall. Bewusst ein eigenes Feld: `subtitle` ist eine Kategorie
+     * ("3D Satellitenvisualisierung") und `description` sind mehrere Saetze.
+     * Am Stein ist nur fuer einen kurzen Satz Platz.
+     */
+    tagline: string;
     description: string;
     tech: string[];
     /** Gewichtshinweis am Play-Button, z.B. "74 MB Unity-Build" */

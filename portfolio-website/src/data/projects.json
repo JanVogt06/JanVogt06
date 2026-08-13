@@ -4,6 +4,7 @@
     "icon": "Waves",
     "title": "Riptide",
     "subtitle": "Interaktive Tsunami-Simulation",
+    "tagline": "Erdbeben setzen, Wellenausbreitung live verfolgen",
     "description": "Browserbasierte Tsunami-Simulation mit einem FWave-Finite-Volumen-Solver als WebAssembly. Erdbeben mit echter USGS-Slab2-Verwerfungsgeometrie platzieren und die Wellenausbreitung live über GEBCO-Bathymetrie in WebGL2 verfolgen.",
     "tech": [
       "C++",
@@ -24,6 +25,7 @@
     "icon": "Satellite",
     "title": "SatTrak",
     "subtitle": "3D Satellitenvisualisierung",
+    "tagline": "12.000 Satelliten in Echtzeit auf dem Globus",
     "description": "Interaktive Echtzeit-Verfolgung von über 12.000 Satelliten auf einem virtuellen Globus. Mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung.",
     "tech": [
       "Unity",
@@ -39,6 +41,7 @@
     "icon": "Zap",
     "title": "SolarFlow",
     "subtitle": "Smart Energy Management",
+    "tagline": "Schaltet Verbraucher nach Solarüberschuss",
     "description": "Intelligentes Energie-Management-System für Photovoltaik-Anlagen. Maximiert den Eigenverbrauch durch automatische Steuerung von Verbrauchern.",
     "tech": [
       "Python",
@@ -56,6 +59,7 @@
     "icon": "Receipt",
     "title": "TFV Spesen Generator",
     "subtitle": "Automatisierte Spesenabrechnung",
+    "tagline": "Spielansetzungen rein, fertige Abrechnung raus",
     "description": "Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Scrapt Spielansetzungen und generiert Word-Dokumente.",
     "tech": [
       "Python",
@@ -74,6 +78,7 @@
     "icon": "Sword",
     "title": "Cryptborne",
     "subtitle": "3D Dungeon-Crawler",
+    "tagline": "Prozedural erzeugte Dungeons mit Gegner-KI",
     "description": "Prozedural generierter Dungeon-Crawler im mittelalterlichen Fantasy-Setting. Mit variantenreichem Waffensystem und intelligenter Enemy-AI.",
     "tech": [
       "Unity",
