@@ -147,21 +147,38 @@ const chapters: Chapter[] = [
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
 /**
+ * Ueber welchen Anteil der Strecke der Abschnitt "anlaeuft", bevor er oben
+ * ankommt. Derselbe Griff wie bei den Projekten.
+ */
+const APPROACH = 0.14
+
+/**
  * Aufnahme, die in den Raum ausblendet.
  *
- * Ohne Rahmen und ohne Eckklammern – eine Kante wuerde das Bild als Objekt VOR
- * dem Raum zeigen statt als etwas, das darin schwebt. Die Maske loest alle vier
- * Seiten auf.
+ * Ohne Rahmen – eine Kante wuerde das Bild als Objekt VOR dem Raum zeigen statt
+ * als etwas, das darin schwebt.
+ *
+ * DIE MASKE MUSS INNERHALB DES BILDES AUSLAUFEN
+ *
+ * Erst stand hier `ellipse 78% 78%`. Bei dieser Schreibweise sind 78 % die
+ * Halbachsen bezogen auf Breite und Hoehe – die Ellipse reicht also weit ueber
+ * das Bild hinaus. Am Bildrand war der Verlauf erst bei 64 % seiner Strecke und
+ * damit noch zu zwei Dritteln deckend: sichtbar blieb ein Rechteck mit harten
+ * Kanten, genau das, was die Maske verhindern sollte.
+ *
+ * Ohne Groessenangabe gilt `farthest-corner`: 100 % liegt in der Bildecke, der
+ * Bildrand also bei 71 %. Ein Verlauf, der bis 78 % durchsichtig wird, laeuft
+ * damit INNERHALB des Bildes aus – Raender und Ecken loesen sich auf.
  */
+const IMAGE_MASK =
+    "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,1) 30%, rgba(0,0,0,0.55) 58%, rgba(0,0,0,0) 78%)"
+
 const FloatingImage = ({chapter}: {chapter: Chapter}) => (
     <img
         src={chapter.image}
         alt={chapter.alt}
         className={`h-full w-full ${chapter.fit === "cover" ? "object-cover" : "object-contain object-bottom"}`}
-        style={{
-            maskImage: "radial-gradient(ellipse 78% 78% at 50% 50%, black 45%, transparent 100%)",
-            WebkitMaskImage: "radial-gradient(ellipse 78% 78% at 50% 50%, black 45%, transparent 100%)",
-        }}
+        style={{maskImage: IMAGE_MASK, WebkitMaskImage: IMAGE_MASK}}
     />
 )
 
@@ -295,6 +312,13 @@ const AboutJourney = () => {
         // Die Kamera fliegt – das ist der Kern: der Raum bewegt sich mit.
         space.setAboutProgress(progress)
 
+        /* Zusaetzlich, ob der Abschnitt ueberhaupt an der Reihe ist. `raw` ist
+           nicht begrenzt, oberhalb also negativ – daraus laesst sich das ableiten,
+           aus `progress` nicht: der steht im Hero auf 0, und 0 heisst dort
+           "Station 1 genau vorne". Genau deshalb wurde die Beschriftungslinie
+           schon im Hero gezeichnet. */
+        space.setAboutActive(clamp01((raw + APPROACH) / APPROACH))
+
         const position = progress * (chapters.length - 1)
         layerRefs.current.forEach((layer, i) => {
             if (!layer) return
@@ -323,12 +347,33 @@ const AboutJourney = () => {
 
     useScrollProgress(sectionRef, onProgress)
 
-    /* Der Link braucht die Position der aktuellen Ueberschrift erst dann, wenn er
-       zeichnet – deshalb als Funktion und nicht als Wert. */
-    const headingBox = useCallback(
-        () => headingRefs.current[activeIndex.current]?.getBoundingClientRect() ?? null,
-        [],
-    )
+    /**
+     * Rechteck der aktuellen Ueberschrift – ZWISCHENGESPEICHERT.
+     *
+     * Das war die Ursache fuer das ruckelige Scrollen: die Beschriftungslinie
+     * holte es sich pro Frame ueber getBoundingClientRect(), waehrend im selben
+     * Frame die Ebenen ihre Transformationen geschrieben bekamen. Lesen nach
+     * Schreiben erzwingt jedes Mal ein neues Layout – klassisches Layout
+     * Thrashing, sechzig Mal pro Sekunde.
+     *
+     * Die Ueberschrift steht in einem klebenden Rahmen und bewegt sich praktisch
+     * nicht. Es genuegt, sie beim Kapitelwechsel und bei Groessenaenderungen neu
+     * zu messen.
+     */
+    const boxCache = useRef<DOMRect | null>(null)
+
+    const remeasure = useCallback(() => {
+        boxCache.current =
+            headingRefs.current[activeIndex.current]?.getBoundingClientRect() ?? null
+    }, [])
+
+    useEffect(() => {
+        remeasure()
+        window.addEventListener("resize", remeasure)
+        return () => window.removeEventListener("resize", remeasure)
+    }, [remeasure, index])
+
+    const headingBox = useCallback(() => boxCache.current, [])
 
     const goToChapter = (target: number) => {
         const el = sectionRef.current

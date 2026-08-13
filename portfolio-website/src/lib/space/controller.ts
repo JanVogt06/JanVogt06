@@ -44,6 +44,8 @@ export const space = {
     setFieldProgress: (progress: number) => current?.setFieldProgress(progress),
     /** Flug durch die Galaxie: 0 = Hero-Position, 1 = vor dem Kristallring. */
     setAboutProgress: (progress: number) => current?.setAboutProgress(progress),
+    /** 0 = Werdegang noch nicht dran, 1 = Sektion steht. */
+    setAboutActive: (active: number) => current?.setAboutActive(active),
     /** 0 = Ring weit weg, 1 = Sektion steht. Steuert das Heranziehen. */
     setApproach: (approach: number) => current?.setApproach(approach),
     setPaused: (paused: boolean) => current?.setPaused(paused),

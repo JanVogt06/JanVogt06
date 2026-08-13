@@ -39,11 +39,21 @@ import * as THREE from "three"
 const ARMS = 2
 
 /** Wie stark die Arme aufgewickelt sind. Kleiner = offener. */
-const ARM_WIND = 0.5
+const ARM_WIND = 0.42
 
-/** Anteile der drei Bestandteile. */
-const BULGE_SHARE = 0.3
-const HALO_SHARE = 0.12
+/**
+ * Anteile der drei Bestandteile.
+ *
+ * Der Bulge stand auf 30 %. Zusammen mit einem Kernschein, der fast die ganze
+ * Scheibe ueberdeckte, sah die Galaxie dadurch wie ein Kugelsternhaufen aus: ein
+ * heller Klumpen mit Streupunkten drumherum, keine Spirale. Fast die Haelfte
+ * aller Punkte sass in der Mitte.
+ *
+ * 14 % lassen den Kern dicht, geben die Punkte aber den Armen – und die tragen
+ * die Form, an der man eine Spiralgalaxie erkennt.
+ */
+const BULGE_SHARE = 0.14
+const HALO_SHARE = 0.1
 
 /* Farben. Warm im Kern (alte Sterne), blau-weiss in den Armen (junge Sterne) –
    das ist die echte Farbverteilung einer Spiralgalaxie. Cyan als Primaerakzent
@@ -193,9 +203,11 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
 
             /* Streuung waechst nach aussen, und ein Sinus entlang des Arms
                verdichtet ihn stellenweise – dadurch entstehen Ketten statt einer
-               glatten Linie. */
-            const clump = 0.55 + 0.45 * Math.sin(r * 1.7 + arm * 2.1)
-            const spread = (0.10 + t * 0.5) * clump
+               glatten Linie. Deutlich enger als zuvor: mit 0.10 + t * 0.5 waren
+               die Arme so breit, dass sie zu einer Scheibe verschmolzen und die
+               Spirale nicht mehr zu erkennen war. */
+            const clump = 0.55 + 0.45 * Math.sin(r * 1.9 + arm * 2.1)
+            const spread = (0.05 + t * 0.22) * clump
 
             const theta =
                 (arm / ARMS) * Math.PI * 2 + Math.log(1 + r) * ARM_WIND * 3.2 + gauss() * spread
@@ -275,9 +287,9 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
     const ctx = coreCanvas.getContext("2d")
     if (ctx) {
         const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
-        gradient.addColorStop(0, "rgba(255,246,225,0.95)")
-        gradient.addColorStop(0.25, "rgba(255,214,150,0.45)")
-        gradient.addColorStop(0.6, "rgba(180,140,255,0.12)")
+        gradient.addColorStop(0, "rgba(255,246,225,0.75)")
+        gradient.addColorStop(0.3, "rgba(255,210,145,0.28)")
+        gradient.addColorStop(0.65, "rgba(180,140,255,0.07)")
         gradient.addColorStop(1, "rgba(0,0,0,0)")
         ctx.fillStyle = gradient
         ctx.fillRect(0, 0, 128, 128)
@@ -290,7 +302,9 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
         transparent: true,
     })
     const core = new THREE.Sprite(coreMaterial)
-    core.scale.setScalar(radius * 0.85)
+    /* Klein halten. Mit radius * 0.85 lag der Schein ueber fast der ganzen
+       Scheibe und hat die Arme ueberstrahlt – die Galaxie war ein Leuchtfleck. */
+    core.scale.setScalar(radius * 0.3)
 
     // Gekippt: frontal waere die Spirale ein flaches Ornament.
     const group = new THREE.Group()

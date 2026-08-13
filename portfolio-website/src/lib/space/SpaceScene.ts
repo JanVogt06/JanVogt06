@@ -135,11 +135,24 @@ const INTERACTIVE_ENTER = 0.75
 /**
  * Der Nebel bleibt ueber die ganze Seite stehen und wird nur leiser.
  *
- * Vorher war er bei 34 % der Seitenlaenge ganz ausgeblendet – dann steht der
- * Kristallring im Nichts, und die Seite faellt genau in der Mitte auseinander.
- * Der Weltraum muss durchgehen.
+ * Er war bei 34 % der Seitenlaenge einmal ganz ausgeblendet – dann steht der
+ * Kristallring im Nichts. Der Weltraum muss durchgehen.
+ *
+ * 0.35 statt 0.55: seit es eine Galaxie gibt, ist der Nebel nicht mehr der
+ * Hauptdarsteller, sondern Hintergrund. Und er ist der teuerste Teil der Szene –
+ * ein bildschirmfuellender FBM-Shader laeuft ueber die ganze Seitenlaenge mit.
  */
-const NEBULA_MIN = 0.55
+const NEBULA_MIN = 0.35
+
+/**
+ * Obergrenze der Nebel-Qualitaet.
+ *
+ * Der Shader rechnet je Stufe mehr FBM-Oktaven; auf einem Retina-Bildschirm sind
+ * das bei voller Stufe sechs Oktaven fuer mehrere Millionen Pixel pro Frame –
+ * neben der Galaxie zu viel, und genau daran ruckelte das Scrollen. Als
+ * Hintergrund braucht er die feinsten Oktaven nicht.
+ */
+const NEBULA_MAX_QUALITY = 0.5
 
 const SAMPLE_FRAMES = 60
 const MIN_ACCEPTABLE_FPS = 45
@@ -234,6 +247,12 @@ export class SpaceScene {
     private readonly projected = new THREE.Vector3()
     private pointerInside = false
 
+    /* Groesse und Lage der Canvas. Sie aendert sich nur bei Resize, wurde aber
+       zweimal pro Frame per getBoundingClientRect gelesen – einmal je Anker-Art.
+       Zusammen mit den Stil-Schreibvorgaengen im selben Frame erzwingt jedes
+       Lesen ein neues Layout. */
+    private canvasRect: DOMRect
+
     private readonly clock = new THREE.Clock()
     private quality: number
     private frame = 0
@@ -249,6 +268,8 @@ export class SpaceScene {
     private enter = 0
     private aboutTarget = 0
     private aboutProgress = 0
+    private aboutActiveTarget = 0
+    private aboutActive = 0
     private hovered: number | null = null
     private selected: number | null = null
     private selectBlend = 0
@@ -274,6 +295,7 @@ export class SpaceScene {
         this.renderer.setClearColor(0x000000, 0)
         this.renderer.autoClear = false
         container.appendChild(this.renderer.domElement)
+        this.canvasRect = this.renderer.domElement.getBoundingClientRect()
 
         // --- Hintergrund ---
         this.bgMaterial = new THREE.ShaderMaterial({
@@ -282,7 +304,7 @@ export class SpaceScene {
             uniforms: {
                 uTime: {value: 0},
                 uResolution: {value: new THREE.Vector2(width, height)},
-                uQuality: {value: this.quality},
+                uQuality: {value: Math.min(this.quality, NEBULA_MAX_QUALITY)},
                 uFade: {value: 1},
             },
             transparent: true,
@@ -454,6 +476,21 @@ export class SpaceScene {
         this.sync()
     }
 
+    /**
+     * Ist der Werdegang ueberhaupt an der Reihe? 0 im Hero, 1 in der Sektion.
+     *
+     * Ohne dieses Signal galt im Hero Wegpunkt 0 als "genau vorne": der
+     * Fortschritt ist dort auf 0 geklemmt, der Abstand zur naechsten Station
+     * also exakt 0 und damit die Staerke 1. Die Beschriftungslinie wurde deshalb
+     * schon im Hero voll gezeichnet und lief aus dem Bild. Genau derselbe Fehler
+     * wie frueher bei den Kristallen – geklemmter Fortschritt sagt nicht, ob man
+     * da ist.
+     */
+    setAboutActive(active: number) {
+        this.aboutActiveTarget = active
+        this.sync()
+    }
+
     setApproach(approach: number) {
         this.approachTarget = approach
         this.sync()
@@ -502,7 +539,7 @@ export class SpaceScene {
         const lower = stepDown(this.quality)
         if (lower === null) return
         this.quality = lower
-        this.bgMaterial.uniforms.uQuality.value = lower
+        this.bgMaterial.uniforms.uQuality.value = Math.min(lower, NEBULA_MAX_QUALITY)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
     }
@@ -540,6 +577,7 @@ export class SpaceScene {
         this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
         this.enter = lerp(this.enter, this.approachTarget, 0.09)
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
+        this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
         // --- Ring drehen: Stein `station` kommt nach vorn ---
@@ -634,7 +672,7 @@ export class SpaceScene {
             material.uniforms.uTime.value = time
             material.uniforms.uFade.value = lerp(
                 material.uniforms.uFade.value,
-                own * (1 - this.enter),
+                own * this.aboutActive * (1 - this.enter),
                 0.08,
             )
         }
@@ -652,7 +690,7 @@ export class SpaceScene {
             "waypoint",
             this.waypoints,
             nearestWaypoint,
-            waypointCentred * (1 - this.enter),
+            waypointCentred * this.aboutActive * (1 - this.enter),
         )
 
         if (this.pointerInside) this.updateHover()
@@ -667,7 +705,7 @@ export class SpaceScene {
         const mesh = meshes[index]
         if (!mesh) return
 
-        const rect = this.renderer.domElement.getBoundingClientRect()
+        const rect = this.canvasRect
         mesh.getWorldPosition(this.projected)
         this.projected.project(this.camera)
 
@@ -727,7 +765,7 @@ export class SpaceScene {
             }
             return
         }
-        const rect = this.renderer.domElement.getBoundingClientRect()
+        const rect = this.canvasRect
         this.pointer.set(
             ((event.clientX - rect.left) / rect.width) * 2 - 1,
             -((event.clientY - rect.top) / rect.height) * 2 + 1,
@@ -756,6 +794,7 @@ export class SpaceScene {
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
+        this.canvasRect = this.renderer.domElement.getBoundingClientRect()
         this.bgMaterial.uniforms.uResolution.value.set(width, height)
         this.camera.aspect = width / height
         this.camera.updateProjectionMatrix()
