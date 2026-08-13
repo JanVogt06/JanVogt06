@@ -2,6 +2,9 @@ import * as THREE from "three"
 import {detectQuality, stepDown} from "@/lib/quality"
 import {nebulaVertexShader, nebulaFragmentShader} from "./nebulaShader"
 import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
+import {
+    planetVertexShader, planetFragmentShader, ringVertexShader, ringFragmentShader,
+} from "./planetShader"
 import {createGalaxy} from "./galaxy"
 import type {Galaxy} from "./galaxy"
 
@@ -57,8 +60,18 @@ import type {Galaxy} from "./galaxy"
 /** Wo der Kristallring im Raum liegt – am Ende der Reise. */
 const RING_Z = -70
 
-/** Wo die Galaxie liegt und wie weit ihre Scheibe reicht. */
-const GALAXY_Z = -18
+/**
+ * Wo die Galaxie liegt und wie weit ihre Scheibe reicht.
+ *
+ * Sie stand auf -18. Die Reise geht von +12 bis etwa -48, also war die Scheibe
+ * nach knapp der Haelfte des Werdegangs durchflogen – bei Station 3 lag sie
+ * hinter der Kamera und war weg. Die Galaxie endete deutlich zu frueh.
+ *
+ * -54 heisst: sie wird ueber den ganzen Werdegang groesser und fuellt am Ende das
+ * Bild. Durchflogen wird sie erst, wenn die Projekte uebernehmen – und dort
+ * blendet sie ohnehin aus, damit sie die Kristalle nicht ueberstrahlt.
+ */
+const GALAXY_Z = -54
 const GALAXY_RADIUS = 26
 
 /**
@@ -68,7 +81,7 @@ const GALAXY_RADIUS = 26
  * muesste man sie jedes Mal nachziehen, wenn sich die Reiselaenge aendert, und
  * ein Kapitel stuende neben seinem Wegpunkt statt davor.
  */
-const WAYPOINT_VIEW_DISTANCE = 9
+const WAYPOINT_VIEW_DISTANCE = 8
 
 /** Wie viele Punkte die Galaxie je Qualitaetsstufe bekommt. */
 const GALAXY_POINTS = [1800, 3000, 4500, 6000, 8000]
@@ -169,6 +182,15 @@ const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#123a5e", rim: "#38bdf8"},
 ]
 
+/* Drei Planeten, im Farbraum der Seite. Die Nachtseite ist nie schwarz, sondern
+   ein kuehler Rest – so sehen echte Aufnahmen aus, und der Koerper bleibt gegen
+   den Weltraum als Kugel erkennbar. */
+const PLANET_COLORS: ReadonlyArray<{surface: string; shadow: string; rim: string}> = [
+    {surface: "#3f6f93", shadow: "#0a1622", rim: "#7dd3fc"},
+    {surface: "#6a5a93", shadow: "#120e1f", rim: "#c4a3ff"},
+    {surface: "#3b7d7a", shadow: "#0a1a1a", rim: "#5eead4"},
+]
+
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
@@ -231,9 +253,17 @@ export class SpaceScene {
 
     private readonly galaxy: Galaxy
 
-    private readonly waypoints: THREE.Mesh[] = []
+    private readonly waypoints: THREE.Object3D[] = []
+    /* Die Kugeln getrennt gemerkt: die Eigendrehung gehoert dem Planeten, nicht
+       der Gruppe – sonst kippt der Ring mit und verliert seine Neigung. */
+    private readonly waypointPlanets: THREE.Mesh[] = []
     private readonly waypointMaterials: THREE.ShaderMaterial[] = []
-    private readonly waypointGeometry = new THREE.OctahedronGeometry(1, 0)
+    private readonly ringMaterials: THREE.ShaderMaterial[] = []
+    /* Kugel statt Oktaeder: die Wegpunkte des Werdegangs sind Planeten, nicht
+       Kristalle – dieselbe Form fuer zwei verschiedene Dinge wuerde nichts
+       unterscheiden. 24x16 Segmente reichen bei dieser Groesse voellig. */
+    private readonly waypointGeometry = new THREE.SphereGeometry(1, 24, 16)
+    private readonly ringGeometry = new THREE.RingGeometry(1.5, 2.3, 64)
 
     /** z, an dem die Reise durch die Galaxie endet und der Ring uebernimmt. */
     private readonly journeyEnd: number
@@ -336,36 +366,74 @@ export class SpaceScene {
            Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
            steht, wenn Kapitel i dran ist. */
         for (let i = 0; i < WAYPOINT_COUNT; i++) {
+            const {surface, shadow, rim} = PLANET_COLORS[i % PLANET_COLORS.length]
             const material = new THREE.ShaderMaterial({
-                vertexShader: crystalVertexShader,
-                fragmentShader: crystalFragmentShader,
+                vertexShader: planetVertexShader,
+                fragmentShader: planetFragmentShader,
                 uniforms: {
-                    uCore: {value: new THREE.Color("#1b3f63")},
-                    uRim: {value: new THREE.Color("#7dd3fc")},
+                    uSurface: {value: new THREE.Color(surface)},
+                    uShadow: {value: new THREE.Color(shadow)},
+                    uRim: {value: new THREE.Color(rim)},
                     uTime: {value: 0},
-                    uHighlight: {value: 0},
+                    uFade: {value: 0},
+                },
+                transparent: true,
+                /* NICHT additiv und MIT Tiefenschreiben, anders als alles andere
+                   in der Szene: ein Planet ist ein Koerper. Additiv gemischt
+                   wuerde man die Sterne der Galaxie durch ihn hindurch sehen, und
+                   dann ist es keine Kugel mehr, sondern ein Schleier. */
+                depthWrite: true,
+            })
+            this.waypointMaterials.push(material)
+
+            const planet = new THREE.Mesh(this.waypointGeometry, material)
+
+            const ringMaterial = new THREE.ShaderMaterial({
+                vertexShader: ringVertexShader,
+                fragmentShader: ringFragmentShader,
+                uniforms: {
+                    uColor: {value: new THREE.Color(rim)},
                     uFade: {value: 0},
                 },
                 transparent: true,
                 blending: THREE.AdditiveBlending,
                 depthWrite: false,
+                side: THREE.DoubleSide,
             })
-            this.waypointMaterials.push(material)
+            this.ringMaterials.push(ringMaterial)
 
-            const mesh = new THREE.Mesh(this.waypointGeometry, material)
+            const ring = new THREE.Mesh(this.ringGeometry, ringMaterial)
+            /* Schraeg gestellt, je Planet anders. Flach zur Kamera waere er ein
+               Kreis, exakt von der Kante ein Strich – dazwischen liest er sich
+               als Ring. */
+            ring.rotation.set(1.15 + hash(i * 4.4) * 0.5, hash(i * 2.2) * 0.9, 0)
+
+            /* Planet und Ring in einer Gruppe: der Anker projiziert die Gruppe,
+               und die Beschriftungslinie soll an der Kugel ansetzen, nicht am
+               Ring. Deshalb bleibt der Ring ein Kind und die Gruppenposition ist
+               die des Planeten. */
+            const group = new THREE.Group()
+            group.add(planet)
+            group.add(ring)
+            /* Die GRUPPE wird skaliert, nicht der Planet: der Anker liest
+               scale.y, um die halbe Hoehe in Pixeln zu bestimmen. Bei einer
+               unskalierten Gruppe waere das 1 und die Beschriftungslinie setzte
+               im Nichts an. Der Ring skaliert dabei mit, was richtig ist. */
+            group.scale.setScalar(0.85 + hash(i) * 0.3)
+
             const t = i / (WAYPOINT_COUNT - 1)
             /* x relativ zur Kamera, nicht absolut: die Kamera steht auf der
                Reise um HERO_LATERAL nach links versetzt (damit links der Text
                Platz hat). Absolute x-Werte um +2,5 landeten dadurch am rechten
                Bildrand statt rechts der Mitte. */
-            mesh.position.set(
+            group.position.set(
                 -HERO_LATERAL + 1.8 + hash(i * 3.1) * 0.7,
                 -1.05 + (hash(i * 5.7) - 0.5) * 1.4,
                 lerp(CAMERA_Z_HERO, this.journeyEnd, t) - WAYPOINT_VIEW_DISTANCE,
             )
-            mesh.scale.setScalar(0.75 + hash(i) * 0.25)
-            this.scene.add(mesh)
-            this.waypoints.push(mesh)
+            this.scene.add(group)
+            this.waypoints.push(group)
+            this.waypointPlanets.push(planet)
         }
 
         const step = (Math.PI * 2) / Math.max(count, 1)
@@ -661,20 +729,24 @@ export class SpaceScene {
         const waypointCentred = clamp01(1 - Math.abs(station3 - nearestWaypoint) * 2.4)
 
         for (let i = 0; i < this.waypoints.length; i++) {
-            const mesh = this.waypoints[i]
             const material = this.waypointMaterials[i]
-            mesh.rotation.y = hash(i * 2.3) * Math.PI + station3 * 1.8 + time * 0.08
-            mesh.rotation.x = Math.sin(time * 0.3 + i) * 0.2
+            /* Nur die Kugel dreht sich – und nur um ihre eigene Achse, wie ein
+               Planet. Die Gruppe bleibt stehen, damit der Ring seine Neigung
+               behaelt. */
+            this.waypointPlanets[i].rotation.y =
+                hash(i * 2.3) * Math.PI + station3 * 1.2 + time * 0.05
 
             /* Nur der Wegpunkt, der gerade dran ist, leuchtet voll – und alles
                blendet aus, sobald der Ring uebernimmt. */
             const own = i === nearestWaypoint ? 1 : 0.25
             material.uniforms.uTime.value = time
-            material.uniforms.uFade.value = lerp(
+            const fade = lerp(
                 material.uniforms.uFade.value,
                 own * this.aboutActive * (1 - this.enter),
                 0.08,
             )
+            material.uniforms.uFade.value = fade
+            this.ringMaterials[i].uniforms.uFade.value = fade
         }
 
         this.shardMaterial.uniforms.uTime.value = time
@@ -698,7 +770,7 @@ export class SpaceScene {
 
     private reportAnchor(
         kind: Anchor["kind"],
-        meshes: THREE.Mesh[],
+        meshes: THREE.Object3D[],
         index: number,
         strength: number,
     ) {
@@ -811,7 +883,9 @@ export class SpaceScene {
 
         this.geometry.dispose()
         this.waypointGeometry.dispose()
+        this.ringGeometry.dispose()
         this.waypointMaterials.forEach((m) => m.dispose())
+        this.ringMaterials.forEach((m) => m.dispose())
         this.galaxy.dispose()
         this.shardGeometry.dispose()
         this.bgGeometry.dispose()
