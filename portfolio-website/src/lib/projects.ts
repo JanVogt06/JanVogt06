@@ -8,7 +8,6 @@ export interface Project {
     /** Dateiname des Screenshots in src/data/images/screenshots/ */
     slug: string;
     icon: string;
-    hash: string;       // kurzer Commit-Hash (Deko)
     title: string;
     subtitle: string;
     description: string;

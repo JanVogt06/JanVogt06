@@ -36,8 +36,6 @@ const SectionIntro = () => (
     <div className="flex items-end justify-between gap-6">
         <HudSectionHeader
             id="02"
-            command="git log"
-            argument="--oneline projekte/"
             title="Meine"
             accent="Projekte"
             className="min-w-0 flex-1"

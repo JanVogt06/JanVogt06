@@ -1,8 +1,7 @@
 import {useCallback, useRef} from "react"
 import {ArrowDown, ArrowRight} from "lucide-react"
-import {motion, useReducedMotion} from "framer-motion"
+import {motion} from "framer-motion"
 import {EASE} from "@/lib/motion"
-import useTypewriter from "@/lib/useTypewriter"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {scrollToElement} from "@/lib/smoothScroll"
 
@@ -28,14 +27,9 @@ import {scrollToElement} from "@/lib/smoothScroll"
  * kommt: die Bewegung gehoert dem Scroll, nicht einer Zeitachse.
  */
 
-const COMMAND = "whoami"
-
 const Hero = () => {
     const sectionRef = useRef<HTMLElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
-    const reduced = useReducedMotion()
-
-    const {typed, done} = useTypewriter(COMMAND, {startDelay: 550, cps: 18, enabled: !reduced})
 
     const onProgress = useCallback((raw: number) => {
         // useScrollProgress begrenzt nicht mehr; oberhalb des Hero ist raw < 0.
@@ -56,19 +50,12 @@ const Hero = () => {
                 className="relative z-10 mx-auto flex min-h-screen max-w-[88rem] flex-col justify-center px-6 pt-14 will-change-transform sm:px-8 lg:px-12"
             >
                 <motion.p
-                    className="mb-6 font-mono text-sm text-white/50"
+                    className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-white/40"
                     initial={{opacity: 0}}
                     animate={{opacity: 1}}
                     transition={{duration: 0.5, delay: 0.3, ease: EASE}}
                 >
-                    <span className="text-status">$</span> {typed}
-                    {!done && <Caret/>}
-                    {/* Der Zusatz erst ab sm: auf 375 px bricht die Zeile sonst um. */}
-                    {done && (
-                        <span className="hidden text-white/35 sm:inline">
-                            {" "}— informatik · developer · referee
-                        </span>
-                    )}
+                    Informatik · Entwicklung · Schiedsrichter
                 </motion.p>
 
                 {/* Der Name als Bildmarke: eine Zeile pro Wort, dicht gesetzt,
@@ -148,9 +135,5 @@ const Hero = () => {
     )
 }
 
-/** Blinkender Block-Cursor. */
-const Caret = () => (
-    <span className="ml-0.5 inline-block h-[1.05em] w-[0.5em] translate-y-[0.15em] bg-brand animate-caret"/>
-)
 
 export default Hero

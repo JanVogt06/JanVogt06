@@ -1,7 +1,7 @@
 import {useState} from 'react'
 import {MotionConfig} from 'framer-motion'
 import Atmosphere from './components/Atmosphere'
-import RepoBar from './components/RepoBar'
+import TopBar from './components/TopBar'
 import Hero from './components/Hero'
 import About from './components/About'
 import Projects from './components/Projects'
@@ -41,7 +41,7 @@ function App() {
                 crystalCount={crystals ? projects.length : 0}
                 onSelectCrystal={setSelected}
             />
-            <RepoBar/>
+            <TopBar/>
             <Hero/>
             <About/>
             <Projects crystals={crystals} selected={selected} onSelect={setSelected}/>

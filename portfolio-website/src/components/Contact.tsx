@@ -1,19 +1,16 @@
 import {useCallback, useRef} from "react"
-import {Mail, Github, Instagram, MapPin, GitPullRequest, GitMerge, ArrowUpRight} from "lucide-react"
+import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
 import {HudPanel, HudLabel, HudSectionHeader} from "./Hud"
 import useScrollProgress from "@/lib/useScrollProgress"
 
 /**
  * Kontakt als Funkstrecke.
  *
- * Der Abschnitt war eine abgerundete Karte mit Pillen und einem grossen violetten
- * Knopf – die weichste Flaeche der Seite, direkt hinter dem Kristallring. Jetzt
- * dieselbe Instrumentensprache wie die Projekt-Tafel.
- *
- * Die Pull-Request-Metapher bleibt, weil sie zum Git-Leitmotiv gehoert und weil
- * sie stimmt: man traegt etwas an, das zusammengefuehrt werden kann. Sie ist nur
- * nicht mehr als GitHub-Nachbau gezeichnet, sondern als Statuszeile eines
- * Geraets.
+ * War als Pull Request inszeniert: "Open a Pull Request", eine Statuszeile
+ * "du:hallo -> jan-vogt:main", ein Knopf "Merge anfragen". Das ist raus – ein
+ * Kontaktformular als Git-Vorgang zu verkleiden verlangt vom Besucher, die
+ * Metapher zu kennen, bevor er weiss, wie er eine Mail schreibt. Uebrig bleibt
+ * die Sache selbst: vier Kanaele und ein Knopf.
  *
  * ANKUNFT AM SCROLL
  *
@@ -147,26 +144,22 @@ const Contact = () => {
                 <div ref={headerRef} className="mb-10 will-change-transform md:mb-14">
                     <HudSectionHeader
                         id="03"
-                        command="git request-pull"
-                        title="Open a"
-                        accent="Pull Request"
+                        title="Sag"
+                        accent="Hallo"
                         lead="Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?"
                     />
                 </div>
 
                 <div ref={panelRef} className="will-change-transform">
                     <HudPanel className="p-5 sm:p-8">
-                        {/* Statuszeile des Geraets */}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.07] pb-4 font-mono text-xs">
-                            <GitPullRequest className="h-4 w-4 text-status"/>
-                            <span className="font-semibold uppercase tracking-[0.2em] text-status">Open</span>
-                            <span aria-hidden="true" className="h-px w-6 bg-white/15"/>
-                            <span className="border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-white/70">
-                                du:hallo
+                        {/* Verfuegbarkeit – dafuer ist der Emerald-Akzent da */}
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.07] pb-4">
+                            <span className="relative flex h-1.5 w-1.5">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
+                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-status"/>
                             </span>
-                            <span aria-hidden="true" className="text-white/30">→</span>
-                            <span className="border border-brand/25 bg-brand/10 px-2 py-0.5 text-brand">
-                                jan-vogt:main
+                            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-status">
+                                Offen für Gespräche
                             </span>
                         </div>
 
@@ -183,8 +176,8 @@ const Contact = () => {
                                 href="mailto:contact@jan-vogt.dev"
                                 className="group inline-flex items-center gap-3 border border-brand/30 bg-brand/10 px-6 py-3 font-mono text-xs uppercase tracking-[0.22em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
                             >
-                                <GitMerge className="h-4 w-4"/>
-                                Merge anfragen
+                                <Send className="h-4 w-4"/>
+                                Nachricht schreiben
                                 <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
                             </a>
 

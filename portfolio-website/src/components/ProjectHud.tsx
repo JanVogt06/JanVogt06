@@ -95,7 +95,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     <div className="min-w-0">
                         <HudLabel tone="text-brand/80" className="!text-[11px]">
                             Projekt {String(index + 1).padStart(2, "0")}
-                            <span className="text-white/25"> · {project.hash}</span>
+                            <span className="text-white/25"> / {String(projects.length).padStart(2, "0")}</span>
                         </HudLabel>
                         <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
                             {project.title}

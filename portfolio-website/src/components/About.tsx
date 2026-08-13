@@ -244,8 +244,6 @@ const AboutChapters = () => {
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pt-8 sm:px-10 lg:px-16">
                     <HudSectionHeader
                         id="01"
-                        command="cat"
-                        argument="README.md"
                         title="Über"
                         accent="mich"
                     />
@@ -318,8 +316,6 @@ const AboutStack = () => (
         <Reveal variants={fadeUp} className="mb-10 md:mb-14">
             <HudSectionHeader
                 id="01"
-                command="cat"
-                argument="README.md"
                 title="Über"
                 accent="mich"
                 lead="Informatik-Student, Werkstudent bei ZEISS & Schiedsrichter mit Leidenschaft für Technologie"

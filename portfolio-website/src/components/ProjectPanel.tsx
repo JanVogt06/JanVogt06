@@ -61,7 +61,6 @@ const ProjectPanel = ({
                 <p className="mb-5 flex items-center gap-3 font-mono text-xs text-white/35">
                     <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
                     <span className="h-px w-6 bg-white/15"/>
-                    <span>{project.hash}</span>
                     <span className="text-white/20">/{String(total).padStart(2, "0")}</span>
                 </p>
 

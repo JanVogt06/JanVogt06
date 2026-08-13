@@ -13,9 +13,11 @@ import type {ReactNode} from "react"
  *   einzukasteln – dadurch bleibt der Blick auf dem Inhalt und der Nebel
  *   dahinter bleibt sichtbar.
  *
- *   Mono-Beschriftungen mit Doppelslash und weiter Laufweite. Das ist der Ton
- *   einer Instrumententafel, und es passt zum Git-Leitmotiv der Seite: beides
- *   ist die Schrift von Werkzeugen.
+ *   Mono-Beschriftungen in Kapitaelchen mit weiter Laufweite. Das ist der Ton
+ *   einer Instrumentenanzeige. Sie trugen einmal ein "// " davor, aus dem
+ *   Git-Leitmotiv der Seite – das ist raus: es hat jede Beschriftung wie einen
+ *   auskommentierten Codezeile aussehen lassen und mit dem Weltraum nichts zu
+ *   tun.
  *
  *   Rechte Winkel. Die Radien der Seite stehen in index.css global auf nahezu
  *   null, damit das nicht pro Komponente durchgehalten werden muss.
@@ -66,12 +68,7 @@ export const HudPanel = ({
     </div>
 )
 
-/**
- * Mono-Beschriftung im Stil `// LABEL`.
- *
- * Der Doppelslash kommt aus dem Code und ist damit derselbe Griff wie das
- * `$ git`-Motiv: die Seite spricht die Sprache ihrer Werkzeuge.
- */
+/** Mono-Beschriftung in Kapitaelchen mit weiter Laufweite. */
 export const HudLabel = ({
     children,
     className = "",
@@ -81,26 +78,22 @@ export const HudLabel = ({
     className?: string
     tone?: string
 }) => (
-    <p
-        className={`font-mono text-[10px] uppercase tracking-[0.28em] ${tone} ${className}`}
-    >
-        <span aria-hidden="true">// </span>
+    <p className={`font-mono text-[10px] uppercase tracking-[0.28em] ${tone} ${className}`}>
         {children}
     </p>
 )
 
 /**
- * Abschnittskopf im HUD-Stil.
+ * Abschnittskopf: laufende Kennung, feine Linie, Ueberschrift.
  *
- * Ersetzt SectionHeader.tsx. Der alte Kopf hatte ein `$ befehl argument` und
- * darunter eine Ueberschrift mit Gradient-Wort; das bleibt im Kern, wird aber
- * knapper und bekommt eine Kennung wie ein Instrument: eine laufende Nummer und
- * eine feine Linie, die den Kopf mit dem Rest verbindet.
+ * Hier stand vorher eine Kommandozeile darueber (`$ cat README.md`,
+ * `$ git log --oneline projekte/`). Die ist raus – sie war der lauteste Teil des
+ * Git-Leitmotivs und hat jeden Abschnitt wie ein Terminal eingeleitet, was neben
+ * einem Kristallring im Weltraum keinen Sinn ergibt. Die Kennung mit der Linie
+ * traegt die Ordnung allein.
  */
 export const HudSectionHeader = ({
     id,
-    command,
-    argument,
     title,
     accent,
     lead,
@@ -108,8 +101,6 @@ export const HudSectionHeader = ({
 }: {
     /** Kennung wie 02 – gibt der Seite eine Ordnung, die man mitliest. */
     id: string
-    command: string
-    argument?: string
     title: string
     accent: string
     lead?: string
@@ -123,12 +114,7 @@ export const HudSectionHeader = ({
             <span aria-hidden="true" className="h-px flex-1 bg-gradient-to-r from-brand/40 to-transparent"/>
         </div>
 
-        <p className="mt-5 font-mono text-sm text-white/40">
-            <span className="text-status">$</span> {command}
-            {argument && <span className="text-white/25"> {argument}</span>}
-        </p>
-
-        <h2 className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
+        <h2 className="mt-5 text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
             {title}{" "}
             <span className="bg-gradient-to-r from-brand to-brand-deep bg-clip-text text-transparent">
                 {accent}
