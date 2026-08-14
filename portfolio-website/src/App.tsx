@@ -26,10 +26,13 @@ function App() {
     const wideEnough = useMediaQuery(`(min-width: ${CRYSTALS_MIN_WIDTH}px)`)
     const crystals = scene && wideEnough
 
-    /* Welches Projekt ist geoeffnet? Liegt hier, weil zwei Geschwister es
-       brauchen: die Szene loest die Auswahl per Klick auf einen Stein aus, die
-       Projekt-Sektion zeigt das Panel. */
+    /* Was ist geoeffnet? Beides liegt hier, weil jeweils zwei Geschwister
+       beteiligt sind: die Szene loest die Auswahl per Klick im Raum aus, die
+       jeweilige Sektion zeigt daraufhin ihre Tafel.
+
+       `selected` = Kristall (Projekt), `station` = Planet (Werdegang). */
     const [selected, setSelected] = useState<number | null>(null)
+    const [station, setStation] = useState<number | null>(null)
 
     return (
         /* reducedMotion="user": wer im System "Bewegung reduzieren" gesetzt hat,
@@ -40,11 +43,13 @@ function App() {
             <Atmosphere
                 scene={scene}
                 crystalCount={crystals ? projects.length : 0}
-                onSelectCrystal={setSelected}
+                onPick={(pick) =>
+                    pick.kind === "crystal" ? setSelected(pick.index) : setStation(pick.index)
+                }
             />
             <TopBar/>
             <Hero/>
-            <About/>
+            <About station={station} onStation={setStation}/>
             {/* Reine Scroll-Strecke: der Durchflug durch die Galaxie. */}
             <Passage/>
             <Projects crystals={crystals} selected={selected} onSelect={setSelected}/>

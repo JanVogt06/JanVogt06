@@ -1,5 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import type {ReactNode} from "react"
+import {ImageIcon, X} from "lucide-react"
+import {HudCorners, HudLabel} from "./Hud"
 import portraitImage from "../data/images/portrait.webp"
 import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
@@ -36,6 +38,17 @@ import {space, subscribeAnchor} from "@/lib/space/controller"
  * Kein Rahmen, keine Eckklammern, keine Tafel: der Text liegt frei im Raum, mit
  * einem weichen dunklen Schleier dahinter, damit er ueber der Galaxie lesbar
  * bleibt.
+ *
+ * DIE BILDER
+ *
+ * Sie standen einmal dauerhaft in der rechten Haelfte. Das war der Fremdkoerper:
+ * ein Foto ist ein Rechteck mit eigener Perspektive, eigenem Licht und eigenem
+ * Horizont – im freien Raum sieht es aus, als klebe es auf der Scheibe. Und es
+ * nahm der Galaxie genau die Haelfte des Bildes weg, durch die man fliegen soll.
+ *
+ * Jetzt sind die Planeten anklickbar und die Aufnahme kommt erst darauf – dieselbe
+ * Geste wie bei den Kristallen. Der Raum bleibt Raum, bis man etwas darin
+ * anfasst.
  */
 
 /** Stationen des Werdegangs – frueher ein Git-Graph mit Branches und Hashes. */
@@ -148,31 +161,97 @@ const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const APPROACH = 0.14
 
 /**
- * Die Aufnahme zum Kapitel.
+ * Die Aufnahme zum Kapitel – als Tafel, die ein Klick auf den Planeten oeffnet.
  *
- * Ohne Maske und ohne Rahmen. Hier lief einmal ein radialer Verlauf, der die
- * Raender wegblendete – ein Notbehelf, weil das Skisprung-Bild einen
- * fotografischen Hintergrund hatte und als hartes Rechteck im Weltraum sass. Der
- * Notbehelf loest das Problem aber nicht, er verwischt es nur: ein weggeblendeter
- * Hintergrund ist immer noch ein Hintergrund.
+ * Bewusst schlichter als das Projekt-HUD: dort ruft man einen Datensatz auf, hier
+ * schaut man ein Bild an. Eckklammern, eine Zeile Beschriftung, sonst nichts.
  *
- * Die Bilder sind freigestellt, deshalb genuegt das Bild selbst. `object-contain`
- * fuer alle drei: bei freigestellten Motiven gibt es nichts zuzuschneiden.
+ * `object-contain`: die Bilder sind freigestellt, es gibt nichts zuzuschneiden.
  */
-const FloatingImage = ({chapter}: {chapter: Chapter}) => (
-    <img
-        src={chapter.image}
-        alt={chapter.alt}
-        className="h-full w-full object-contain object-center"
-    />
-)
+const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}) => {
+    const closeRef = useRef<HTMLButtonElement>(null)
+
+    useEffect(() => {
+        closeRef.current?.focus()
+    }, [])
+
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key === "Escape") onClose()
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [onClose])
+
+    return (
+        <div
+            /* Das Rad gehoert dieser Tafel, nicht der Seite darunter – siehe
+               lib/smoothScroll.ts. Die Tafel scrollt selbst nicht, also bleibt
+               das Bild stehen, statt dass die Kamera darunter weiterfliegt. */
+            data-native-scroll
+            role="dialog"
+            aria-modal="true"
+            aria-label={chapter.alt}
+            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
+        >
+            {/* Klick daneben schliesst. Der Knopf bleibt der barrierefreie Weg. */}
+            <button
+                aria-hidden="true"
+                tabIndex={-1}
+                onClick={onClose}
+                className="absolute inset-0 cursor-default"
+            />
+
+            <div className="surface relative flex w-full max-w-[64rem] flex-col p-5 sm:p-8">
+                <HudCorners/>
+
+                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
+                    <div className="min-w-0">
+                        <HudLabel tone="text-brand/80" className="!text-[11px]">
+                            {chapter.label}
+                        </HudLabel>
+                        <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
+                            {chapter.title} {chapter.accent}
+                        </h2>
+                    </div>
+
+                    <div className="flex shrink-0 items-center gap-4">
+                        <span className="hidden font-mono text-[10px] uppercase tracking-[0.28em] text-white/25 lg:inline">
+                            Esc
+                        </span>
+                        <button
+                            ref={closeRef}
+                            onClick={onClose}
+                            aria-label="Aufnahme schließen"
+                            className="border border-white/10 p-2.5 text-white/60 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                        >
+                            <X className="h-4 w-4"/>
+                        </button>
+                    </div>
+                </div>
+
+                {/* min-h-0: sonst waere der Bildbereich nie kleiner als das Bild. */}
+                <div className="mt-5 min-h-0 flex-1">
+                    <img
+                        src={chapter.image}
+                        alt={chapter.alt}
+                        className="h-full w-full object-contain object-center"
+                    />
+                </div>
+            </div>
+        </div>
+    )
+}
 
 const ChapterContent = ({
     chapter,
     headingRef,
+    onOpenImage,
 }: {
     chapter: Chapter
     headingRef?: (node: HTMLDivElement | null) => void
+    /** Fehlt in der gestapelten Fassung – dort steht das Bild einfach da. */
+    onOpenImage?: () => void
 }) => (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="relative max-w-xl lg:col-span-6">
@@ -200,10 +279,23 @@ const ChapterContent = ({
             </div>
 
             <div className="mt-7">{chapter.body}</div>
-        </div>
 
-        <div className="hidden h-[46vh] lg:col-span-6 lg:block">
-            <FloatingImage chapter={chapter}/>
+            {/* Der Weg zur Aufnahme ohne Maus – und gleichzeitig der Hinweis,
+                dass der Planet ueberhaupt anfassbar ist. Ein Bild, das nur
+                per Klick auf ein 3D-Objekt erreichbar ist, waere fuer einen
+                Teil der Besucher gar nicht erreichbar. */}
+            {onOpenImage && (
+                <button
+                    onClick={onOpenImage}
+                    className="group mt-8 inline-flex items-center gap-2 border border-white/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                >
+                    <ImageIcon className="h-3.5 w-3.5"/>
+                    Aufnahme
+                    <span className="text-white/25 group-hover:text-brand/50">
+                        oder Planet anklicken
+                    </span>
+                </button>
+            )}
         </div>
     </div>
 )
@@ -272,7 +364,13 @@ const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
     )
 }
 
-const AboutJourney = () => {
+const AboutJourney = ({
+    station,
+    onStation,
+}: {
+    station: number | null
+    onStation: (index: number | null) => void
+}) => {
     const sectionRef = useRef<HTMLDivElement>(null)
     const layerRefs = useRef<(HTMLDivElement | null)[]>([])
     const headingRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -396,6 +494,7 @@ const AboutJourney = () => {
                                 headingRef={(node) => {
                                     headingRefs.current[i] = node
                                 }}
+                                onOpenImage={() => onStation(i)}
                             />
                         </div>
                     ))}
@@ -429,6 +528,10 @@ const AboutJourney = () => {
                     </div>
                 </div>
             </div>
+
+            {station !== null && chapters[station] && (
+                <StationView chapter={chapters[station]} onClose={() => onStation(null)}/>
+            )}
         </div>
     )
 }
@@ -443,18 +546,38 @@ const AboutJourney = () => {
 const AboutStack = () => (
     <div className="mx-auto max-w-[88rem] space-y-20 px-4 py-20 sm:px-6 md:py-28 lg:px-8">
         {chapters.map((chapter) => (
-            <ChapterContent key={chapter.id} chapter={chapter}/>
+            <div key={chapter.id}>
+                <ChapterContent chapter={chapter}/>
+                {/* Hier gibt es keine Planeten zum Anklicken, also steht das Bild
+                    einfach unter dem Text. */}
+                <img
+                    src={chapter.image}
+                    alt={chapter.alt}
+                    className="mt-10 max-h-[50vh] w-full object-contain object-center"
+                />
+            </div>
         ))}
     </div>
 )
 
-const About = () => {
+const About = ({
+    station,
+    onStation,
+}: {
+    /** Welcher Planet ist angeklickt? Kommt aus App, weil die Szene ihn auslöst. */
+    station: number | null
+    onStation: (index: number | null) => void
+}) => {
     const roomy = useMediaQuery("(min-width: 1024px) and (min-height: 700px)")
     const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
 
     return (
         <section id="about" className="relative">
-            {roomy && !reduced ? <AboutJourney/> : <AboutStack/>}
+            {roomy && !reduced ? (
+                <AboutJourney station={station} onStation={onStation}/>
+            ) : (
+                <AboutStack/>
+            )}
         </section>
     )
 }

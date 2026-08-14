@@ -276,11 +276,14 @@ export type Anchor = {
     strength: number
 }
 
+/** Was unter dem Zeiger liegt bzw. angeklickt wurde. */
+export type Pick = {kind: "crystal" | "waypoint"; index: number}
+
 export type SpaceSceneOptions = {
     container: HTMLElement
     count: number
-    onHover: (index: number | null) => void
-    onSelect: (index: number) => void
+    onHover: (pick: Pick | null) => void
+    onSelect: (pick: Pick) => void
     /** Jeden Frame: wo stehen der vordere Stein und der naechste Wegpunkt? */
     onAnchor: (anchor: Anchor) => void
 }
@@ -365,6 +368,7 @@ export class SpaceScene {
     private passageTarget = 0
     private passageProgress = 0
     private hovered: number | null = null
+    private hoveredKind: "crystal" | "waypoint" | null = null
     private selected: number | null = null
     private selectBlend = 0
     private paused = false
@@ -519,6 +523,7 @@ export class SpaceScene {
                 -2.6 + (hash(i * 5.7) - 0.5) * 1.2,
                 lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - WAYPOINT_VIEW_DISTANCE,
             )
+            group.userData.index = i
             this.scene.add(group)
             this.waypoints.push(group)
             this.waypointPlanets.push(planet)
@@ -814,7 +819,8 @@ export class SpaceScene {
             mesh.rotation.x = hash(i) * Math.PI + Math.sin(time * 0.25 + i) * 0.1
 
             const isNearest = i === nearest
-            const highlightTarget = this.hovered === i || this.selected === i ? 1 : 0
+            const hoveredHere = this.hoveredKind === "crystal" && this.hovered === i
+            const highlightTarget = hoveredHere || this.selected === i ? 1 : 0
             material.uniforms.uTime.value = time
             material.uniforms.uHighlight.value = lerp(
                 material.uniforms.uHighlight.value,
@@ -874,7 +880,12 @@ export class SpaceScene {
 
             /* Nur der Wegpunkt, der gerade dran ist, leuchtet voll – und alles
                blendet aus, sobald der Ring uebernimmt. */
-            const own = i === nearestWaypoint ? 1 : 0.25
+            const own =
+                i === nearestWaypoint
+                    ? 1
+                    : this.hoveredKind === "waypoint" && this.hovered === i
+                      ? 0.7
+                      : 0.25
             material.uniforms.uTime.value = time
             const fade = lerp(
                 material.uniforms.uFade.value,
@@ -935,25 +946,53 @@ export class SpaceScene {
         this.onAnchor({kind, index, x, y, radius: Math.abs(y - topY), strength})
     }
 
-    /** Sind die Steine gerade anfassbar? Nur in der Projekt-Sektion. */
-    private get interactive() {
-        return this.enter >= INTERACTIVE_ENTER
+    /**
+     * Was ist gerade anfassbar?
+     *
+     * Beides liegt die ganze Zeit in der Szene und ist nur weit weg – einen
+     * Raycast interessiert Entfernung nicht. Ohne diese Unterscheidung waeren
+     * Steine im Werdegang und Planeten in den Projekten anklickbar.
+     */
+    private get target(): "crystal" | "waypoint" | null {
+        if (this.enter >= INTERACTIVE_ENTER) return "crystal"
+        if (this.aboutActive >= INTERACTIVE_ENTER && this.passageProgress < 0.1) return "waypoint"
+        return null
     }
 
     private updateHover() {
-        if (!this.interactive) {
-            if (this.hovered !== null) {
-                this.hovered = null
-                this.onHover(null)
-            }
+        const kind = this.target
+        if (!kind) {
+            this.clearHover()
             return
         }
+
         this.raycaster.setFromCamera(this.pointer, this.camera)
-        const hit = this.raycaster.intersectObjects(this.crystals, false)[0]
-        const index = hit ? (hit.object.userData.index as number) : null
-        if (index === this.hovered) return
+        const meshes = kind === "crystal" ? this.crystals : this.waypoints
+        /* true = auch Kinder pruefen: ein Planet ist eine Gruppe aus Kugel und
+           Ring, der Strahl trifft also nie die Gruppe selbst. */
+        const hit = this.raycaster.intersectObjects(meshes, true)[0]
+        if (!hit) {
+            this.clearHover()
+            return
+        }
+
+        /* Vom Treffer zurueck zum Objekt, das den Index traegt – beim Planeten ist
+           das der Grosselternteil, beim Stein das Mesh selbst. */
+        let node: THREE.Object3D | null = hit.object
+        while (node && node.userData.index === undefined) node = node.parent
+        const index = node ? (node.userData.index as number) : null
+
+        if (index === this.hovered && kind === this.hoveredKind) return
         this.hovered = index
-        this.onHover(index)
+        this.hoveredKind = index === null ? null : kind
+        this.onHover(index === null ? null : {kind, index})
+    }
+
+    private clearHover() {
+        if (this.hovered === null) return
+        this.hovered = null
+        this.hoveredKind = null
+        this.onHover(null)
     }
 
     private render() {
@@ -971,10 +1010,7 @@ export class SpaceScene {
     private handlePointerMove = (event: PointerEvent) => {
         if (this.isOverInteractive(event.target)) {
             this.pointerInside = false
-            if (this.hovered !== null) {
-                this.hovered = null
-                this.onHover(null)
-            }
+            this.clearHover()
             return
         }
         const rect = this.canvasRect
@@ -987,10 +1023,9 @@ export class SpaceScene {
     }
 
     private handleClick = (event: MouseEvent) => {
-        if (!this.interactive) return
         if (this.isOverInteractive(event.target)) return
-        if (this.hovered === null) return
-        this.onSelect(this.hovered)
+        if (this.hovered === null || this.hoveredKind === null) return
+        this.onSelect({kind: this.hoveredKind, index: this.hovered})
     }
 
     private isOverInteractive(target: EventTarget | null) {

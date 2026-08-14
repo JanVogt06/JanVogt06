@@ -1,5 +1,6 @@
 import {useCallback, useEffect, useRef, useState} from "react"
 import {SpaceScene} from "@/lib/space/SpaceScene"
+import type {Pick} from "@/lib/space/SpaceScene"
 import {attachScene, emitAnchor} from "@/lib/space/controller"
 import useScrollProgress from "@/lib/useScrollProgress"
 
@@ -38,13 +39,14 @@ const CONTACT_START = 0.76
 const Atmosphere = ({
     scene: sceneEnabled,
     crystalCount,
-    onSelectCrystal,
+    onPick,
 }: {
     /** Laeuft die WebGL-Szene (Nebel)? Sonst bleibt es bei den CSS-Ebenen. */
     scene: boolean
     /** Anzahl anklickbarer Steine. 0 = Nebel ohne Kristalle. */
     crystalCount: number
-    onSelectCrystal: (index: number) => void
+    /** Ein Klick im Raum – auf einen Kristall oder auf einen Planeten. */
+    onPick: (pick: Pick) => void
 }) => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
     const heroRef = useRef<HTMLDivElement>(null)
@@ -53,14 +55,14 @@ const Atmosphere = ({
     const canvasRef = useRef<HTMLDivElement>(null)
     const sceneRef = useRef<SpaceScene | null>(null)
 
-    const [hovered, setHovered] = useState<number | null>(null)
+    const [hovered, setHovered] = useState<Pick | null>(null)
 
-    /* Die Callbacks liegen in Refs, damit ein neuer onSelectCrystal nicht die
-       Szene neu aufbaut – das waere jedes Mal ein neuer WebGL-Kontext. */
-    const selectRef = useRef(onSelectCrystal)
+    /* Die Callbacks liegen in Refs, damit ein neues onPick nicht die Szene neu
+       aufbaut – das waere jedes Mal ein neuer WebGL-Kontext. */
+    const selectRef = useRef(onPick)
     useEffect(() => {
-        selectRef.current = onSelectCrystal
-    }, [onSelectCrystal])
+        selectRef.current = onPick
+    }, [onPick])
 
     useEffect(() => {
         if (!canvasRef.current || !sceneEnabled) return
@@ -69,7 +71,7 @@ const Atmosphere = ({
             container: canvasRef.current,
             count: crystalCount,
             onHover: setHovered,
-            onSelect: (index) => selectRef.current(index),
+            onSelect: (pick) => selectRef.current(pick),
             onAnchor: emitAnchor,
         })
         sceneRef.current = scene
@@ -176,7 +178,8 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Zeigt an, dass ein Stein anklickbar ist. Die Canvas selbst kann
+            {/* Zeigt an, dass etwas im Raum anklickbar ist – ein Stein in den
+                Projekten oder ein Planet im Werdegang. Die Canvas selbst kann
                 keinen cursor setzen, weil sie hinter dem Inhalt liegt und keine
                 Zeiger-Ereignisse bekommt – deshalb haengt der Zeiger am body. */}
             {hovered !== null && <CursorHint/>}
