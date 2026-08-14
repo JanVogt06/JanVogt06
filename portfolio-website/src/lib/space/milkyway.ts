@@ -75,8 +75,13 @@ const fragmentShader = `
     float fbm(vec3 p) {
         float v = 0.0;
         float a = 0.5;
-        int octaves = 3 + int(uQuality * 3.0 + 0.5);
-        for (int i = 0; i < 6; i++) {
+        /* Drei bis vier Oktaven. Mehr kostet spuerbar – das ist ein
+           bildschirmfuellender Pass mit dreidimensionalem Rauschen, und zwar
+           zweimal (Wolken und Staub) – bringt aber fast nichts: das Band ist eine
+           weiche, kontrastarme Struktur. Die feine Koernung liefern ohnehin die
+           Sterne davor. */
+        int octaves = 3 + int(uQuality + 0.5);
+        for (int i = 0; i < 4; i++) {
             if (i >= octaves) break;
             v += a * noise(p);
             p *= 2.02;
