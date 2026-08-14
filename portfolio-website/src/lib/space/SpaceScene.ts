@@ -194,6 +194,24 @@ const PLANET_COLORS: ReadonlyArray<{surface: string; shadow: string; rim: string
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
+/** Weiche Ein-/Ausblendkurve – ohne sie setzt eine Ueberblendung hart ein. */
+const smooth = (t: number) => {
+    const c = clamp01(t)
+    return c * c * (3 - 2 * c)
+}
+
+/**
+ * Ab wann und bis wann die Steine erscheinen, gemessen am Heranziehen der
+ * Projekt-Sektion.
+ *
+ * Sie gehoeren zu den Projekten – vorher stand der vordere Stein aber immer auf
+ * voller Deckkraft und die anderen auf 0,5, unabhaengig davon, wo man auf der
+ * Seite war. Dadurch lagen sie im Hero und im ganzen Werdegang sichtbar herum und
+ * haben sich mit der Galaxie und den Planeten ueberlagert.
+ */
+const CRYSTAL_REVEAL_START = 0.12
+const CRYSTAL_REVEAL_END = 0.85
+
 /* Deterministischer Pseudo-Zufall: die Szene soll bei jedem Laden gleich
    aussehen (Math.random waere jedes Mal eine andere). */
 const hash = (n: number) => {
@@ -428,7 +446,10 @@ export class SpaceScene {
                Bildrand statt rechts der Mitte. */
             group.position.set(
                 -HERO_LATERAL + 1.8 + hash(i * 3.1) * 0.7,
-                -1.05 + (hash(i * 5.7) - 0.5) * 1.4,
+                /* Deutlich unter der Kamerahoehe: der Galaxienkern liegt auf der
+                   Blickachse und wird gegen Ende des Werdegangs am hellsten – ein
+                   Planet davor war schwer zu erkennen. */
+                -2.6 + (hash(i * 5.7) - 0.5) * 1.2,
                 lerp(CAMERA_Z_HERO, this.journeyEnd, t) - WAYPOINT_VIEW_DISTANCE,
             )
             this.scene.add(group)
@@ -686,6 +707,14 @@ export class SpaceScene {
         this.camera.position.set(front.x - lateral, front.y + 0.55, z)
         this.camera.lookAt(front.x - lateral, front.y, z - 10)
 
+        /* --- Uebergabe Galaxie -> Steine ---
+           Eine Kurve fuer beides: waehrend die Steine ankommen, blendet die
+           Galaxie aus. Dadurch loest sich das eine im anderen auf, statt dass
+           beides gleichzeitig im Bild liegt. */
+        const reveal = smooth(
+            (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
+        )
+
         // --- Steine ---
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
@@ -705,23 +734,29 @@ export class SpaceScene {
                 highlightTarget,
                 0.12,
             )
-            /* Der vordere Stein tritt hervor, die anderen bleiben sichtbar –
-               es ist ein Ring, kein Karussell mit nur einem Bild. */
+            /* Der vordere Stein tritt hervor, die anderen bleiben sichtbar – es
+               ist ein Ring, kein Karussell mit nur einem Bild. Aber ALLES mal
+               `reveal`: ausserhalb der Projekte sind die Steine gar nicht da. */
             material.uniforms.uFade.value = lerp(
                 material.uniforms.uFade.value,
-                isNearest ? 1 : lerp(0.5, 0.32, this.enter),
+                (isNearest ? 1 : 0.34) * reveal,
                 0.08,
             )
 
-            const grow = isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1
+            /* Sie wachsen beim Erscheinen heran, statt nur aufzublenden – so
+               kommen sie an, wie die Planeten vorher vorbeigezogen sind. */
+            const grow =
+                (isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1) *
+                (0.6 + 0.4 * reveal)
             mesh.scale.copy(this.baseScales[i]).multiplyScalar(grow)
         }
 
         // --- Galaxie ---
         this.galaxy.setTime(time)
-        /* Beim Ankommen am Ring ausblenden: sonst liegt die Scheibe als helles
-           Feld hinter den Steinen und frisst deren Kanten. */
-        this.galaxy.setOpacity(1 - this.enter * 0.8)
+        /* Ausblenden, waehrend die Steine ankommen – dieselbe Kurve. Sonst liegt
+           die Scheibe als helles Feld hinter den Steinen und frisst deren
+           Kanten. */
+        this.galaxy.setOpacity(1 - reveal * 0.92)
 
         // --- Wegpunkte des Werdegangs ---
         const station3 = this.aboutProgress * Math.max(WAYPOINT_COUNT - 1, 1)
@@ -750,6 +785,10 @@ export class SpaceScene {
         }
 
         this.shardMaterial.uniforms.uTime.value = time
+        /* Die Splitter haengen am Ring und lagen deshalb genauso im Werdegang
+           herum. Ihre Deckkraft stand seit dem Anlegen fest auf 0,45 und wurde
+           nie angefasst. */
+        this.shardMaterial.uniforms.uFade.value = 0.45 * reveal
 
         // --- Ankerpunkt fuer die Beschriftung im DOM ---
         /* strength enthaelt `enter`: ausserhalb der Projekt-Sektion ist der
