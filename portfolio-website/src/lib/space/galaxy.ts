@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import {createGalaxyDisc} from "./galaxyDisc"
 
 /**
  * Eine Spiralgalaxie aus Punkten, durch die man hindurchfliegt.
@@ -31,6 +32,14 @@ import * as THREE from "three"
  * Dazu ein paar helle rosa Knoten in den Armen – HII-Regionen, das auffaelligste
  * Merkmal echter Spiralarme. Und ein weicher Kernschein als eigene Flaeche, weil
  * ein Haufen Punkte allein keinen leuchtenden Kern ergibt.
+ *
+ * PUNKTE SIND NUR DIE HALBE GALAXIE
+ *
+ * Aus Punkten allein sah sie aus wie mit dem Stift gezeichnet: zwei duenne Faeden
+ * aus Kruemeln, dazwischen leerer Raum. Auf jeder echten Aufnahme ist es
+ * umgekehrt – eine durchgehend leuchtende Scheibe, in der die Arme HELLERE
+ * Bereiche sind. Dieses diffuse Licht liegt jetzt in galaxyDisc.ts als eigene
+ * Flaeche darunter; die Punkte geben die Koernung darauf.
  *
  * Additiv gemischt: ueberlagerte Punkte summieren sich zu dichten, hellen
  * Bereichen, ohne dass dafuer etwas gerechnet werden muss.
@@ -65,6 +74,8 @@ const COLOR_OUTER = new THREE.Color("#7d9cba")
 /* HII-Regionen sind roetlich, nicht bonbonrosa: sie leuchten in Halpha. */
 const COLOR_HII = new THREE.Color("#d9808c")
 const COLOR_HALO = new THREE.Color("#9aa8bd")
+
+const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
 
 const vertexShader = `
     attribute float aSize;
@@ -139,15 +150,20 @@ export type Galaxy = {
     object: THREE.Object3D
     setPixelRatio: (ratio: number) => void
     setOpacity: (opacity: number) => void
+    /** Abstand der Kamera zum Kern – blendet den Kernschein aus der Naehe aus. */
+    setProximity: (distance: number) => void
     setTime: (time: number) => void
+    setQuality: (quality: number) => void
     dispose: () => void
 }
 
 /**
  * @param count   Anzahl Punkte – skaliert mit der Qualitaetsstufe.
  * @param radius  Aussenradius der Scheibe.
+ * @param quality Qualitaetsstufe 0..1. Sie bestimmt die Oktaven im Schein der
+ *                Scheibe und die Zahl ihrer Lagen.
  */
-export const createGalaxy = (count: number, radius: number): Galaxy => {
+export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy => {
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
     const sizes = new Float32Array(count)
@@ -163,6 +179,10 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
     /* Zwei Zufallszahlen gemittelt ergeben eine Haeufung um die Mitte – billiger
        Ersatz fuer eine Normalverteilung, und genau das braucht der Bulge. */
     const gauss = () => (rand() + rand() - 1)
+
+    /** Deckkraft, zuletzt gesetzt – der Kernschein braucht sie zusammen mit dem
+        Abstand. */
+    let opacity = 1
 
     const bulgeCount = Math.floor(count * BULGE_SHARE)
     const haloCount = Math.floor(count * HALO_SHARE)
@@ -210,8 +230,15 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
                glatten Linie. Deutlich enger als zuvor: mit 0.10 + t * 0.5 waren
                die Arme so breit, dass sie zu einer Scheibe verschmolzen und die
                Spirale nicht mehr zu erkennen war. */
-            const clump = 0.55 + 0.45 * Math.sin(r * 1.9 + arm * 2.1)
-            const spread = (0.05 + t * 0.22) * clump
+            /* Weniger Klumpung als zuvor (0.55 + 0.45): damit wurden aus den
+               Armen Perlenketten mit Luecken. 0.75 + 0.25 verdichtet sie noch
+               stellenweise, laesst sie aber durchlaufen. */
+            const clump = 0.75 + 0.25 * Math.sin(r * 1.9 + arm * 2.1)
+            /* Und breiter (vorher 0.05 + t * 0.22). Echte Arme sind breite
+               Verdichtungen, keine Linien – als Linien sah die Galaxie gezeichnet
+               aus. Die Spirale bleibt trotzdem erkennbar, weil jetzt die diffuse
+               Scheibe darunter die Form traegt. */
+            const spread = (0.10 + t * 0.34) * clump
 
             const theta =
                 (arm / ARMS) * Math.PI * 2 + Math.log(1 + r) * ARM_WIND * 3.2 + gauss() * spread
@@ -221,6 +248,16 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
             // Die Scheibe ist innen dicker als aussen.
             z = gauss() * (1 - t * 0.7) * 1.3
 
+            /* Ein Teil der Scheibensterne steht bewusst NICHT im Arm: die
+               aeltere Population verteilt sich gleichmaessig ueber die Scheibe.
+               Ohne sie ist zwischen den Armen ein Loch, und ein Loch gibt es
+               dort nicht. */
+            if (rand() < 0.22) {
+                const free = rand() * Math.PI * 2
+                x = Math.cos(free) * r
+                y = Math.sin(free) * r
+            }
+
             color.copy(COLOR_INNER).lerp(COLOR_ARM, Math.min(1, t * 2.1))
             if (t > 0.5) color.lerp(COLOR_OUTER, (t - 0.5) / 0.5)
 
@@ -229,10 +266,12 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
 
             /* HII-Regionen: einzelne, deutlich hellere rosa Knoten in den Armen.
                Das auffaelligste Merkmal echter Spiralarme. */
-            if (rand() > 0.982) {
+            if (rand() > 0.991) {
                 color.copy(COLOR_HII)
-                size *= 2.4
-                bright = 1
+                /* Kleiner und seltener als zuvor (2.4 bei 1.8 %): als grosse
+                   rosa Punkte sahen sie aus wie Konfetti auf der Scheibe. */
+                size *= 1.7
+                bright = 0.85
             }
         }
 
@@ -296,8 +335,11 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
         /* Warm nach aussen auslaufend, ohne Violett. Der Stop bei 0.65 war
            (180,140,255) – ein violetter Hof um den Kern, den es an einer echten
            Galaxie nicht gibt. */
-        gradient.addColorStop(0, "rgba(255,247,230,0.72)")
-        gradient.addColorStop(0.3, "rgba(255,214,158,0.26)")
+        /* Deutlich schwaecher als zuvor (0.72 / 0.26). Seit die diffuse Scheibe
+           ihren eigenen Bulge hat, addieren sich beide – die Mitte war ein
+           ausgebrannter weisser Fleck ohne Struktur. */
+        gradient.addColorStop(0, "rgba(255,247,230,0.42)")
+        gradient.addColorStop(0.3, "rgba(255,214,158,0.16)")
         gradient.addColorStop(0.65, "rgba(190,170,140,0.06)")
         gradient.addColorStop(1, "rgba(0,0,0,0)")
         ctx.fillStyle = gradient
@@ -315,29 +357,61 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
        Scheibe und hat die Arme ueberstrahlt – die Galaxie war ein Leuchtfleck. */
     core.scale.setScalar(radius * 0.3)
 
+    /* Das diffuse Licht der Scheibe – dieselben Konstanten wie die Punkte, damit
+       Schein und Koernung aufeinander liegen. */
+    const disc = createGalaxyDisc({
+        radius,
+        arms: ARMS,
+        wind: ARM_WIND,
+        quality,
+        /* Drei Lagen statt fuenf auf schwachen Geraeten. Jede Lage ist im
+           Durchflug eine bildschirmfuellende Flaeche mit Rauschen – das ist die
+           teuerste Stelle der ganzen Szene. */
+        layers: quality >= 0.5 ? 5 : 3,
+    })
+
     // Gekippt: frontal waere die Spirale ein flaches Ornament.
     const group = new THREE.Group()
     group.rotation.set(0.5, 0.25, 0.15)
+    group.add(disc.object)
     group.add(points)
     group.add(core)
 
+    /* Wie beim Schein der Scheibe: der Kernschein ist eine Naeherung fuer die
+       Ferne. Aus zehn Einheiten Abstand deckt das Sprite den halben Bildschirm und
+       ist nur noch ein weisser Fleck. */
+    const CORE_NEAR = 12
+    const CORE_FAR = 34
+    let coreProximity = 1
+
     return {
         object: group,
+        setProximity: (distance) => {
+            coreProximity = clamp01((distance - CORE_NEAR) / (CORE_FAR - CORE_NEAR))
+            coreMaterial.opacity = opacity * coreProximity
+        },
         setPixelRatio: (ratio) => {
             material.uniforms.uPixelRatio.value = ratio
         },
-        setOpacity: (opacity) => {
-            material.uniforms.uOpacity.value = opacity
-            coreMaterial.opacity = opacity
+        setOpacity: (value) => {
+            opacity = value
+            material.uniforms.uOpacity.value = value
+            coreMaterial.opacity = value * coreProximity
+            disc.setOpacity(value)
         },
         setTime: (time) => {
             material.uniforms.uTime.value = time
+            disc.setTime(time)
+        },
+        setQuality: (value) => {
+            disc.setQuality(value)
         },
         dispose: () => {
             geometry.dispose()
             material.dispose()
             coreTexture.dispose()
             coreMaterial.dispose()
+            disc.dispose()
         },
     }
 }

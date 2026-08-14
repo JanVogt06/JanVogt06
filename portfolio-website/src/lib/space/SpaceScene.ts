@@ -7,8 +7,10 @@ import {
 } from "./planetShader"
 import {createGalaxy} from "./galaxy"
 import {createStarfield} from "./starfield"
+import {createMilkyWay} from "./milkyway"
 import type {Galaxy} from "./galaxy"
 import type {Starfield} from "./starfield"
+import type {MilkyWay} from "./milkyway"
 
 /**
  * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
@@ -81,6 +83,17 @@ const RING_Z = -90
  * blendet sie ohnehin aus, damit sie die Kristalle nicht ueberstrahlt.
  */
 const GALAXY_Z = -54
+/**
+ * Seitlicher Versatz der Galaxie.
+ *
+ * Ohne ihn liegt ihr Kern genau auf der Flugbahn – die Passage fuehrt also mitten
+ * durch den Kern, und dort ist alles gleissend weiss. Neun Einheiten sind aus dem
+ * Hero (66 Einheiten entfernt) nur acht Grad, also kaum aus der Mitte, bringen die
+ * Bahn aber an der Verdickung vorbei durch die Arme. Das ist die schoenere Stelle
+ * zum Durchfliegen, und rechts liegt sie auch besser, weil im Hero der Name links
+ * steht.
+ */
+const GALAXY_X = 9
 const GALAXY_RADIUS = 26
 
 /**
@@ -102,11 +115,21 @@ const WAYPOINT_VIEW_DISTANCE = 8
  */
 const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
 
-/** Sterne des Himmels und des Nahfelds je Qualitaetsstufe. */
-const SKY_STARS = [1400, 2600, 4200, 6500, 9000]
-const NEAR_STARS = [180, 380, 650, 950, 1400]
+/**
+ * Sterne des Himmels und des Nahfelds je Qualitaetsstufe.
+ *
+ * Der Himmel traegt zusaetzlich das Band der Milchstrasse, und ein Band lebt von
+ * Masse: es besteht aus Sternen, die einzeln kaum sichtbar sind. Deshalb sind es
+ * hier deutlich mehr als fuer einen Himmel aus Einzelsternen noetig waere.
+ */
+const SKY_STARS = [4000, 9000, 16000, 26000, 38000]
+const NEAR_STARS = [400, 800, 1400, 2000, 2800]
 
-/** Radien der beiden Sternschalen. */
+/** Anteil der Himmelssterne im Band. Der Rest steht ueber die Kugel verteilt. */
+const BAND_FRACTION = 0.62
+
+/** Radien der beiden Sternschalen und der Himmelskugel. */
+const MILKYWAY_RADIUS = 900
 const SKY_RADIUS = 700
 const NEAR_RADIUS = 150
 /** Mitte der Reise – dort sitzt das Nahfeld, damit die Kamera darin bleibt. */
@@ -193,7 +216,17 @@ const INTERACTIVE_ENTER = 0.75
  * Hauptdarsteller, sondern Hintergrund. Und er ist der teuerste Teil der Szene –
  * ein bildschirmfuellender FBM-Shader laeuft ueber die ganze Seitenlaenge mit.
  */
-const NEBULA_MIN = 0.35
+/**
+ * Wie viel vom Nebel-Rechteck uebrig bleibt.
+ *
+ * Deutlich weniger als vorher (1.0 im Hero, 0.35 spaeter). Der Nebel liegt auf
+ * einem bildschirmfesten Rechteck – er kann sich nicht mitbewegen und ist damit
+ * genau der Teil, der aufgeklebt wirkt. Seit die Himmelskugel (milkyway.ts) die
+ * Struktur traegt, ist seine Aufgabe nur noch Farbe: ein Hauch Staubrot und
+ * Tuerkis ueber dem Ganzen.
+ */
+const NEBULA_MAX = 0.5
+const NEBULA_MIN = 0.2
 
 /**
  * Obergrenze der Nebel-Qualitaet.
@@ -317,6 +350,10 @@ export class SpaceScene {
        wirkt aufgeklebt. */
     private readonly skyStars: Starfield
     private readonly nearStars: Starfield
+    /* Der diffuse Teil der Milchstrasse. Punkte allein koennen ihn nicht malen:
+       der auffaelligste Teil des echten Himmels ist nicht punktfoermig, sondern das
+       verschmolzene Licht unaufloesbar vieler Sterne. */
+    private readonly milkyWay: MilkyWay
 
     private readonly waypoints: THREE.Object3D[] = []
     /* Die Kugeln getrennt gemerkt: die Eigendrehung gehoert dem Planeten, nicht
@@ -425,24 +462,41 @@ export class SpaceScene {
         this.galaxy = createGalaxy(
             GALAXY_POINTS[Math.round(this.quality * 4)],
             GALAXY_RADIUS,
+            this.quality,
         )
-        this.galaxy.object.position.z = GALAXY_Z
+        this.galaxy.object.position.set(GALAXY_X, 0, GALAXY_Z)
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.scene.add(this.galaxy.object)
 
-        // --- Sternfelder ---
+        // --- Milchstrasse und Sternfelder ---
         const level = Math.round(this.quality * 4)
+        this.milkyWay = createMilkyWay({
+            radius: MILKYWAY_RADIUS,
+            quality: this.quality,
+        })
+        this.scene.add(this.milkyWay.object)
         this.skyStars = createStarfield({
             count: SKY_STARS[level],
             radius: SKY_RADIUS,
             parallax: false,
+            bandFraction: BAND_FRACTION,
             seed: 7,
         })
+        /* sizeScale muss zur Entfernung des Feldes passen: mit dem Standardwert 26
+           und einer Schale in 80 bis 150 Einheiten blieb jeder Stern unter einem
+           Pixel – gemessen 0,6 bis 1,9 px, also ein unsichtbares Feld und damit
+           gar keine Parallaxe. 110 bringt es auf dieselbe Groesse wie den Himmel.
+           nearFade haelt dafuer die Brocken raus, an denen man dicht vorbeifliegt:
+           unter 45 Einheiten blendet ein Stern aus, statt als Flaeche vors Bild zu
+           rutschen. */
         this.nearStars = createStarfield({
             count: NEAR_STARS[level],
             radius: NEAR_RADIUS,
             parallax: true,
             brightness: 0.85,
+            sizeScale: 110,
+            nearFade: [14, 45],
+            maxSize: 12,
             seed: 131,
         })
         this.nearStars.points.position.z = NEAR_CENTER_Z
@@ -712,6 +766,8 @@ export class SpaceScene {
         if (lower === null) return
         this.quality = lower
         this.bgMaterial.uniforms.uQuality.value = Math.min(lower, NEBULA_MAX_QUALITY)
+        this.milkyWay.setQuality(lower)
+        this.galaxy.setQuality(lower)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
@@ -745,7 +801,11 @@ export class SpaceScene {
 
         // --- Nebel: bleibt ueber die ganze Seite stehen, wird nur leiser ---
         this.bgMaterial.uniforms.uTime.value = time
-        this.bgMaterial.uniforms.uFade.value = lerp(1, NEBULA_MIN, clamp01(this.pageProgress))
+        this.bgMaterial.uniforms.uFade.value = lerp(
+            NEBULA_MAX,
+            NEBULA_MIN,
+            clamp01(this.pageProgress),
+        )
 
         // --- Nachlaufende Werte ---
         this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
@@ -849,11 +909,15 @@ export class SpaceScene {
            immer gleich weit weg und laeuft nie aus dem Bild. Das Nahfeld bleibt,
            wo es ist – an ihm zieht man vorbei, und das ist die Bewegung. */
         this.skyStars.points.position.copy(this.camera.position)
+        this.milkyWay.object.position.copy(this.camera.position)
         this.skyStars.setTime(time)
         this.nearStars.setTime(time)
 
         // --- Galaxie ---
         this.galaxy.setTime(time)
+        /* Der Kernschein ist – wie das diffuse Licht der Scheibe – eine Naeherung
+           fuer die Ferne. Aus der Naehe muss er den Einzelsternen weichen. */
+        this.galaxy.setProximity(this.camera.position.distanceTo(this.galaxy.object.position))
         /* Ausblenden, waehrend die Steine ankommen – dieselbe Kurve. Sonst liegt
            die Scheibe als helles Feld hinter den Steinen und frisst deren
            Kanten. */
@@ -1064,6 +1128,7 @@ export class SpaceScene {
         this.waypointMaterials.forEach((m) => m.dispose())
         this.ringMaterials.forEach((m) => m.dispose())
         this.galaxy.dispose()
+        this.milkyWay.dispose()
         this.skyStars.dispose()
         this.nearStars.dispose()
         this.shardGeometry.dispose()

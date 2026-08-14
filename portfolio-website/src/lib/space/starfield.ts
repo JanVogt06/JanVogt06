@@ -1,4 +1,5 @@
 import * as THREE from "three"
+import {galacticOrientation} from "./galactic"
 
 /**
  * Sterne als echte Punkte im Raum.
@@ -21,6 +22,19 @@ import * as THREE from "three"
  * `near` – steht fest im Raum. An ihm zieht man vorbei, und DAS erzeugt die
  *          Parallaxe. Ohne dieses Feld gibt es keine Bewegung, mit ihm fliegt man.
  *
+ * DIE MILCHSTRASSE
+ *
+ * Gleichmaessig ueber eine Kugel verteilte Punkte ergeben keinen Sternenhimmel,
+ * sondern ein Punktemuster – und so sah es auch aus. Der echte Himmel hat eine
+ * Struktur, und zwar genau eine grosse: das Band der Milchstrasse. Wir schauen von
+ * innen durch die Scheibe unserer Galaxie, deshalb stehen dort ueberwaeltigend
+ * viele Sterne, die einzeln nicht mehr aufloesbar sind und als milchiges Licht
+ * verschmelzen. Quer darueber liegen Staubwolken – die dunklen Risse.
+ *
+ * Deshalb liegt hier der Grossteil der Sterne in einem Band: sehr viele, sehr
+ * kleine, sehr schwache. Sie sind einzeln kaum zu sehen und ergeben zusammen den
+ * Schimmer. Die helleren Einzelsterne stehen weiter darueber verteilt.
+ *
  * HELLIGKEITSVERTEILUNG
  *
  * Ein erster Versuch nahm die fuenfte Potenz einer Zufallszahl. Das ist zwar die
@@ -40,6 +54,9 @@ const vertexShader = `
     /** 0 = feste Groesse (Himmel), 1 = mit der Entfernung kleiner (Nahfeld). */
     uniform float uAttenuate;
     uniform float uSizeScale;
+    /** Ab wo das Nahfeld einblendet und ab wo es voll da ist. */
+    uniform vec2 uNearFade;
+    uniform float uMaxSize;
 
     varying vec3 vColor;
     varying float vBright;
@@ -53,7 +70,7 @@ const vertexShader = `
         /* Sehr nahe Sterne ausblenden, sonst schiebt sich beim Vorbeifliegen ein
            einzelner als Flaeche vor das Bild. Gilt nur fuers Nahfeld – der Himmel
            ist immer gleich weit weg. */
-        float nearFade = mix(1.0, smoothstep(1.0, 14.0, dist), uAttenuate);
+        float nearFade = mix(1.0, smoothstep(uNearFade.x, uNearFade.y, dist), uAttenuate);
 
         /* Sechs Prozent Schwankung. Mehr waere Funkeln, und Funkeln ist
            Luftunruhe – im Weltraum gibt es keine. */
@@ -65,7 +82,7 @@ const vertexShader = `
 
         float attenuated = uSizeScale / dist;
         float size = aSize * mix(1.0, attenuated, uAttenuate);
-        gl_PointSize = clamp(size * uPixelRatio, 0.6, 26.0);
+        gl_PointSize = clamp(size * uPixelRatio, 0.5, uMaxSize);
     }
 `
 
@@ -106,6 +123,21 @@ export type StarfieldOptions = {
     parallax: boolean
     /** Verschiebt die Verteilung heller/dunkler, 1 = normal. */
     brightness?: number
+    /**
+     * Anteil der Sterne im Band der Milchstrasse (0 = kein Band). Diese Sterne
+     * sind absichtlich winzig und schwach: einzeln kaum sichtbar, zusammen der
+     * milchige Schimmer.
+     */
+    bandFraction?: number
+    /** Nur beim Nahfeld: ab welcher Entfernung ein Stern voll sichtbar ist. */
+    nearFade?: [number, number]
+    /**
+     * Nur beim Nahfeld: wie stark die Groesse mit der Naehe waechst. Muss zur
+     * Entfernung des Feldes passen – bei 26 und einer Schale in 100 Einheiten
+     * Abstand blieb jeder Stern unter einem Pixel und das ganze Feld unsichtbar.
+     */
+    sizeScale?: number
+    maxSize?: number
     seed?: number
 }
 
@@ -114,6 +146,10 @@ export const createStarfield = ({
     radius,
     parallax,
     brightness = 1,
+    bandFraction = 0,
+    nearFade = [1, 14],
+    sizeScale = 26,
+    maxSize = 26,
     seed = 7,
 }: StarfieldOptions): Starfield => {
     const positions = new Float32Array(count * 3)
@@ -128,39 +164,102 @@ export const createStarfield = ({
         return state / 2147483647
     }
 
+    /** Normalverteilt – fuer die Dicke des Bandes. */
+    const gauss = () => {
+        const u = Math.max(rand(), 1e-6)
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand())
+    }
+
+    /**
+     * Staubwolken laengs des Bandes: eine Summe aus drei Sinuskurven ueber dem
+     * Laengengrad. Kein Rauschen, aber es leistet dasselbe – unregelmaessige
+     * dunkle Abschnitte, wie der Grosse Riss im Sternbild Schwan. Ohne das ist das
+     * Band ein gleichmaessiger Streifen, und gleichmaessig ist es nie.
+     */
+    const dustAt = (lon: number) =>
+        0.55 +
+        0.45 *
+            (0.5 +
+                0.5 *
+                    Math.sin(lon * 2.0 + 0.7) *
+                    0.6 *
+                    (1 + 0.6 * Math.sin(lon * 5.0 - 1.3) + 0.4 * Math.sin(lon * 11.0 + 2.1)))
+
+    /* Die Lage des Bandes kommt aus galactic.ts – dieselbe wie beim diffusen
+       Schimmer in milkyway.ts. Zwei Werte waeren zwei Baender. */
+    const orientation = galacticOrientation()
+
     const color = new THREE.Color()
+    const warm = new THREE.Color(1, 0.82, 0.66)
+    const cool = new THREE.Color(0.76, 0.85, 1)
+    const white = new THREE.Color(1, 0.99, 0.97)
+    const v = new THREE.Vector3()
+
+    const bandCount = Math.round(count * bandFraction)
 
     for (let i = 0; i < count; i++) {
-        /* Gleichmaessig auf der Kugel: der Kosinus des Polarwinkels muss
-           gleichverteilt sein, nicht der Winkel selbst – sonst haeufen sich die
-           Sterne an den Polen. */
-        const u = rand() * 2 - 1
-        const theta = rand() * Math.PI * 2
-        const s = Math.sqrt(1 - u * u)
+        const inBand = i < bandCount
+
+        let lon = rand() * Math.PI * 2
+        if (inBand) {
+            /* Im Band: Laengengrad gleichverteilt, Breite normalverteilt und
+               schmal. So entsteht ein Streifen mit weichen Raendern statt eines
+               Rechtecks. */
+            const lat = gauss() * 0.11
+            v.set(
+                Math.cos(lon) * Math.cos(lat),
+                Math.sin(lat),
+                Math.sin(lon) * Math.cos(lat),
+            )
+            // In die galaktische Ebene drehen – waagerecht waere es ein Balken.
+            v.applyQuaternion(orientation)
+        } else {
+            /* Ausserhalb gleichmaessig auf der Kugel: der Kosinus des Polarwinkels
+               muss gleichverteilt sein, nicht der Winkel selbst – sonst haeufen
+               sich die Sterne an den Polen. */
+            const u = rand() * 2 - 1
+            const s = Math.sqrt(1 - u * u)
+            v.set(Math.cos(lon) * s, u, Math.sin(lon) * s)
+            lon = Math.atan2(v.z, v.x)
+        }
+
         /* Die Schale hat Tiefe. Beim Nahfeld erzeugt gerade das die Parallaxe:
            nahe Sterne wandern schneller als ferne. */
         const r = radius * (0.55 + rand() * 0.45)
-
-        positions[i * 3] = Math.cos(theta) * s * r
-        positions[i * 3 + 1] = Math.sin(theta) * s * r
-        positions[i * 3 + 2] = u * r
+        positions[i * 3] = v.x * r
+        positions[i * 3 + 1] = v.y * r
+        positions[i * 3 + 2] = v.z * r
 
         /* Helligkeit: eine flache Potenz und eine Untergrenze. Viele schwache,
            einzelne sehr helle – aber keiner unsichtbar. */
         const mag = Math.pow(rand(), 2.3)
-        brights[i] = (0.16 + mag * 0.9) * brightness
+
+        if (inBand) {
+            /* Die Sterne des Bandes stehen fuer die unaufgeloeste Masse: klein,
+               schwach, und dort dunkler, wo Staub davor liegt. Einzeln sieht man
+               sie kaum – ihre Summe ist der Schimmer. */
+            brights[i] = (0.11 + mag * 0.5) * dustAt(lon) * brightness
+            sizes[i] = 0.85 + mag * 1.3
+        } else {
+            brights[i] = (0.16 + mag * 0.9) * brightness
+            sizes[i] = (parallax ? 1.5 : 1.1) + mag * 3.2 + rand() * 0.5
+
+            /* Die hellsten paar Prozent duerfen deutlich herausstechen. Ohne sie
+               ist der Himmel ein gleichmaessiger Griess aus Ein-Pixel-Punkten – am
+               echten Himmel gibt es Wega und Deneb, und die sieht man zuerst. */
+            if (mag > 0.9) {
+                sizes[i] *= 1.7
+                brights[i] = Math.min(1.05, brights[i] * 1.3)
+            }
+        }
 
         /* Farbe nach Sterntemperatur, insgesamt Richtung Weiss gezogen: am
            Nachthimmel sind die meisten Sterne nahezu farblos. */
-        const temp = rand()
-        color.setRGB(1, 0.82, 0.66).lerp(new THREE.Color(0.76, 0.85, 1), Math.min(1, temp * 1.3))
-        color.lerp(new THREE.Color(1, 0.99, 0.97), 0.45)
+        color.copy(warm).lerp(cool, Math.min(1, rand() * 1.3))
+        color.lerp(white, 0.45)
         colors[i * 3] = color.r
         colors[i * 3 + 1] = color.g
         colors[i * 3 + 2] = color.b
-
-        // Helle Sterne sind auch etwas groesser – aber nur etwas.
-        sizes[i] = (parallax ? 1.5 : 1.2) + mag * 2.2 + rand() * 0.5
     }
 
     const geometry = new THREE.BufferGeometry()
@@ -177,7 +276,9 @@ export const createStarfield = ({
             uPixelRatio: {value: 1},
             uOpacity: {value: 1},
             uAttenuate: {value: parallax ? 1 : 0},
-            uSizeScale: {value: 26},
+            uSizeScale: {value: sizeScale},
+            uNearFade: {value: new THREE.Vector2(nearFade[0], nearFade[1])},
+            uMaxSize: {value: maxSize},
         },
         transparent: true,
         depthWrite: false,
@@ -187,7 +288,7 @@ export const createStarfield = ({
     const points = new THREE.Points(geometry, material)
     /* Der Himmel darf nie weggeschnitten werden, egal wie weit die Kamera
        reist – seine Kugel wird jeden Frame auf die Kamera gesetzt. */
-    points.frustumCulled = !parallax ? false : true
+    points.frustumCulled = parallax
 
     return {
         points,
