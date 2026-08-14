@@ -142,7 +142,14 @@ const fragmentShader = `
         /* Klein halten: das Band soll da sein, nicht leuchten. Es ist am echten
            Himmel gerade so heller als der Hintergrund – und darueber liegen ja noch
            die Einzelsterne, die Galaxie und der Nebel. */
-        gl_FragColor = vec4(col * 0.155 * uOpacity, 1.0);
+        /* Alpha = Helligkeit, Farbe darauf normiert – aus demselben Grund wie in
+           galaxyDisc.ts: die Canvas liegt ueber CSS-Ebenen, und ein festes 1.0
+           macht sie dicht, obwohl das Band kaum leuchtet. */
+        vec3 lit = col * 0.155 * uOpacity;
+        float a = clamp(max(max(lit.r, lit.g), lit.b), 0.0, 1.0);
+        if (a < 0.002) discard;
+
+        gl_FragColor = vec4(lit / a, a);
     }
 `
 

@@ -132,6 +132,24 @@ const BAND_FRACTION = 0.62
 const MILKYWAY_RADIUS = 900
 const SKY_RADIUS = 700
 const NEAR_RADIUS = 150
+
+/**
+ * Sichtweite der Kamera.
+ *
+ * Stand auf 300 – und damit lag alles, was den Sternenhimmel ausmacht, dahinter:
+ * die Himmelskugel bei 900, die Sternschale zwischen 385 und 700. Gemessen waren
+ * 0 von 26000 Himmelssternen innerhalb der Ebene und die Milchstrasse vollstaendig
+ * weg; sichtbar blieb allein das Nahfeld bei 150. Deshalb war der Himmel auf der
+ * Seite fast leer, obwohl die Felder laengst in der Szene lagen. Das Kappen
+ * passiert in der Projektion – daran aendert depthTest: false nichts.
+ *
+ * 1600 laesst Luft hinter der Himmelskugel. Genauigkeit im Tiefenpuffer kostet das
+ * praktisch nichts: Tiefe schreiben in dieser Szene nur die Planeten, und die
+ * stehen bei 5 bis 25 Einheiten – also dort, wo ein perspektivischer Puffer seine
+ * Aufloesung ohnehin hat.
+ */
+const CAMERA_FAR = 1600
+
 /** Mitte der Reise – dort sitzt das Nahfeld, damit die Kamera darin bleibt. */
 const NEAR_CENTER_Z = -33
 
@@ -449,7 +467,7 @@ export class SpaceScene {
         this.bgScene.add(new THREE.Mesh(this.bgGeometry, this.bgMaterial))
 
         // --- Ring ---
-        this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 300)
+        this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, CAMERA_FAR)
         this.tiltGroup.rotation.x = RING_TILT
         this.tiltGroup.position.z = RING_Z
         this.tiltGroup.add(this.spinGroup)

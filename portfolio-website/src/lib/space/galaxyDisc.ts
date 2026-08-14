@@ -156,7 +156,27 @@ const fragmentShader = `
         vec3 bulgeColor = vec3(1.0, 0.84, 0.62);
         vec3 col = armColor * disc + bulgeColor * bulge * 0.75;
 
-        gl_FragColor = vec4(col * uWeight * uOpacity * resolve * 0.8, 1.0);
+        /* ALPHA IST NICHT 1.
+
+           Die Canvas liegt ueber den Farbebenen aus CSS (Atmosphere.tsx) und wird
+           mit ihrem Alphakanal darueber gemischt. Additiv mischt three.js die FARBE
+           mit SRC_ALPHA, das ALPHA aber mit ONE. Ein festes 1.0 addiert hier also
+           volle Deckkraft, auch wo diese Flaeche fast nichts beitraegt.
+
+           Genau das war der schwarze, elliptische Fleck um die Galaxie: gemessen
+           Alpha 255 innerhalb der Scheibenflaeche gegen 10 daneben. Die Canvas war
+           dort dicht und hat die CSS-Ebenen darunter ausgeknipst – ein schwarzes
+           Loch in der Form des Vierecks, auf dem die Scheibe liegt.
+
+           Also: Alpha = Helligkeit, Farbe darauf normiert. Das Produkt aus beidem
+           bleibt gleich, das Bild damit unveraendert – nur die Deckkraft sagt jetzt
+           die Wahrheit. Normiert wird auf den hellsten Kanal, damit nach der
+           Division kein Kanal ueber 1 laeuft. */
+        vec3 lit = col * uWeight * uOpacity * resolve * 0.8;
+        float a = clamp(max(max(lit.r, lit.g), lit.b), 0.0, 1.0);
+        if (a < 0.002) discard;
+
+        gl_FragColor = vec4(lit / a, a);
     }
 `
 
