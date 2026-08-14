@@ -77,7 +77,16 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     const onProgress = useCallback((raw: number) => {
         const progress = Math.min(Math.max(raw, 0), 1)
         space.setFieldProgress(progress)
-        space.setApproach(Math.min(Math.max((raw + APPROACH) / APPROACH, 0), 1))
+
+        /* An- UND Auslauf. Vorher stand hier nur der Anlauf, und der bleibt fuer
+           raw > 1 auf 1 – also auch noch im Kontakt darunter. Die Steine und ihre
+           Beschriftung waeren dort sichtbar geblieben, weil die Ebene `fixed` ist
+           und im Bild liegt, obwohl die Sektion durchgescrollt ist. */
+        const ramp = (v: number) => Math.min(Math.max(v, 0), 1)
+        space.setApproach(
+            Math.min(ramp((raw + APPROACH) / APPROACH), ramp((1 + APPROACH - raw) / APPROACH)),
+        )
+
         setIndex(Math.round(progress * (total - 1)))
     }, [])
 

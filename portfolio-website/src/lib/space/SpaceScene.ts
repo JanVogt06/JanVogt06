@@ -57,8 +57,15 @@ import type {Galaxy} from "./galaxy"
  * bekommt von aussen nur Zahlen.
  */
 
-/** Wo der Kristallring im Raum liegt – am Ende der Reise. */
-const RING_Z = -70
+/**
+ * Wo der Kristallring im Raum liegt – am Ende der Reise.
+ *
+ * Er lag bei -70. Dann steht die Ring-Kamera bei -48, also VOR der Galaxie
+ * (-54): der Durchflug waere erst mitten in der Projekt-Sektion passiert, und der
+ * Werdegang endete bereits in der Scheibe. Bei -90 ist hinter der Galaxie Platz
+ * fuer eine eigene Etappe, in der man durch sie hindurchfliegt.
+ */
+const RING_Z = -90
 
 /**
  * Wo die Galaxie liegt und wie weit ihre Scheibe reicht.
@@ -91,6 +98,18 @@ export const WAYPOINT_COUNT = 3
 
 /** Kamera-z im Hero: weit ausserhalb, die Galaxie liegt als Scheibe voraus. */
 const CAMERA_Z_HERO = 12
+
+/**
+ * Wo der Flug durch den Werdegang endet – deutlich VOR der Galaxie.
+ *
+ * Vorher endete er bei -48 und damit sechs Einheiten vor der Scheibe: bei Station
+ * 03 steckte man schon darin. Bei -26 sind es 28 Einheiten Abstand – die Galaxie
+ * naehert sich ueber den ganzen Werdegang (von 66 auf 28) und fuellt das Bild,
+ * ohne dass man drin ist.
+ *
+ * Der Durchflug gehoert danach der Passage.
+ */
+const ABOUT_END_Z = -26
 
 /** Radius des Rings. */
 const RING_RADIUS = 5.4
@@ -318,6 +337,8 @@ export class SpaceScene {
     private aboutProgress = 0
     private aboutActiveTarget = 0
     private aboutActive = 0
+    private passageTarget = 0
+    private passageProgress = 0
     private hovered: number | null = null
     private selected: number | null = null
     private selectBlend = 0
@@ -450,7 +471,7 @@ export class SpaceScene {
                    Blickachse und wird gegen Ende des Werdegangs am hellsten – ein
                    Planet davor war schwer zu erkennen. */
                 -2.6 + (hash(i * 5.7) - 0.5) * 1.2,
-                lerp(CAMERA_Z_HERO, this.journeyEnd, t) - WAYPOINT_VIEW_DISTANCE,
+                lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - WAYPOINT_VIEW_DISTANCE,
             )
             this.scene.add(group)
             this.waypoints.push(group)
@@ -580,6 +601,17 @@ export class SpaceScene {
         this.sync()
     }
 
+    /**
+     * Der Durchflug durch die Galaxie, 0 bis 1.
+     *
+     * Eigene Etappe zwischen Werdegang und Projekten: der Werdegang bringt die
+     * Kamera bis vor die Scheibe, hier geht sie hindurch und bis vor den Ring.
+     */
+    setPassageProgress(progress: number) {
+        this.passageTarget = progress
+        this.sync()
+    }
+
     setApproach(approach: number) {
         this.approachTarget = approach
         this.sync()
@@ -667,6 +699,7 @@ export class SpaceScene {
         this.enter = lerp(this.enter, this.approachTarget, 0.09)
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
         this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
+        this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
         // --- Ring drehen: Stein `station` kommt nach vorn ---
@@ -697,12 +730,18 @@ export class SpaceScene {
            Das Blickziel muss mitwandern, sonst schwenkt die Kamera ein. */
         const lateral = HERO_LATERAL * (1 - this.enter)
 
-        /* Die Reise: vom Hero durch die Galaxie bis dorthin, wo die Ring-Kamera
-           bei enter = 0 stehen wuerde. Weil journeyEnd genau dieser Punkt ist,
-           ist die Uebergabe an das Ring-Verhalten nahtlos – es gibt keinen Sprung
-           zwischen "durch die Galaxie fliegen" und "am Ring ankommen". */
-        const journeyZ = lerp(CAMERA_Z_HERO, this.journeyEnd, this.aboutProgress)
-        const z = lerp(journeyZ, front.z + finalDistance, this.enter)
+        /* --- Die Reise in drei Etappen ---
+           Hero -> Werdegang bis vor die Galaxie -> Passage durch sie hindurch bis
+           vor den Ring. Eine geschachtelte Interpolation genuegt dafuer: solange
+           die Passage auf 0 steht, gilt das Ende des Werdegang-Flugs, und weil
+           journeyEnd genau der Punkt ist, an dem die Ring-Kamera bei enter = 0
+           steht, ist auch die Uebergabe an den Ring nahtlos. */
+        const travelZ = lerp(
+            lerp(CAMERA_Z_HERO, ABOUT_END_Z, this.aboutProgress),
+            this.journeyEnd,
+            this.passageProgress,
+        )
+        const z = lerp(travelZ, front.z + finalDistance, this.enter)
 
         this.camera.position.set(front.x - lateral, front.y + 0.55, z)
         this.camera.lookAt(front.x - lateral, front.y, z - 10)
@@ -758,7 +797,13 @@ export class SpaceScene {
            Kanten. */
         this.galaxy.setOpacity(1 - reveal * 0.92)
 
-        // --- Wegpunkte des Werdegangs ---
+        /* --- Wegpunkte des Werdegangs ---
+           Sie enden mit dem Beginn der Passage. Ohne das blieben sie sichtbar,
+           obwohl die Kamera langst an ihnen vorbei ist: aboutActive bleibt nach
+           dem Abschnitt auf 1, und die Beschriftungsebene ist `fixed`, liegt also
+           weiter im Bild – die Linie haette waehrend des Durchflugs ins Nichts
+           gezeigt. */
+        const waypointsLive = 1 - this.passageProgress
         const station3 = this.aboutProgress * Math.max(WAYPOINT_COUNT - 1, 1)
         const nearestWaypoint = Math.round(station3)
         const waypointCentred = clamp01(1 - Math.abs(station3 - nearestWaypoint) * 2.4)
@@ -777,7 +822,7 @@ export class SpaceScene {
             material.uniforms.uTime.value = time
             const fade = lerp(
                 material.uniforms.uFade.value,
-                own * this.aboutActive * (1 - this.enter),
+                own * this.aboutActive * waypointsLive * (1 - this.enter),
                 0.08,
             )
             material.uniforms.uFade.value = fade
@@ -801,7 +846,7 @@ export class SpaceScene {
             "waypoint",
             this.waypoints,
             nearestWaypoint,
-            waypointCentred * this.aboutActive * (1 - this.enter),
+            waypointCentred * this.aboutActive * waypointsLive * (1 - this.enter),
         )
 
         if (this.pointerInside) this.updateHover()

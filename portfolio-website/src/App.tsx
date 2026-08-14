@@ -4,6 +4,7 @@ import Atmosphere from './components/Atmosphere'
 import TopBar from './components/TopBar'
 import Hero from './components/Hero'
 import About from './components/About'
+import Passage from './components/Passage'
 import Projects from './components/Projects'
 import Contact from './components/Contact'
 import {useSmoothScroll} from '@/lib/smoothScroll'
@@ -44,6 +45,8 @@ function App() {
             <TopBar/>
             <Hero/>
             <About/>
+            {/* Reine Scroll-Strecke: der Durchflug durch die Galaxie. */}
+            <Passage/>
             <Projects crystals={crystals} selected={selected} onSelect={setSelected}/>
             <Contact/>
         </MotionConfig>

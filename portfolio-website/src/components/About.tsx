@@ -302,7 +302,15 @@ const AboutJourney = () => {
            aus `progress` nicht: der steht im Hero auf 0, und 0 heisst dort
            "Station 1 genau vorne". Genau deshalb wurde die Beschriftungslinie
            schon im Hero gezeichnet. */
-        space.setAboutActive(clamp01((raw + APPROACH) / APPROACH))
+        /* An- UND Auslauf, aus demselben Grund wie bei den Projekten: nur der
+           Anlauf bliebe fuer raw > 1 auf 1 und haette die Planeten-Beschriftung
+           auch nach dem Abschnitt im Bild gelassen. */
+        space.setAboutActive(
+            Math.min(
+                clamp01((raw + APPROACH) / APPROACH),
+                clamp01((1 + APPROACH - raw) / APPROACH),
+            ),
+        )
 
         const position = progress * (chapters.length - 1)
         layerRefs.current.forEach((layer, i) => {
