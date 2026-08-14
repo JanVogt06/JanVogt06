@@ -110,7 +110,11 @@ const vertexShader = `
            bei zwei Einheiten Abstand waeren es rechnerisch ueber 100 px, und ein
            einzelner Stern wuerde beim Durchflug durch die Scheibe das Bild
            fuellen. Die Ausblendung laeuft deshalb ueber 0…9 Einheiten. */
-        vFade = aBright * smoothstep(0.0, 9.0, dist) * (1.0 - smoothstep(90.0, 160.0, dist));
+        /* Ueber 0.8 bis 5 Einheiten statt 0 bis 9: mit der weiten Ausblendung war
+           die Scheibe im Durchflug leer, weil dort fast alles naeher als neun
+           Einheiten liegt. Der harte Groessendeckel unten uebernimmt den Schutz
+           gegen den einen Stern, der als Flaeche vors Bild rutscht. */
+        vFade = aBright * smoothstep(0.8, 5.0, dist) * (1.0 - smoothstep(90.0, 160.0, dist));
 
         gl_Position = projectionMatrix * view;
 
@@ -119,7 +123,7 @@ const vertexShader = `
         /* Deckel bei 20 statt 34: mit der viel hoeheren Punktzahl traegt die
            DICHTE das Bild, nicht die Groesse einzelner Punkte. Grosse Punkte waren
            im Nahflug genau der Grund, warum die Scheibe verschwommen aussah. */
-        gl_PointSize = min(aSize * uPixelRatio * uSizeScale / max(dist, 1.0), 20.0);
+        gl_PointSize = min(aSize * uPixelRatio * uSizeScale / max(dist, 1.0), 16.0);
     }
 `
 
@@ -206,8 +210,11 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
             z = r * Math.cos(phi) * 0.6
 
             color.copy(COLOR_BULGE).lerp(COLOR_INNER, rand() * 0.5)
-            size = 1.1 + rand() * 1.4
-            bright = 0.55 + rand() * 0.45
+            size = 1.0 + rand() * 1.2
+            /* Etwas zurueckhaltender als zuvor (0.55 + 0.45). Im Anflug stehen
+               tausende Bulge-Punkte auf wenigen Grad, und additiv gemischt wird
+               daraus eine weisse Flaeche. */
+            bright = 0.42 + rand() * 0.38
         } else if (i < bulgeCount + haloCount) {
             // --- Halo: wenige, schwache Sterne weit draussen ---
             const r = radius * (0.5 + rand() * 0.9)
@@ -372,7 +379,19 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
 
     // Gekippt: frontal waere die Spirale ein flaches Ornament.
     const group = new THREE.Group()
-    group.rotation.set(0.5, 0.25, 0.15)
+    /**
+     * Neigung der Scheibe.
+     *
+     * Stand auf 0.5 – damit lag sie fast frontal zur Flugbahn, und die Passage
+     * durchstiess sie in zwei Einheiten: erst gleissend hell, dann nichts. Ein
+     * Durchflug durch eine Galaxie ist aber gerade das Schoene daran.
+     *
+     * 1.15 rad sind gut 65 Grad. Aus der Ferne ist das die Ansicht, die man von
+     * Andromeda kennt – eine schraeg gestellte Spirale mit sichtbaren Armen und
+     * Staubbahnen. Und die Bahn streift die Ebene flach, statt sie zu durchstossen:
+     * man fliegt eine lange Strecke IN der Scheibe.
+     */
+    group.rotation.set(1.15, 0.25, 0.15)
     group.add(disc.object)
     group.add(points)
     group.add(core)
@@ -380,8 +399,8 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
     /* Wie beim Schein der Scheibe: der Kernschein ist eine Naeherung fuer die
        Ferne. Aus zehn Einheiten Abstand deckt das Sprite den halben Bildschirm und
        ist nur noch ein weisser Fleck. */
-    const CORE_NEAR = 12
-    const CORE_FAR = 34
+    const CORE_NEAR = 18
+    const CORE_FAR = 46
     let coreProximity = 1
 
     return {
