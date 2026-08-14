@@ -6,7 +6,9 @@ import {
     planetVertexShader, planetFragmentShader, ringVertexShader, ringFragmentShader,
 } from "./planetShader"
 import {createGalaxy} from "./galaxy"
+import {createStarfield} from "./starfield"
 import type {Galaxy} from "./galaxy"
+import type {Starfield} from "./starfield"
 
 /**
  * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
@@ -90,8 +92,25 @@ const GALAXY_RADIUS = 26
  */
 const WAYPOINT_VIEW_DISTANCE = 8
 
-/** Wie viele Punkte die Galaxie je Qualitaetsstufe bekommt. */
-const GALAXY_POINTS = [1800, 3000, 4500, 6000, 8000]
+/**
+ * Wie viele Punkte die Galaxie je Qualitaetsstufe bekommt.
+ *
+ * Stand auf 1800 bis 8000. Im Nahflug verteilen sich 6000 Punkte ueber einen
+ * bildschirmfuellenden Durchmesser – das sind ein paar blasse Tupfen, und genau
+ * so sah es aus. Punkte sind billig (ein Draw-Call, nur Vertex-Arbeit), also darf
+ * die Dichte das Bild tragen.
+ */
+const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
+
+/** Sterne des Himmels und des Nahfelds je Qualitaetsstufe. */
+const SKY_STARS = [1400, 2600, 4200, 6500, 9000]
+const NEAR_STARS = [180, 380, 650, 950, 1400]
+
+/** Radien der beiden Sternschalen. */
+const SKY_RADIUS = 700
+const NEAR_RADIUS = 150
+/** Mitte der Reise – dort sitzt das Nahfeld, damit die Kamera darin bleibt. */
+const NEAR_CENTER_Z = -33
 
 /** Anzahl der Werdegang-Wegpunkte – muss zu den Kapiteln in About.tsx passen. */
 export const WAYPOINT_COUNT = 3
@@ -289,6 +308,12 @@ export class SpaceScene {
     private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
 
     private readonly galaxy: Galaxy
+    /* Zwei Sternfelder: der Himmel folgt der Kamera (also praktisch unendlich
+       weit weg), das Nahfeld steht fest im Raum und erzeugt damit die Parallaxe.
+       Ohne das Nahfeld bewegt sich beim Flug nichts ausser der Galaxie, und alles
+       wirkt aufgeklebt. */
+    private readonly skyStars: Starfield
+    private readonly nearStars: Starfield
 
     private readonly waypoints: THREE.Object3D[] = []
     /* Die Kugeln getrennt gemerkt: die Eigendrehung gehoert dem Planeten, nicht
@@ -400,6 +425,27 @@ export class SpaceScene {
         this.galaxy.object.position.z = GALAXY_Z
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.scene.add(this.galaxy.object)
+
+        // --- Sternfelder ---
+        const level = Math.round(this.quality * 4)
+        this.skyStars = createStarfield({
+            count: SKY_STARS[level],
+            radius: SKY_RADIUS,
+            parallax: false,
+            seed: 7,
+        })
+        this.nearStars = createStarfield({
+            count: NEAR_STARS[level],
+            radius: NEAR_RADIUS,
+            parallax: true,
+            brightness: 0.85,
+            seed: 131,
+        })
+        this.nearStars.points.position.z = NEAR_CENTER_Z
+        this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
+        this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
+        this.scene.add(this.skyStars.points)
+        this.scene.add(this.nearStars.points)
 
         /* --- Wegpunkte des Werdegangs ---
            Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
@@ -663,6 +709,8 @@ export class SpaceScene {
         this.bgMaterial.uniforms.uQuality.value = Math.min(lower, NEBULA_MAX_QUALITY)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
+        this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
+        this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
     }
 
     private loop = (now: number) => {
@@ -789,6 +837,14 @@ export class SpaceScene {
                 (0.6 + 0.4 * reveal)
             mesh.scale.copy(this.baseScales[i]).multiplyScalar(grow)
         }
+
+        /* --- Sterne ---
+           Der Himmel wird jeden Frame auf die Kamera gesetzt: dadurch liegt er
+           immer gleich weit weg und laeuft nie aus dem Bild. Das Nahfeld bleibt,
+           wo es ist – an ihm zieht man vorbei, und das ist die Bewegung. */
+        this.skyStars.points.position.copy(this.camera.position)
+        this.skyStars.setTime(time)
+        this.nearStars.setTime(time)
 
         // --- Galaxie ---
         this.galaxy.setTime(time)
@@ -950,6 +1006,8 @@ export class SpaceScene {
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
+        this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
+        this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
         this.canvasRect = this.renderer.domElement.getBoundingClientRect()
         this.bgMaterial.uniforms.uResolution.value.set(width, height)
         this.camera.aspect = width / height
@@ -971,6 +1029,8 @@ export class SpaceScene {
         this.waypointMaterials.forEach((m) => m.dispose())
         this.ringMaterials.forEach((m) => m.dispose())
         this.galaxy.dispose()
+        this.skyStars.dispose()
+        this.nearStars.dispose()
         this.shardGeometry.dispose()
         this.bgGeometry.dispose()
         this.bgMaterial.dispose()

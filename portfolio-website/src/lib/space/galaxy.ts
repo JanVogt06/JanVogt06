@@ -105,7 +105,10 @@ const vertexShader = `
 
         /* Zusaetzlich hart begrenzt: die Ausblendung allein genuegt nicht, weil ein
            sehr heller Stern auch halbtransparent noch als Flaeche auffaellt. */
-        gl_PointSize = min(aSize * uPixelRatio * uSizeScale / max(dist, 1.0), 34.0);
+        /* Deckel bei 20 statt 34: mit der viel hoeheren Punktzahl traegt die
+           DICHTE das Bild, nicht die Groesse einzelner Punkte. Grosse Punkte waren
+           im Nahflug genau der Grund, warum die Scheibe verschwommen aussah. */
+        gl_PointSize = min(aSize * uPixelRatio * uSizeScale / max(dist, 1.0), 20.0);
     }
 `
 
@@ -284,10 +287,12 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
      * rund, auch wenn man die Scheibe schraeg oder von der Kante sieht.
      */
     const coreCanvas = document.createElement("canvas")
-    coreCanvas.width = coreCanvas.height = 128
+    /* 384 statt 128: der Schein wird im Nahflug bildschirmgross, und 128 Pixel
+       sahen dort aus wie ein weichgezeichneter Fleck. */
+    coreCanvas.width = coreCanvas.height = 384
     const ctx = coreCanvas.getContext("2d")
     if (ctx) {
-        const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
+        const gradient = ctx.createRadialGradient(192, 192, 0, 192, 192, 192)
         /* Warm nach aussen auslaufend, ohne Violett. Der Stop bei 0.65 war
            (180,140,255) – ein violetter Hof um den Kern, den es an einer echten
            Galaxie nicht gibt. */
@@ -296,7 +301,7 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
         gradient.addColorStop(0.65, "rgba(190,170,140,0.06)")
         gradient.addColorStop(1, "rgba(0,0,0,0)")
         ctx.fillStyle = gradient
-        ctx.fillRect(0, 0, 128, 128)
+        ctx.fillRect(0, 0, 384, 384)
     }
     const coreTexture = new THREE.CanvasTexture(coreCanvas)
     const coreMaterial = new THREE.SpriteMaterial({

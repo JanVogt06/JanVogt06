@@ -118,74 +118,14 @@ export const nebulaFragmentShader = `
         return fbm(p + 4.0 * r);
     }
     
-    // ============================================
-    // STERNFELD
-    // ============================================
+    /* Das Sternfeld lag hier. Es ist nach lib/space/starfield.ts gewandert und
+       liegt jetzt als echte Punkte im Raum.
 
-    /**
-     * Ein Sternfeld.
-     *
-     * Vorher: alle Sterne gleich hell, alle in derselben blauweissen Farbe, und
-     * ein Funkeln, das die Helligkeit zwischen 50 und 100 % schwanken liess. Das
-     * ergibt ein Muster, keinen Himmel.
-     *
-     * Echte Felder haben sehr viele schwache und sehr wenige helle Sterne, jeder
-     * mit eigener Farbe nach seiner Temperatur. Und in einer Aufnahme funkeln sie
-     * nicht – Funkeln ist Luftunruhe, im Weltraum gibt es keine. Geblieben ist
-     * eine Schwankung von sechs Prozent, damit das Feld nicht toter Stillstand
-     * ist.
-     */
-    vec3 starLayer(vec2 uv, float density, float brightness) {
-        vec2 gv = fract(uv * density) - 0.5;
-        vec2 id = floor(uv * density);
-        vec3 acc = vec3(0.0);
-
-        /* Auf niedrigen Stufen nur die eigene Zelle statt der 3x3-Nachbarschaft.
-           Das kostet den Rand der Sterne, spart aber acht Neuntel der Arbeit. */
-        int r = uQuality < 0.375 ? 0 : 1;
-
-        for (int y = -1; y <= 1; y++) {
-            if (y < -r || y > r) continue;
-            for (int x = -1; x <= 1; x++) {
-                if (x < -r || x > r) continue;
-
-                vec2 offset = vec2(float(x), float(y));
-                vec2 cellId = id + offset;
-
-                float n = hash(cellId);
-                if (n <= 0.78) continue;
-
-                vec2 starPos = vec2(hash(cellId + 13.0), hash(cellId + 41.0)) - 0.5;
-                float dist = length(gv - offset - starPos);
-
-                /* Potenzverteilung der Helligkeit: die fuenfte Potenz drueckt die
-                   meisten Sterne nach unten und laesst nur einzelne herausragen –
-                   so verteilen sich echte Helligkeiten. */
-                float mag = pow(hash(cellId + 7.0), 5.0);
-                float amp = brightness * (0.05 + mag * 1.7);
-
-                // Sechs Prozent Schwankung, nicht mehr.
-                amp *= 0.94 + 0.06 * sin(uTime * (0.6 + n) + n * 60.0);
-
-                /* Farbe nach Sterntemperatur: warm-orange ueber weiss zu
-                   blauweiss. Der letzte mix zieht alles Richtung Weiss – am
-                   Nachthimmel sind die meisten Sterne nahezu farblos. */
-                float temp = hash(cellId + 33.0);
-                vec3 tint = mix(vec3(1.0, 0.80, 0.62), vec3(0.74, 0.85, 1.0),
-                                smoothstep(0.2, 0.8, temp));
-                tint = mix(vec3(1.0, 0.98, 0.96), tint, 0.55);
-
-                /* Kern und Hof. Der Hof laesst helle Sterne GROSS erscheinen,
-                   ohne dass sie wirklich groesser sind – genau so wirken sie auf
-                   einer Aufnahme. */
-                float core = smoothstep(0.032, 0.0, dist);
-                float halo = smoothstep(0.13, 0.0, dist) * (0.08 + mag * 0.55);
-
-                acc += tint * amp * (core + halo);
-            }
-        }
-        return acc;
-    }
+       Der Grund: dieses Rechteck steht vor einer orthografischen Kamera und
+       bewegt sich NIE. Egal wie weit die Kamera fliegt, die Sterne standen still –
+       beim Zoom in die Galaxie wuchs die Galaxie, der Himmel dahinter nicht. Genau
+       daran merkt man, dass etwas aufgeklebt ist. Ein Hintergrund-Shader kann
+       keine Parallaxe. */
 
     // ============================================
     // NEBULA - 5 quality levels
@@ -277,21 +217,6 @@ export const nebulaFragmentShader = `
            ~13 % – also nichts Sichtbares.
            0.72 nimmt die Saettigung heraus, ohne ihn wegzunehmen. */
         vec3 col = nebula(correctedUv, time) * 0.72;
-
-        /* === STERNE ===
-           Drei Ebenen unterschiedlicher Dichte je nach Qualitaet. Die Farbe kommt
-           jetzt aus der Ebene selbst (pro Stern), nicht mehr als ein globaler
-           blauweisser Ton fuer alle. */
-        vec3 starField = starLayer(correctedUv, 90.0, 0.85);
-
-        if (uQuality >= 0.2) {
-            starField += starLayer(correctedUv + 0.5, 46.0, 1.0);
-        }
-        if (uQuality >= 0.7) {
-            starField += starLayer(correctedUv + 0.25, 22.0, 1.25);
-        }
-
-        col += starField;
 
         /* === RANDSCHIMMER ===
            Nur noch eine Andeutung von Tiefe. Links stand ein Violett
