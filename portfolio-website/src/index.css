@@ -6,7 +6,10 @@
  * Bewusst nur ZWEI Flächen und DREI Akzente:
  *
  *   brand   (Cyan)     = Primärakzent. Linien, Knoten, Beschriftungen, Links.
- *   glow    (Violett)  = Atmosphäre und der Name im Hero.
+ *   glow    (Violett)  = nur noch der Name im Hero. Die Atmosphäre benutzt ihn
+ *                        nicht mehr: als Fläche über dem ganzen Bildschirm war er
+ *                        der Grund, warum die Seite lila statt nach Weltraum
+ *                        aussah.
  *   status  (Emerald)  = sparsam, für "verfügbar"-Zustände.
  *
  * Alles andere ist Weiß mit Deckkraft.

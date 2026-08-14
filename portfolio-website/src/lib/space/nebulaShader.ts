@@ -119,91 +119,74 @@ export const nebulaFragmentShader = `
     }
     
     // ============================================
-    // STARS - 5 quality levels
+    // STERNFELD
     // ============================================
-    
-    float stars(vec2 uv, float density, float brightness) {
+
+    /**
+     * Ein Sternfeld.
+     *
+     * Vorher: alle Sterne gleich hell, alle in derselben blauweissen Farbe, und
+     * ein Funkeln, das die Helligkeit zwischen 50 und 100 % schwanken liess. Das
+     * ergibt ein Muster, keinen Himmel.
+     *
+     * Echte Felder haben sehr viele schwache und sehr wenige helle Sterne, jeder
+     * mit eigener Farbe nach seiner Temperatur. Und in einer Aufnahme funkeln sie
+     * nicht – Funkeln ist Luftunruhe, im Weltraum gibt es keine. Geblieben ist
+     * eine Schwankung von sechs Prozent, damit das Feld nicht toter Stillstand
+     * ist.
+     */
+    vec3 starLayer(vec2 uv, float density, float brightness) {
         vec2 gv = fract(uv * density) - 0.5;
         vec2 id = floor(uv * density);
-        
-        float star = 0.0;
-        
-        // Ultra (1.0): Full 3x3 neighbor check with twinkle
-        if (uQuality > 0.875) {
-            for (int y = -1; y <= 1; y++) {
-                for (int x = -1; x <= 1; x++) {
-                    vec2 offset = vec2(float(x), float(y));
-                    vec2 cellId = id + offset;
-                    
-                    float n = hash(cellId);
-                    
-                    if (n > 0.85) {
-                        vec2 starPos = vec2(n, hash(cellId + 100.0)) - 0.5;
-                        vec2 diff = gv - offset - starPos;
-                        float dist = length(diff);
-                        
-                        float twinkle = sin(n * 100.0 + uTime * (2.0 + n * 3.0)) * 0.5 + 0.5;
-                        float intensity = brightness * (0.5 + twinkle * 0.5);
-                        
-                        star += intensity * smoothstep(0.05, 0.0, dist);
-                        star += intensity * 0.3 * smoothstep(0.1, 0.0, dist);
-                    }
-                }
+        vec3 acc = vec3(0.0);
+
+        /* Auf niedrigen Stufen nur die eigene Zelle statt der 3x3-Nachbarschaft.
+           Das kostet den Rand der Sterne, spart aber acht Neuntel der Arbeit. */
+        int r = uQuality < 0.375 ? 0 : 1;
+
+        for (int y = -1; y <= 1; y++) {
+            if (y < -r || y > r) continue;
+            for (int x = -1; x <= 1; x++) {
+                if (x < -r || x > r) continue;
+
+                vec2 offset = vec2(float(x), float(y));
+                vec2 cellId = id + offset;
+
+                float n = hash(cellId);
+                if (n <= 0.78) continue;
+
+                vec2 starPos = vec2(hash(cellId + 13.0), hash(cellId + 41.0)) - 0.5;
+                float dist = length(gv - offset - starPos);
+
+                /* Potenzverteilung der Helligkeit: die fuenfte Potenz drueckt die
+                   meisten Sterne nach unten und laesst nur einzelne herausragen –
+                   so verteilen sich echte Helligkeiten. */
+                float mag = pow(hash(cellId + 7.0), 5.0);
+                float amp = brightness * (0.05 + mag * 1.7);
+
+                // Sechs Prozent Schwankung, nicht mehr.
+                amp *= 0.94 + 0.06 * sin(uTime * (0.6 + n) + n * 60.0);
+
+                /* Farbe nach Sterntemperatur: warm-orange ueber weiss zu
+                   blauweiss. Der letzte mix zieht alles Richtung Weiss – am
+                   Nachthimmel sind die meisten Sterne nahezu farblos. */
+                float temp = hash(cellId + 33.0);
+                vec3 tint = mix(vec3(1.0, 0.80, 0.62), vec3(0.74, 0.85, 1.0),
+                                smoothstep(0.2, 0.8, temp));
+                tint = mix(vec3(1.0, 0.98, 0.96), tint, 0.55);
+
+                /* Kern und Hof. Der Hof laesst helle Sterne GROSS erscheinen,
+                   ohne dass sie wirklich groesser sind – genau so wirken sie auf
+                   einer Aufnahme. */
+                float core = smoothstep(0.032, 0.0, dist);
+                float halo = smoothstep(0.13, 0.0, dist) * (0.08 + mag * 0.55);
+
+                acc += tint * amp * (core + halo);
             }
         }
-        // High (0.75): 3x3 neighbor check, simpler twinkle
-        else if (uQuality > 0.625) {
-            for (int y = -1; y <= 1; y++) {
-                for (int x = -1; x <= 1; x++) {
-                    vec2 offset = vec2(float(x), float(y));
-                    vec2 cellId = id + offset;
-                    
-                    float n = hash(cellId);
-                    
-                    if (n > 0.86) {
-                        vec2 starPos = vec2(n, hash(cellId + 100.0)) - 0.5;
-                        vec2 diff = gv - offset - starPos;
-                        float dist = length(diff);
-                        
-                        float twinkle = sin(n * 80.0 + uTime * 2.5) * 0.4 + 0.6;
-                        star += brightness * twinkle * smoothstep(0.05, 0.0, dist);
-                    }
-                }
-            }
-        }
-        // Mid (0.5): Single cell with twinkle
-        else if (uQuality > 0.375) {
-            float n = hash(id);
-            if (n > 0.87) {
-                vec2 starPos = vec2(n, hash(id + 100.0)) - 0.5;
-                float dist = length(gv - starPos * 0.7);
-                float twinkle = sin(n * 80.0 + uTime * 2.0) * 0.35 + 0.65;
-                star = brightness * twinkle * smoothstep(0.055, 0.0, dist);
-            }
-        }
-        // Low (0.25): Single cell, minimal twinkle
-        else if (uQuality > 0.125) {
-            float n = hash(id);
-            if (n > 0.88) {
-                vec2 starPos = vec2(n, hash(id + 100.0)) - 0.5;
-                float dist = length(gv - starPos * 0.6);
-                float twinkle = sin(n * 50.0 + uTime * 1.5) * 0.25 + 0.75;
-                star = brightness * twinkle * smoothstep(0.06, 0.0, dist);
-            }
-        }
-        // Eco (0): Simplest stars, no twinkle
-        else {
-            float n = hash(id);
-            if (n > 0.9) {
-                vec2 starPos = vec2(n, hash(id + 100.0)) - 0.5;
-                float dist = length(gv - starPos * 0.5);
-                star = brightness * 0.8 * smoothstep(0.07, 0.0, dist);
-            }
-        }
-        
-        return star;
+        return acc;
     }
-    
+
     // ============================================
     // NEBULA - 5 quality levels
     // ============================================
@@ -212,38 +195,54 @@ export const nebulaFragmentShader = `
         vec3 col = vec3(0.0);
         float t = time * 0.05;
         
-        // === LAYER 1: Deep background (all levels) ===
+        /* === EBENE 1: Grundhelligkeit ===
+           Fast schwarz mit einem Hauch Blau. Hier stand ein Verlauf nach
+           Violett (0.15, 0.05, 0.25) – das war der Grundton, der die ganze Seite
+           lila gemacht hat. Der leere Weltraum ist praktisch schwarz; alles, was
+           man sieht, ist Struktur davor. */
         float n1 = warpedFbm(uv * 1.5 + t * 0.3, time * 0.3);
-        col += mix(vec3(0.05, 0.1, 0.2), vec3(0.15, 0.05, 0.25), n1) * 0.8;
-        
-        // === LAYER 2: Main purple/magenta clouds (all levels) ===
+        col += mix(vec3(0.010, 0.014, 0.026), vec3(0.020, 0.020, 0.034), n1) * 0.9;
+
+        /* === EBENE 2: Staub ===
+           Der auffaelligste Teil und vorher ein saftiges Magenta
+           (0.5, 0.2, 0.7). Echte Molekuelwolken sind dunkelbraun-rot: sie
+           leuchten in Halpha und werden vom eigenen Staub geroetet. Deutlich
+           dunkler und viel weniger gesaettigt. */
         float n2 = warpedFbm(uv * 2.0 + vec2(100.0, 50.0) + t * 0.5, time * 0.4);
-        n2 = pow(n2, 1.2);
-        vec3 cloud1 = mix(vec3(0.5, 0.2, 0.7), vec3(0.7, 0.15, 0.5), fbm(uv * 2.0 + t));
-        col += cloud1 * n2 * 0.6;
-        
-        // === LAYER 3: Cyan accent (Low+ : quality >= 0.25) ===
+        n2 = pow(n2, 1.6);
+        vec3 dust = mix(vec3(0.115, 0.052, 0.042), vec3(0.140, 0.070, 0.058), fbm(uv * 2.0 + t));
+        col += dust * n2 * 0.62;
+
+        /* === EBENE 3: OIII ===
+           Der zweite Emissionsbereich echter Nebel, tuerkis. Bleibt, aber als
+           Andeutung statt als Farbfeld – und er ist der Grund, warum das Cyan der
+           Seite im Weltraum ueberhaupt vorkommt. */
         if (uQuality >= 0.2) {
             float n3 = warpedFbm(uv * 2.5 + vec2(-50.0, 30.0) - t * 0.4, time * 0.35);
-            n3 = pow(n3, 1.5);
-            vec3 cloud2 = mix(vec3(0.15, 0.5, 0.6), vec3(0.1, 0.7, 0.8), fbm(uv * 1.5 - t));
-            float cyanMask = smoothstep(0.6, 0.2, uv.x) * smoothstep(0.4, 0.8, uv.y);
-            col += cloud2 * n3 * 0.5 * (0.3 + cyanMask * 0.7);
+            n3 = pow(n3, 2.1);
+            vec3 oiii = mix(vec3(0.035, 0.088, 0.092), vec3(0.028, 0.105, 0.115), fbm(uv * 1.5 - t));
+            float mask = smoothstep(0.6, 0.2, uv.x) * smoothstep(0.4, 0.8, uv.y);
+            col += oiii * n3 * 0.5 * (0.25 + mask * 0.75);
         }
-        
-        // === LAYER 4: Pink highlights (Mid+ : quality >= 0.5) ===
+
+        /* === EBENE 4: Halpha-Faeden ===
+           Vorher heisses Pink (0.9, 0.3, 0.6). Jetzt ein gedecktes Rot, wie es in
+           Weitwinkelaufnahmen der Milchstrasse aussieht, und nur in Faeden statt
+           flaechig (hoehere Potenz auf dem Rauschen). */
         if (uQuality >= 0.45) {
             float n4 = warpedFbm(uv * 3.0 + vec2(25.0, -40.0) + t * 0.6, time * 0.5);
-            n4 = pow(n4, 2.0);
-            float pinkMask = smoothstep(0.3, 0.7, uv.x);
-            col += vec3(0.9, 0.3, 0.6) * n4 * 0.4 * pinkMask;
+            n4 = pow(n4, 3.2);
+            float mask = smoothstep(0.3, 0.7, uv.x);
+            col += vec3(0.28, 0.085, 0.075) * n4 * 0.5 * mask;
         }
-        
-        // === LAYER 5: Bright cores (High+ : quality >= 0.75) ===
+
+        /* === EBENE 5: Reflexionsnebel ===
+           Staub, der Sternenlicht streut – deshalb kuehl blau und nicht violett
+           (vorher 0.8, 0.6, 0.9). Sehr sparsam. */
         if (uQuality >= 0.7) {
             float n5 = warpedFbm(uv * 1.8 + vec2(10.0, 20.0) + t * 0.2, time * 0.25);
-            n5 = pow(n5, 3.0);
-            col += vec3(0.8, 0.6, 0.9) * n5 * 0.3;
+            n5 = pow(n5, 3.6);
+            col += vec3(0.10, 0.13, 0.20) * n5 * 0.45;
         }
         
         // === Dust lanes (Ultra only : quality >= 1.0) ===
@@ -279,27 +278,26 @@ export const nebulaFragmentShader = `
            0.72 nimmt die Saettigung heraus, ohne ihn wegzunehmen. */
         vec3 col = nebula(correctedUv, time) * 0.72;
 
-        // === STERNE – Ebenen je nach Qualitaet ===
-        float starField = 0.0;
+        /* === STERNE ===
+           Drei Ebenen unterschiedlicher Dichte je nach Qualitaet. Die Farbe kommt
+           jetzt aus der Ebene selbst (pro Stern), nicht mehr als ein globaler
+           blauweisser Ton fuer alle. */
+        vec3 starField = starLayer(correctedUv, 90.0, 0.85);
 
-        // Ebene 1: immer
-        starField += stars(correctedUv, 80.0, 0.8);
-
-        // Ebene 2: ab Low
         if (uQuality >= 0.2) {
-            starField += stars(correctedUv + 0.5, 40.0, 1.0);
+            starField += starLayer(correctedUv + 0.5, 46.0, 1.0);
         }
-
-        // Ebene 3: ab High
         if (uQuality >= 0.7) {
-            starField += stars(correctedUv + 0.25, 20.0, 1.2);
+            starField += starLayer(correctedUv + 0.25, 22.0, 1.25);
         }
 
-        col += vec3(0.92, 0.96, 1.0) * starField;
+        col += starField;
 
-        // === RANDSCHIMMER – Andeutung von Tiefe, kuehler als vorher ===
-        col += vec3(0.20, 0.08, 0.38) * smoothstep(0.5, 0.0, uv.x) * 0.30;
-        col += vec3(0.10, 0.20, 0.32) * smoothstep(0.5, 1.0, uv.x) * 0.24;
+        /* === RANDSCHIMMER ===
+           Nur noch eine Andeutung von Tiefe. Links stand ein Violett
+           (0.20, 0.08, 0.38), das kraeftiger war als der Nebel selbst. */
+        col += vec3(0.055, 0.045, 0.085) * smoothstep(0.5, 0.0, uv.x) * 0.30;
+        col += vec3(0.035, 0.060, 0.090) * smoothstep(0.5, 1.0, uv.x) * 0.26;
 
         // === VIGNETTE ===
         vec2 vignetteUv = uv * (1.0 - uv);

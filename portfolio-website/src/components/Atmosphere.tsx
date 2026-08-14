@@ -12,9 +12,16 @@ import useScrollProgress from "@/lib/useScrollProgress"
  * derselbe Aufbau mit anderen Werten. Genau daran sah man die Naht zwischen den
  * Sektionen, und genau das laesst eine Seite zusammengesetzt statt gebaut wirken.
  *
- * Jetzt gibt es EINEN Raum: Farbebenen aus CSS, darauf die WebGL-Szene mit Nebel
- * und Kristallen. Die Stimmung wandert mit dem Fortschritt – Violett im Hero,
- * Cyan durch Werdegang und Projekte, Violett wieder zum Kontakt.
+ * Jetzt gibt es EINEN Raum: Farbebenen aus CSS, darauf die WebGL-Szene mit Nebel,
+ * Galaxie und Kristallen.
+ *
+ * Die Ebenen sind absichtlich sehr dunkel und kaum gefaerbt. Sie trugen einmal
+ * ein kraeftiges Violett und ein deutliches Cyan – zusammen mit dem damals
+ * magentafarbenen Nebel war die ganze Seite lila. Leerer Weltraum ist fast
+ * schwarz; Farbe gehoert in einzelne Strukturen (Galaxie, Emissionsnebel,
+ * Sterne), nicht als Waesche darueber. Die Ebenen geben nur noch Tiefe und einen
+ * Hauch Richtung: kuehl im Hero, ein Anflug Cyan bei der Arbeit, gedecktes
+ * Blauviolett zum Schluss.
  *
  * Die Deckkraft der Ebenen wird pro Frame direkt geschrieben, nicht ueber
  * React-State: das sind drei style-Zuweisungen statt eines Renderbaums.
@@ -98,39 +105,43 @@ const Atmosphere = ({
             {/* Grundton, immer da */}
             <div className="absolute inset-0 bg-page"/>
 
-            {/* Hero – Violett.
-                Kraeftig genug, dass der Hero auch ohne die Szene nach etwas
-                aussieht: auf schwachen Geraeten laeuft sie auf Stufe 0, bei
-                prefers-reduced-motion gar nicht, und ohne WebGL fehlt sie ganz.
-                Der Hintergrund darf in keinem dieser Faelle flach schwarz sein. */}
+            {/* Hero.
+                Stand auf einem kraeftigen Violett (#2a1552). Das war neben dem
+                Nebel die zweite Quelle des Lilastichs und lag als Flaeche ueber
+                dem ganzen ersten Bildschirm. Jetzt ein sehr dunkles Blaugrau: es
+                gibt dem Hero Tiefe, ohne ihn zu faerben – und traegt weiterhin
+                den Fall, dass die Szene gar nicht laeuft (schwaches Geraet,
+                reduzierte Bewegung, kein WebGL). Flach schwarz ist er nie. */}
             <div
                 ref={heroRef}
                 className="absolute inset-0"
                 style={{
                     background:
-                        "radial-gradient(115% 80% at 50% -10%, #2a1552 0%, #150c2b 35%, rgba(9,7,20,0.6) 60%, transparent 80%)",
+                        "radial-gradient(115% 80% at 50% -10%, #101728 0%, #0a0f1c 38%, rgba(7,9,16,0.6) 62%, transparent 82%)",
                 }}
             />
 
-            {/* Werdegang und Projekte – Cyan, die Farbe der Arbeit */}
+            {/* Werdegang und Projekte – ein Hauch Cyan, halbiert. Es soll die
+                Sektion einfaerben, nicht sie beleuchten. */}
             <div
                 ref={workRef}
                 className="absolute inset-0"
                 style={{
                     opacity: 0,
                     background:
-                        "radial-gradient(90% 70% at 85% 15%, rgba(34,211,238,0.10) 0%, transparent 60%), radial-gradient(80% 70% at 10% 85%, rgba(8,145,178,0.12) 0%, transparent 60%)",
+                        "radial-gradient(90% 70% at 85% 15%, rgba(34,211,238,0.05) 0%, transparent 62%), radial-gradient(80% 70% at 10% 85%, rgba(8,145,178,0.06) 0%, transparent 62%)",
                 }}
             />
 
-            {/* Kontakt – zurueck zu Violett */}
+            {/* Kontakt – die Seite schliesst sich, aber gedeckt: ein tiefes
+                Blauviolett bei einem Drittel der vorherigen Deckkraft. */}
             <div
                 ref={contactRef}
                 className="absolute inset-0"
                 style={{
                     opacity: 0,
                     background:
-                        "radial-gradient(100% 80% at 15% 100%, rgba(139,92,246,0.18) 0%, transparent 60%), radial-gradient(70% 60% at 90% 20%, rgba(34,211,238,0.07) 0%, transparent 60%)",
+                        "radial-gradient(100% 80% at 15% 100%, rgba(94,78,168,0.09) 0%, transparent 62%), radial-gradient(70% 60% at 90% 20%, rgba(34,211,238,0.04) 0%, transparent 62%)",
                 }}
             />
 

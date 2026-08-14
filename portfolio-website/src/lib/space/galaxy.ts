@@ -60,10 +60,11 @@ const HALO_SHARE = 0.1
    der Seite sitzt in den Armen, Violett/Rosa in den HII-Knoten. */
 const COLOR_BULGE = new THREE.Color("#ffd9a0")
 const COLOR_INNER = new THREE.Color("#fff2df")
-const COLOR_ARM = new THREE.Color("#9fd8f5")
-const COLOR_OUTER = new THREE.Color("#4aa8d8")
-const COLOR_HII = new THREE.Color("#ff8fc4")
-const COLOR_HALO = new THREE.Color("#8ea8c8")
+const COLOR_ARM = new THREE.Color("#c3dced")
+const COLOR_OUTER = new THREE.Color("#7d9cba")
+/* HII-Regionen sind roetlich, nicht bonbonrosa: sie leuchten in Halpha. */
+const COLOR_HII = new THREE.Color("#d9808c")
+const COLOR_HALO = new THREE.Color("#9aa8bd")
 
 const vertexShader = `
     attribute float aSize;
@@ -287,9 +288,12 @@ export const createGalaxy = (count: number, radius: number): Galaxy => {
     const ctx = coreCanvas.getContext("2d")
     if (ctx) {
         const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64)
-        gradient.addColorStop(0, "rgba(255,246,225,0.75)")
-        gradient.addColorStop(0.3, "rgba(255,210,145,0.28)")
-        gradient.addColorStop(0.65, "rgba(180,140,255,0.07)")
+        /* Warm nach aussen auslaufend, ohne Violett. Der Stop bei 0.65 war
+           (180,140,255) – ein violetter Hof um den Kern, den es an einer echten
+           Galaxie nicht gibt. */
+        gradient.addColorStop(0, "rgba(255,247,230,0.72)")
+        gradient.addColorStop(0.3, "rgba(255,214,158,0.26)")
+        gradient.addColorStop(0.65, "rgba(190,170,140,0.06)")
         gradient.addColorStop(1, "rgba(0,0,0,0)")
         ctx.fillStyle = gradient
         ctx.fillRect(0, 0, 128, 128)
