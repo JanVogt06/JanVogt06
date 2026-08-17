@@ -11,6 +11,10 @@ import {createMilkyWay} from "./milkyway"
 import type {Galaxy} from "./galaxy"
 import type {Starfield} from "./starfield"
 import type {MilkyWay} from "./milkyway"
+import marsTexture from "../../data/textures/mars.webp"
+import jupiterTexture from "../../data/textures/jupiter.webp"
+import saturnTexture from "../../data/textures/saturn.webp"
+import ringTexture from "../../data/textures/saturn_ring.webp"
 
 /**
  * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
@@ -271,13 +275,92 @@ const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#123a5e", rim: "#38bdf8"},
 ]
 
-/* Drei Planeten, im Farbraum der Seite. Die Nachtseite ist nie schwarz, sondern
-   ein kuehler Rest – so sehen echte Aufnahmen aus, und der Koerper bleibt gegen
-   den Weltraum als Kugel erkennbar. */
-const PLANET_COLORS: ReadonlyArray<{surface: string; shadow: string; rim: string}> = [
-    {surface: "#3f6f93", shadow: "#0a1622", rim: "#7dd3fc"},
-    {surface: "#6a5a93", shadow: "#120e1f", rim: "#c4a3ff"},
-    {surface: "#3b7d7a", shadow: "#0a1a1a", rim: "#5eead4"},
+/**
+ * Die drei Wegpunkte als echte Planeten des Sonnensystems.
+ *
+ * Vorher waren es drei gleich grosse Kugeln mit demselben Sinusmuster in drei
+ * Farben, jede mit einem zufaellig gekippten Ring. Das faellt auf: gleiche Form,
+ * gleiche Silhouette, und drei beringte Planeten gibt es in keinem Sonnensystem.
+ *
+ * Jetzt traegt jeder Koerper seine eigenen Messwerte. Was den Unterschied macht,
+ * ist nicht die Karte, sondern die FORM:
+ *
+ *   flattening  Abplattung durch die Rotation. Saturn ist um 9,8 % abgeplattet,
+ *               Jupiter um 6,5 %, Mars nur um 0,6 %. Bei Saturn sieht man das mit
+ *               dem Auge – er ist sichtbar oval, nicht rund.
+ *   tilt        Achsneigung. Mars 25,2 Grad, Saturn 26,7 Grad, Jupiter nur 3,1 –
+ *               der Gasriese steht auffaellig gerade.
+ *   spin        Rotationsdauer, umgerechnet. Jupiter dreht in 9,9 Stunden, Mars
+ *               braucht 24,6 – der grosse ist der schnelle.
+ *   radius      Groesse, gestaucht. Echte Verhaeltnisse waeren 1 : 17 : 21, damit
+ *               waere Mars ein Punkt und Jupiter aus dem Bild. Die Reihenfolge
+ *               bleibt aber erhalten, und das ist, was man sieht.
+ *
+ * Der Ring gehoert allein zu Saturn und liegt in dessen Aequatorebene – deshalb
+ * kippt er mit der Achse mit, statt frei im Raum zu stehen. Innen- und Aussenradius
+ * sind die echten: 1,18 bis 2,27 Planetenradien (D-Ring bis Aussenkante A-Ring).
+ *
+ * Die Reihenfolge folgt den Kapiteln: Station 01 ein Gesteinsplanet, dann der
+ * Gasriese, zum Schluss der beringte.
+ */
+type PlanetSpec = {
+    name: string
+    texture: string
+    /** Radius in Szeneneinheiten – gestaucht, siehe oben. */
+    radius: number
+    /** Abplattung: der Pol-Radius ist um diesen Anteil kleiner. */
+    flattening: number
+    /** Achsneigung in Radiant. */
+    tilt: number
+    /** Drehung pro Sekunde in Radiant. */
+    spin: number
+    /** Staerke des Randlichts – Gasriesen haben eine deutliche Atmosphaere. */
+    atmosphere: number
+    /** Grundton, bis die Karte geladen ist, plus Nacht- und Randfarbe. */
+    surface: string
+    shadow: string
+    rim: string
+    ring?: {texture: string; inner: number; outer: number}
+}
+
+const PLANETS: ReadonlyArray<PlanetSpec> = [
+    {
+        name: "Mars",
+        texture: marsTexture,
+        radius: 0.85,
+        flattening: 0.006,
+        tilt: 0.44,
+        spin: 0.05,
+        atmosphere: 0.35,
+        surface: "#9c5a3c",
+        shadow: "#160b08",
+        rim: "#e0a884",
+    },
+    {
+        name: "Jupiter",
+        texture: jupiterTexture,
+        radius: 1.5,
+        flattening: 0.065,
+        tilt: 0.055,
+        spin: 0.12,
+        atmosphere: 0.55,
+        surface: "#b08155",
+        shadow: "#150f0a",
+        rim: "#f0d3a8",
+    },
+    {
+        name: "Saturn",
+        texture: saturnTexture,
+        radius: 1.25,
+        flattening: 0.098,
+        tilt: 0.47,
+        spin: 0.11,
+        atmosphere: 0.5,
+        surface: "#c2a173",
+        shadow: "#17110a",
+        rim: "#f5e2bb",
+        ring: {texture: ringTexture, inner: 1.18, outer: 2.27},
+    },
 ]
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
@@ -378,12 +461,18 @@ export class SpaceScene {
        der Gruppe – sonst kippt der Ring mit und verliert seine Neigung. */
     private readonly waypointPlanets: THREE.Mesh[] = []
     private readonly waypointMaterials: THREE.ShaderMaterial[] = []
+    /* Nur Saturn hat einen Ring, deshalb sind diese Listen KUERZER als die der
+       Wegpunkte. Sie liefen vorher parallel und wurden mit demselben i indiziert –
+       das ginge jetzt schief. Der zugehoerige Planet steht in userData.ownerIndex. */
     private readonly ringMaterials: THREE.ShaderMaterial[] = []
+    private readonly ringMeshes: THREE.Mesh[] = []
     /* Kugel statt Oktaeder: die Wegpunkte des Werdegangs sind Planeten, nicht
        Kristalle – dieselbe Form fuer zwei verschiedene Dinge wuerde nichts
-       unterscheiden. 24x16 Segmente reichen bei dieser Groesse voellig. */
-    private readonly waypointGeometry = new THREE.SphereGeometry(1, 24, 16)
-    private readonly ringGeometry = new THREE.RingGeometry(1.5, 2.3, 64)
+       unterscheiden. 48x32 statt 24x16: mit einer Fotokarte darauf sieht man die
+       Facetten der Silhouette, vorher war die Kugel einfarbig. */
+    private readonly waypointGeometry = new THREE.SphereGeometry(1, 48, 32)
+    /** Geladene Karten – fuer dispose(). */
+    private readonly textures: THREE.Texture[] = []
 
     /** z, an dem die Reise durch die Galaxie endet und der Ring uebernimmt. */
     private readonly journeyEnd: number
@@ -394,6 +483,10 @@ export class SpaceScene {
 
     private readonly raycaster = new THREE.Raycaster()
     private readonly pointer = new THREE.Vector2()
+    /* Zwischenspeicher fuer die Lichtrichtung der Ringe – jeden Frame gebraucht,
+       also nicht jeden Frame neu angelegt. */
+    private readonly lightLocal = new THREE.Vector3()
+    private readonly ringQuaternion = new THREE.Quaternion()
     private readonly projected = new THREE.Vector3()
     private pointerInside = false
 
@@ -527,15 +620,17 @@ export class SpaceScene {
            Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
            steht, wenn Kapitel i dran ist. */
         for (let i = 0; i < WAYPOINT_COUNT; i++) {
-            const {surface, shadow, rim} = PLANET_COLORS[i % PLANET_COLORS.length]
+            const spec = PLANETS[i % PLANETS.length]
             const material = new THREE.ShaderMaterial({
                 vertexShader: planetVertexShader,
                 fragmentShader: planetFragmentShader,
                 uniforms: {
-                    uSurface: {value: new THREE.Color(surface)},
-                    uShadow: {value: new THREE.Color(shadow)},
-                    uRim: {value: new THREE.Color(rim)},
-                    uTime: {value: 0},
+                    uMap: {value: null},
+                    uHasMap: {value: 0},
+                    uSurface: {value: new THREE.Color(spec.surface)},
+                    uShadow: {value: new THREE.Color(spec.shadow)},
+                    uRim: {value: new THREE.Color(spec.rim)},
+                    uAtmosphere: {value: spec.atmosphere},
                     uFade: {value: 0},
                 },
                 transparent: true,
@@ -546,28 +641,13 @@ export class SpaceScene {
                 depthWrite: true,
             })
             this.waypointMaterials.push(material)
+            this.loadTexture(spec.texture, material)
 
             const planet = new THREE.Mesh(this.waypointGeometry, material)
-
-            const ringMaterial = new THREE.ShaderMaterial({
-                vertexShader: ringVertexShader,
-                fragmentShader: ringFragmentShader,
-                uniforms: {
-                    uColor: {value: new THREE.Color(rim)},
-                    uFade: {value: 0},
-                },
-                transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
-                side: THREE.DoubleSide,
-            })
-            this.ringMaterials.push(ringMaterial)
-
-            const ring = new THREE.Mesh(this.ringGeometry, ringMaterial)
-            /* Schraeg gestellt, je Planet anders. Flach zur Kamera waere er ein
-               Kreis, exakt von der Kante ein Strich – dazwischen liest er sich
-               als Ring. */
-            ring.rotation.set(1.15 + hash(i * 4.4) * 0.5, hash(i * 2.2) * 0.9, 0)
+            /* Abplattung. Sie steckt im Mesh und nicht in der Gruppe, weil der Ring
+               ein Geschwister ist und nicht mit gestaucht werden darf – und weil
+               der Anker die Gruppenskalierung liest. */
+            planet.scale.y = 1 - spec.flattening
 
             /* Planet und Ring in einer Gruppe: der Anker projiziert die Gruppe,
                und die Beschriftungslinie soll an der Kugel ansetzen, nicht am
@@ -575,12 +655,54 @@ export class SpaceScene {
                die des Planeten. */
             const group = new THREE.Group()
             group.add(planet)
-            group.add(ring)
+
+            if (spec.ring) {
+                const ringMaterial = new THREE.ShaderMaterial({
+                    vertexShader: ringVertexShader,
+                    fragmentShader: ringFragmentShader,
+                    uniforms: {
+                        uMap: {value: null},
+                        uHasMap: {value: 0},
+                        uColor: {value: new THREE.Color(spec.rim)},
+                        uRadii: {value: new THREE.Vector2(spec.ring.inner, spec.ring.outer)},
+                        uPlanetRadius: {value: 1},
+                        uLight: {value: new THREE.Vector3(0, 0, 1)},
+                        uFade: {value: 0},
+                    },
+                    transparent: true,
+                    /* Anders als vorher NICHT additiv: Saturnringe sind Material,
+                       das Licht streut UND den Planeten verdeckt. Additiv gemischt
+                       konnten sie nur heller machen, also nie vor dem Planeten
+                       liegen – und der Schatten des Planeten auf dem Ring waere
+                       unmoeglich, weil additiv nichts abdunkeln kann. */
+                    depthWrite: false,
+                    side: THREE.DoubleSide,
+                })
+                this.ringMaterials.push(ringMaterial)
+                this.loadTexture(spec.ring.texture, ringMaterial, THREE.ClampToEdgeWrapping)
+
+                const ring = new THREE.Mesh(
+                    new THREE.RingGeometry(spec.ring.inner, spec.ring.outer, 96),
+                    ringMaterial,
+                )
+                /* Die Ringebene IST die Aequatorebene des Planeten. Eine
+                   RingGeometry liegt in der xy-Ebene, der Aequator ist die
+                   xz-Ebene – also einmal um 90 Grad kippen. Die Achsneigung kommt
+                   danach von der Gruppe, deshalb kippt der Ring mit dem Planeten
+                   mit, statt frei im Raum zu haengen. */
+                ring.rotation.x = -Math.PI / 2
+                ring.userData.ownerIndex = i
+                group.add(ring)
+                this.ringMeshes.push(ring)
+            }
+
             /* Die GRUPPE wird skaliert, nicht der Planet: der Anker liest
                scale.y, um die halbe Hoehe in Pixeln zu bestimmen. Bei einer
                unskalierten Gruppe waere das 1 und die Beschriftungslinie setzte
                im Nichts an. Der Ring skaliert dabei mit, was richtig ist. */
-            group.scale.setScalar(0.85 + hash(i) * 0.3)
+            group.scale.setScalar(spec.radius)
+            // Achsneigung: kippt Planet und Ring gemeinsam.
+            group.rotation.z = spec.tilt
 
             const t = i / (WAYPOINT_COUNT - 1)
             /* x relativ zur Kamera, nicht absolut: die Kamera steht auf der
@@ -752,6 +874,42 @@ export class SpaceScene {
     }
 
     // ------------------------------------------------------------------ Innerei
+
+    /**
+     * Laedt eine Karte und haengt sie an ein Material.
+     *
+     * Bis sie da ist, steht uHasMap auf 0 und der Koerper zeigt seinen Grundton.
+     * Auf einer Scroll-Seite ist das der Unterschied zwischen einem Planeten, der
+     * eine Sekunde spaeter scharf wird, und einem schwarzen Loch im Bild.
+     *
+     * Zwei Einstellungen sind hier wichtiger als sie aussehen:
+     *
+     * anisotropy – eine Kugel zeigt ihre Karte am Rand extrem schraeg. Ohne
+     *   anisotrope Filterung verschmiert genau der Rand, also der Teil, an dem man
+     *   die Kugel als Koerper erkennt.
+     * wrapS – die Karte ist equirektangular, ihre linke und rechte Kante sind
+     *   dieselbe Laengslinie. Ohne Wiederholung entsteht dort eine sichtbare Naht.
+     *   Beim Ring dagegen ist u der Radius: dort MUSS geklemmt werden, sonst
+     *   erscheint der Aussenrand innen wieder.
+     */
+    private loadTexture(
+        url: string,
+        material: THREE.ShaderMaterial,
+        wrapS: THREE.Wrapping = THREE.RepeatWrapping,
+    ) {
+        new THREE.TextureLoader().load(url, (texture) => {
+            if (this.disposed) {
+                texture.dispose()
+                return
+            }
+            texture.wrapS = wrapS
+            texture.wrapT = THREE.ClampToEdgeWrapping
+            texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+            material.uniforms.uMap.value = texture
+            material.uniforms.uHasMap.value = 1
+            this.textures.push(texture)
+        })
+    }
 
     private pixelRatio() {
         const mobile = this.container.clientWidth < 768
@@ -954,28 +1112,56 @@ export class SpaceScene {
 
         for (let i = 0; i < this.waypoints.length; i++) {
             const material = this.waypointMaterials[i]
+            const spec = PLANETS[i % PLANETS.length]
             /* Nur die Kugel dreht sich – und nur um ihre eigene Achse, wie ein
-               Planet. Die Gruppe bleibt stehen, damit der Ring seine Neigung
-               behaelt. */
-            this.waypointPlanets[i].rotation.y =
-                hash(i * 2.3) * Math.PI + station3 * 1.2 + time * 0.05
+               Planet. Die Gruppe bleibt stehen, damit die Achsneigung und mit ihr
+               der Ring stehen bleiben.
+
+               Die Drehung pro Sekunde steht in PLANETS und kommt aus der echten
+               Rotationsdauer: Jupiter dreht in 9,9 Stunden, Mars braucht 24,6. Dazu
+               etwas Drehung aus dem Scroll, damit der Planet beim Vorbeiziehen
+               nicht wie festgeschraubt wirkt. */
+            this.waypointPlanets[i].rotation.y = station3 * 1.2 + time * spec.spin
 
             /* Nur der Wegpunkt, der gerade dran ist, leuchtet voll – und alles
                blendet aus, sobald der Ring uebernimmt. */
+            /* Die nicht aktiven Planeten deutlich schwaecher als vorher (0.25).
+               Mit einer Fotokarte sampelt ein weit entfernter Planet die kleinste
+               Mipmap-Stufe, also den Mittelwert seiner Karte – er wird zur grauen
+               Kugel. Halb durchscheinend fallen die grauen Kugeln nicht mehr auf,
+               und die Tiefe bleibt trotzdem lesbar. */
             const own =
                 i === nearestWaypoint
                     ? 1
                     : this.hoveredKind === "waypoint" && this.hovered === i
                       ? 0.7
-                      : 0.25
-            material.uniforms.uTime.value = time
+                      : 0.14
             const fade = lerp(
                 material.uniforms.uFade.value,
                 own * this.aboutActive * waypointsLive * (1 - this.enter),
                 0.08,
             )
             material.uniforms.uFade.value = fade
-            this.ringMaterials[i].uniforms.uFade.value = fade
+        }
+
+        /* Ringe: Deckkraft vom zugehoerigen Planeten, und die Lichtrichtung fuer
+           den Schatten im LOKALEN System des Rings.
+           Der Weg dahin: die Lichtrichtung ist im Blickraum definiert (damit der
+           Halbschatten beim Vorbeifliegen stehen bleibt), also erst mit der
+           Kameradrehung in die Welt und dann mit der Umkehrung der Ringdrehung
+           hinein. In GLSL waere das nicht zu machen – ES 1.0 hat weder inverse()
+           noch transpose(). */
+        for (const ring of this.ringMeshes) {
+            const material = ring.material as THREE.ShaderMaterial
+            const owner = ring.userData.ownerIndex as number
+            material.uniforms.uFade.value = this.waypointMaterials[owner].uniforms.uFade.value
+
+            this.lightLocal
+                .set(-0.55, 0.5, 0.67)
+                .normalize()
+                .applyQuaternion(this.camera.quaternion)
+                .applyQuaternion(ring.getWorldQuaternion(this.ringQuaternion).invert())
+            material.uniforms.uLight.value.copy(this.lightLocal)
         }
 
         this.shardMaterial.uniforms.uTime.value = time
@@ -1142,9 +1328,10 @@ export class SpaceScene {
 
         this.geometry.dispose()
         this.waypointGeometry.dispose()
-        this.ringGeometry.dispose()
+        this.ringMeshes.forEach((r) => r.geometry.dispose())
         this.waypointMaterials.forEach((m) => m.dispose())
         this.ringMaterials.forEach((m) => m.dispose())
+        this.textures.forEach((t) => t.dispose())
         this.galaxy.dispose()
         this.milkyWay.dispose()
         this.skyStars.dispose()
