@@ -15,6 +15,7 @@ import marsTexture from "../../data/textures/mars.webp"
 import jupiterTexture from "../../data/textures/jupiter.webp"
 import saturnTexture from "../../data/textures/saturn.webp"
 import ringTexture from "../../data/textures/saturn_ring.webp"
+import milkyWayTexture from "../../data/textures/milkyway_gal.webp"
 
 /**
  * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
@@ -131,6 +132,19 @@ const NEAR_STARS = [400, 800, 1400, 2000, 2800]
 
 /** Anteil der Himmelssterne im Band. Der Rest steht ueber die Kugel verteilt. */
 const BAND_FRACTION = 0.62
+
+/**
+ * Ab welcher Qualitaetsstufe die echte Milchstrassen-Aufnahme geladen wird.
+ *
+ * 250 KB ueber das Netz und 11 MB Grafikspeicher sind auf einem alten Telefon
+ * nicht selbstverstaendlich, und dort laeuft ohnehin die kleinste Stufe. Darunter
+ * bleibt das prozedurale Band – das ist kein Notbehelf, sondern sieht schlicht
+ * eine Spur weniger echt aus.
+ */
+const MILKYWAY_MAP_MIN_QUALITY = 0.5
+
+/** Wie schnell die Aufnahme ueber das prozedurale Band blendet. */
+const MILKYWAY_MAP_FADE = 0.02
 
 /** Radien der beiden Sternschalen und der Himmelskugel. */
 const MILKYWAY_RADIUS = 900
@@ -455,6 +469,9 @@ export class SpaceScene {
        der auffaelligste Teil des echten Himmels ist nicht punktfoermig, sondern das
        verschmolzene Licht unaufloesbar vieler Sterne. */
     private readonly milkyWay: MilkyWay
+    /** Ist die Aufnahme da? Dann blendet sie ueber das prozedurale Band. */
+    private milkyWayMapLoaded = false
+    private milkyWayMapMix = 0
 
     private readonly waypoints: THREE.Object3D[] = []
     /* Die Kugeln getrennt gemerkt: die Eigendrehung gehoert dem Planeten, nicht
@@ -586,6 +603,29 @@ export class SpaceScene {
             quality: this.quality,
         })
         this.scene.add(this.milkyWay.object)
+        if (this.quality >= MILKYWAY_MAP_MIN_QUALITY) {
+            /* Die Aufnahme aus Gaia DR2. Sie blendet ueber das prozedurale Band,
+               sobald sie da ist – siehe milkyway.ts. Kein Mipmapping und lineare
+               Filterung genuegen: die Kugel wird immer aus derselben Entfernung
+               gesehen, es gibt also nur eine sinnvolle Stufe. Das spart ein Drittel
+               des Speichers.
+               wrapS wiederholt, weil die linke und rechte Kante derselbe
+               Laengengrad sind; wrapT klemmt, weil oben und unten die Pole sind. */
+            new THREE.TextureLoader().load(milkyWayTexture, (texture) => {
+                if (this.disposed) {
+                    texture.dispose()
+                    return
+                }
+                texture.wrapS = THREE.RepeatWrapping
+                texture.wrapT = THREE.ClampToEdgeWrapping
+                texture.generateMipmaps = false
+                texture.minFilter = THREE.LinearFilter
+                texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+                this.milkyWay.setMap(texture)
+                this.textures.push(texture)
+                this.milkyWayMapLoaded = true
+            })
+        }
         this.skyStars = createStarfield({
             count: SKY_STARS[level],
             radius: SKY_RADIUS,
@@ -1086,6 +1126,10 @@ export class SpaceScene {
            wo es ist – an ihm zieht man vorbei, und das ist die Bewegung. */
         this.skyStars.points.position.copy(this.camera.position)
         this.milkyWay.object.position.copy(this.camera.position)
+        if (this.milkyWayMapLoaded && this.milkyWayMapMix < 1) {
+            this.milkyWayMapMix = Math.min(1, this.milkyWayMapMix + MILKYWAY_MAP_FADE)
+            this.milkyWay.setMapMix(this.milkyWayMapMix)
+        }
         this.skyStars.setTime(time)
         this.nearStars.setTime(time)
 

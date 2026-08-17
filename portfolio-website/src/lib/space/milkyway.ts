@@ -28,6 +28,26 @@ import {galacticOrientation} from "./galactic"
  *
  * Die Kugel folgt jeden Frame der Kamera und liegt damit im Unendlichen. Sie ist
  * innen sichtbar (BackSide) und schreibt keine Tiefe: alles andere liegt davor.
+ *
+ * DIE ECHTE KARTE
+ *
+ * Das prozedurale Band bleibt, aber es ist nur noch der Anfang: sobald die
+ * Aufnahme geladen ist, blendet sie darueber. Die Quelle ist NASA SVS "Deep Star
+ * Maps 2020" – 1,7 Milliarden Sterne aus Gaia DR2, und zwar genau der Layer, der
+ * die hellen Einzelsterne WEGLAESST. Das passt hier exakt: die Einzelsterne liefert
+ * starfield.ts als Punkte, hier fehlt nur das verschmolzene Licht dahinter.
+ *
+ * Warum das prozedurale Band trotzdem bleibt:
+ *
+ * - Es steht im ersten Frame da. Die Karte kommt ueber das Netz, und ein leerer
+ *   Himmel fuer eine Sekunde ist auf einer Scroll-Seite genau der Moment, in dem
+ *   man scrollt.
+ * - Auf schwachen Geraeten wird sie gar nicht geladen (siehe SpaceScene): 250 KB
+ *   und 11 MB Grafikspeicher sind dort nicht selbstverstaendlich.
+ *
+ * Die Karte ist in GALAKTISCHEN Koordinaten, und diese Kugel liegt bereits in der
+ * galaktischen Ebene (galactic.ts). Damit ist die Zuordnung geradeaus: die Breite
+ * dieser Kugel IST die galaktische Breite, ihre Laenge die galaktische Laenge.
  */
 
 const vertexShader = `
@@ -49,6 +69,19 @@ const fragmentShader = `
 
     uniform float uOpacity;
     uniform float uQuality;
+
+    uniform sampler2D uMap;
+    /** 0 = nur das prozedurale Band, 1 = nur die Aufnahme. */
+    uniform float uMapMix;
+    /** Helligkeit der Aufnahme, damit sie zum Rest der Szene passt. */
+    uniform float uMapGain;
+    /**
+     * Dreht die Karte um die Polachse. Sie richtet den hellen Wulst (das
+     * galaktische Zentrum, in der Karte bei u = 0.5) auf dieselbe Stelle, an der
+     * ihn das prozedurale Band hat – sonst springt beim Ueberblenden das halbe
+     * Bild.
+     */
+    uniform float uMapLon;
 
     /* --- Rauschen in drei Dimensionen ---
        Auf einer Kugel braucht es das: zweidimensionales Rauschen ueber
@@ -139,6 +172,18 @@ const fragmentShader = `
            Himmel nicht absolut schwarz. */
         col += vec3(0.012, 0.014, 0.022) * (0.5 + 0.5 * clouds);
 
+        /* --- Die Aufnahme darueber ---
+           Norden liegt in der Datei oben und die Laenge waechst nach links; beides
+           ist an der Grossen Magellanschen Wolke nachgemessen (siehe CREDITS.md in
+           data/textures). Mit flipY der Textur liegt v = 1 auf der obersten Zeile,
+           also am Nordpol – daher v = 0.5 + lat/PI. */
+        vec2 mapUv = vec2(
+            fract(0.5 - (lon - uMapLon) / 6.2831853),
+            clamp(0.5 + lat / 3.14159265, 0.001, 0.999)
+        );
+        vec3 photo = texture2D(uMap, mapUv).rgb * uMapGain;
+        col = mix(col, photo, uMapMix);
+
         /* Klein halten: das Band soll da sein, nicht leuchten. Es ist am echten
            Himmel gerade so heller als der Hintergrund – und darueber liegen ja noch
            die Einzelsterne, die Galaxie und der Nebel. */
@@ -157,6 +202,10 @@ export type MilkyWay = {
     object: THREE.Mesh
     setOpacity: (opacity: number) => void
     setQuality: (quality: number) => void
+    /** Die Aufnahme einhaengen. Sie blendet danach ueber setMapMix ein. */
+    setMap: (texture: THREE.Texture | null) => void
+    /** 0 = prozedurales Band, 1 = Aufnahme. */
+    setMapMix: (mix: number) => void
     dispose: () => void
 }
 
@@ -171,6 +220,16 @@ export const createMilkyWay = ({radius = 900, quality = 1} = {}): MilkyWay => {
         uniforms: {
             uOpacity: {value: 1},
             uQuality: {value: quality},
+            uMap: {value: null},
+            uMapMix: {value: 0},
+            /* Am Bild eingestellt. Bei 0,55 liegt die Aufnahme auf derselben
+               Helligkeit wie das prozedurale Band – nur ist sie viel flacher, und
+               dadurch war von ihrer Struktur (Sternwolken, Staubrisse) fast nichts
+               zu sehen. 1,35 bringt die Struktur heraus, ohne dass der Himmel
+               milchig wird; bei 1,8 nimmt das Band der Galaxie das Bild weg. */
+            uMapGain: {value: 1.35},
+            /* 0.6 rad: dort sitzt der Wulst im prozeduralen Band (cos(lon - 0.6)). */
+            uMapLon: {value: 0.6},
         },
         side: THREE.BackSide,
         depthWrite: false,
@@ -193,6 +252,12 @@ export const createMilkyWay = ({radius = 900, quality = 1} = {}): MilkyWay => {
         },
         setQuality: (value) => {
             material.uniforms.uQuality.value = value
+        },
+        setMap: (texture) => {
+            material.uniforms.uMap.value = texture
+        },
+        setMapMix: (mix) => {
+            material.uniforms.uMapMix.value = mix
         },
         dispose: () => {
             geometry.dispose()

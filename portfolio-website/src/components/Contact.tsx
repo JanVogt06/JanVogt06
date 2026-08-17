@@ -187,6 +187,38 @@ const Contact = () => {
                         </div>
                     </HudPanel>
                 </div>
+
+                {/* Bildnachweis.
+                    Er steht hier, weil die Seite keinen eigenen Footer hat und der
+                    Kontakt ihr Ende ist. Die Planetenkarten stehen unter CC BY 4.0,
+                    und diese Lizenz verlangt eine Namensnennung – sie ist keine
+                    Hoeflichkeit, sondern die Bedingung, unter der die Dateien hier
+                    liegen duerfen. Beim NASA-Material ist der Credit erbeten und
+                    nennt ausdruecklich auch die Datenquelle: die Sternpositionen
+                    kommen von Gaia, nicht von der NASA.
+                    Bewusst sehr leise gesetzt: es soll auffindbar sein, nicht
+                    auffallen. */}
+                <p className="mt-10 max-w-3xl font-mono text-[10px] leading-relaxed tracking-[0.08em] text-white/20">
+                    Planetenkarten:{" "}
+                    <a
+                        href="https://www.solarsystemscope.com/textures/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
+                    >
+                        Solar System Scope
+                    </a>{" "}
+                    (CC BY 4.0). Milchstraße:{" "}
+                    <a
+                        href="https://svs.gsfc.nasa.gov/4851/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
+                    >
+                        NASA/Goddard Space Flight Center Scientific Visualization Studio
+                    </a>
+                    , Gaia DR2: ESA/Gaia/DPAC.
+                </p>
             </div>
         </section>
     )
