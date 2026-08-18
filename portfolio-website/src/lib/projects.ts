@@ -1,34 +1,18 @@
 import projectsData from "@/data/projects.json"
 
-/**
- * Projekt-Form wie in src/data/projects.json hinterlegt.
- * Projekte dort hinzufügen/ändern – keine Code-Änderung nötig.
- */
 export interface Project {
-    /** Dateiname des Screenshots in src/data/images/screenshots/ */
+    /** Screenshot file name in src/data/images/screenshots/ */
     slug: string;
     icon: string;
     title: string;
     subtitle: string;
-    /**
-     * Eine Zeile, die sagt, was das Projekt TUT – fuer die Beschriftung am
-     * Kristall. Bewusst ein eigenes Feld: `subtitle` ist eine Kategorie
-     * ("3D Satellitenvisualisierung") und `description` sind mehrere Saetze.
-     * Am Stein ist nur fuer einen kurzen Satz Platz.
-     */
     tagline: string;
     description: string;
     tech: string[];
-    /** Gewichtshinweis am Play-Button, z.B. "74 MB Unity-Build" */
+    /** Size hint on the play button, e.g. "74 MB Unity build" */
     previewNote?: string;
-    /**
-     * Darf die Seite in einem iframe eingebettet werden? Standard ja. Auf false
-     * setzen, wenn eine Anwendung im iframe nicht läuft – dann zeigt der Rahmen
-     * "in neuem Tab öffnen" statt der Vorschau. Die Begründung gehört als
-     * `embedNote` in die JSON.
-     */
     embed?: boolean;
-    /** Warum embed: false – steht in der JSON direkt beim Projekt. */
+    /** Why embed is false. */
     embedNote?: string;
     links: {
         github?: string;
@@ -40,7 +24,7 @@ export interface Project {
 
 export const projects = projectsData as Project[]
 
-/** Der Haupt-Link eines Projekts – gleichzeitig die URL der Live-Vorschau. */
+/** Main link of a project, also the URL of the live preview. */
 export const primaryLinkOf = (links: Project["links"]) => {
     if (links.website) return {href: links.website, label: "Website"}
     if (links.app) return {href: links.app, label: "Zur App"}
