@@ -1,46 +1,19 @@
 @import "tailwindcss";
 
-/**
- * Eigene Design-Tokens der Seite.
- *
- * Bewusst nur ZWEI Flächen und DREI Akzente:
- *
- *   brand   (Cyan)     = Primärakzent. Linien, Knoten, Beschriftungen, Links.
- *   glow    (Violett)  = nur noch der Name im Hero. Die Atmosphäre benutzt ihn
- *                        nicht mehr: als Fläche über dem ganzen Bildschirm war er
- *                        der Grund, warum die Seite lila statt nach Weltraum
- *                        aussah.
- *   status  (Emerald)  = sparsam, für "verfügbar"-Zustände.
- *
- * Alles andere ist Weiß mit Deckkraft.
- */
+/* Design tokens of the page: two surfaces, three accents. */
 @theme {
-    /* Flächen */
+    /* Surfaces */
     --color-page: #05070d;
     --color-panel: #0a0e19;
 
-    /* Akzente */
+    /* Accents */
     --color-brand: #22d3ee;
     --color-brand-deep: #0891b2;
     --color-glow: #8b5cf6;
     --color-status: #34d399;
 }
 
-/**
- * Rechte Winkel fuer die ganze Seite.
- *
- * Ein Schalter statt einer Aufraeumaktion in zwanzig Komponenten: die Skala
- * ueberschreibt Tailwinds Standardwerte fuer rounded-sm bis rounded-3xl, und die
- * Seite benutzt diese Klassen ueberall. Weiche Ecken lesen sich freundlich und
- * app-artig; ein Weltraum ist beides nicht.
- *
- * rounded-full ist davon unberuehrt (eigener Wert, 9999px) – Punkte und runde
- * Knoepfe bleiben rund, wo sie rund sein muessen.
- *
- * Die shadcn-Palette stand hier einmal darunter (--background, --primary,
- * --ring …). Sie ist mit shadcn selbst weggefallen: die Seite hat keine
- * Komponente mehr, die eines dieser Tokens anfasst.
- */
+/* Right angles for the whole page: overrides Tailwind's rounded-* scale. */
 @theme inline {
     --radius-sm: 0px;
     --radius-md: 1px;
@@ -52,59 +25,25 @@
 }
 
 @layer base {
-    /* Einheitliche Rahmenfarbe, wo eine gesetzt wird, ohne sie zu erzwingen.
-       Stand vorher als @apply border-border und kam aus der shadcn-Palette. */
+    /* One border color wherever a border is set, without forcing one. */
     * {
         border-color: rgb(255 255 255 / 0.08);
     }
 
     html {
-        /**
-         * KEIN scroll-behavior: smooth.
-         *
-         * lib/smoothScroll.ts ruft window.scrollTo einmal pro Frame auf. Mit
-         * scroll-behavior: smooth wuerde der Browser jeden dieser Aufrufe selbst
-         * animieren – 60 sich ueberlagernde Animationen pro Sekunde, die
-         * Interpolation waere wirkungslos. Wer sanft scrollen soll, bekommt es
-         * dort; die Rueckfallebene setzt behavior ausdruecklich.
-         */
+        /* No scroll-behavior: smooth here - lib/smoothScroll.ts drives the scroll. */
 
-        /* Versatz, damit Anker-Sprünge nicht unter der fixierten Kopfzeile landen */
+        /* Offset so anchor jumps do not land under the fixed header */
         scroll-padding-top: 4rem;
 
-        /**
-         * clip, NICHT hidden.
-         *
-         * Die fixierten Ebenen (Atmosphaere, Kopfzeile, Beschriftungen) spannen
-         * `inset-0` und werden dabei so breit wie das Fenster INKLUSIVE
-         * Scrollleiste – gemessen 391 px bei 375 px Inhaltsbreite. Die 16 px
-         * Differenz machten die Seite seitwaerts scrollbar.
-         *
-         * overflow-x: hidden waere der naheliegende Griff, erzeugt aber einen
-         * Scroll-Container. Damit klebten alle `position: sticky`-Sektionen an
-         * diesem Container statt am Fenster – Werdegang und Projekte haengen
-         * genau daran. `clip` schneidet ab, ohne scrollbar zu werden.
-         */
+        /* clip, not hidden: hidden would create a scroll container and break sticky. */
         overflow-x: clip;
-        /* Scrollbars, Formularelemente und Overscroll-Bereich dunkel */
+        /* Dark scrollbars, form elements and overscroll area */
         color-scheme: dark;
         background-color: var(--color-page);
     }
 
-    /**
-     * body MUSS durchsichtig bleiben.
-     *
-     * Der Seitengrund steht am <html> darueber. Von dort wird er auf die
-     * Zeichenflaeche uebertragen und liegt damit hinter allem – auch beim
-     * Overscroll, weswegen er ueberhaupt gesetzt ist.
-     *
-     * Am body waere er dagegen ein gewoehnlicher Block-Hintergrund. In der
-     * Zeichenreihenfolge kommen die Hintergruende der Bloecke NACH den
-     * Stapelkontexten mit negativem z-index – ein deckender body-Hintergrund
-     * uebermalt also Atmosphere.tsx (-z-10) vollstaendig. Genau das war der Fall:
-     * Farbebenen und Nebel waren da, gemessen mit der richtigen Deckkraft, und
-     * trotzdem war die Seite flach schwarz.
-     */
+    /* body stays transparent: an opaque background would paint over Atmosphere.tsx. */
     body {
         @apply text-white;
     }
@@ -114,11 +53,7 @@
         color: white;
     }
 
-    /**
-     * Zeigefinger auf allen Buttons. Tailwind normalisiert im Preflight jedes
-     * <button> auf cursor: default; Links bekommen ihren Pointer vom Browser.
-     * Deaktivierte Buttons behalten den Standardzeiger.
-     */
+    /* Pointer cursor on all buttons; Tailwind's preflight sets cursor: default. */
     button:not(:disabled),
     [role="button"]:not(:disabled) {
         cursor: pointer;
@@ -126,11 +61,7 @@
 }
 
 @layer components {
-    /**
-     * Standard-Oberfläche für Karten: eine Hairline (1 px, 6 % Weiß) auf einem
-     * Panel-Ton, der minimal heller als die Seite ist. Schichtung über
-     * Helligkeit statt über Rahmen.
-     */
+    /* Default card surface: a hairline on a panel tone slightly lighter than the page. */
     .surface {
         background-color: color-mix(in oklab, var(--color-panel) 88%, transparent);
         border: 1px solid rgb(255 255 255 / 0.06);
@@ -145,19 +76,13 @@
         border-color: rgb(255 255 255 / 0.12);
     }
 
-    /* Monospace-Label über Abschnittsüberschriften ($ git …) */
+    /* Monospace label above section headings */
     .cmd {
         @apply font-mono text-white/40;
     }
 }
 
-/**
- * Endlos laufende Deko-Animationen.
- *
- * Standen als <style>-Block in Hero.tsx – also in einem String im Modul, den
- * React bei jedem Mount erneut in den <head> schreibt. Keyframes sind
- * Stylesheet-Inhalt und gehoeren hierher.
- */
+/* Continuously running decorative animations. */
 @keyframes gradient-shift {
     0%, 100% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -177,22 +102,13 @@
     animation: caret 1.1s steps(1, end) infinite;
 }
 
-/* Textblock zum Kristall, der gerade vor der Kamera steht. Laeuft beim Wechsel
-   erneut, weil das Element per key neu erzeugt wird. */
+/* Caption of the crystal currently in front of the camera. */
 @keyframes caption-in {
     from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: none; }
 }
 
-/**
- * Bewusst OHNE animation-fill-mode: both.
- *
- * Mit `both` gilt der from-Zustand auch schon vor dem Start – laeuft die
- * Animation nie (abgeschaltete Animationen, Fehler, Tab im Hintergrund beim
- * Aufbau), bleibt der Text dauerhaft auf opacity: 0 und ist unsichtbar. Ohne
- * fill-mode ist der Ruhezustand der sichtbare, und die Animation ist nur noch
- * Zugabe. Inhalt zuerst.
- */
+/* Deliberately without animation-fill-mode: the resting state is the visible one. */
 .animate-caption {
     animation: caption-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -206,7 +122,7 @@
     animation: overlay-in 0.3s ease;
 }
 
-/* Das HUD faehrt aus der Tiefe heran, wie eine eingeblendete Tafel. */
+/* The HUD comes in from depth. */
 @keyframes hud-in {
     from { opacity: 0; transform: scale(0.985); }
     to   { opacity: 1; transform: none; }
@@ -216,8 +132,7 @@
     animation: hud-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Blinken kann unangenehm bis ausloesend sein – dann steht der Cursor still.
-   Die Ein-Animationen bleiben als reines Einblenden, ohne Verschieben. */
+/* Reduced motion: no blinking caret, fade-ins without movement. */
 @media (prefers-reduced-motion: reduce) {
     .animate-caret,
     .animate-gradient-shift {
