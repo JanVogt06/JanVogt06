@@ -17,270 +17,72 @@ import saturnTexture from "../../data/textures/saturn.webp"
 import ringTexture from "../../data/textures/saturn_ring.webp"
 import milkyWayTexture from "../../data/textures/milkyway_gal.webp"
 
-/**
- * Die Weltraum-Szene: Nebel-Hintergrund und ein Ring aus Kristallen, in EINEM
- * WebGL-Kontext.
- *
- * Warum ein Kontext und nicht zwei Canvas: Browser erlauben nur eine Handvoll
- * gleichzeitiger WebGL-Kontexte, und die Live-Vorschauen der Projekte brauchen
- * selbst welche (Riptide WebGL2, Cryptborne als Unity-Build). Zwei Kontexte hier
- * heisst, dass eine Vorschau keinen mehr bekommt.
- *
- * Gerendert wird in zwei Durchgaengen in dieselbe Canvas: erst der Hintergrund
- * mit einer orthografischen Kamera, dann die Kristalle mit einer perspektivischen.
- * Zwischen beiden wird nur der Tiefen-, nicht der Farbpuffer geleert.
- *
- * AUFBAU DES RINGS
- *
- * Zwei verschachtelte Gruppen, und das ist der Trick, auf dem alles beruht:
- *
- *   tiltGroup (rotation.x = RING_TILT, fest)
- *     └ spinGroup (rotation.y = Ringwinkel, vom Scroll)
- *         └ die Steine auf einem Kreis
- *
- * Dadurch ist die Stelle, an der ein Stein "vorne" ankommt, ein FESTER Punkt in
- * der Welt. Die Kamera kann dort stehenbleiben, waehrend der Ring sich unter ihr
- * dreht – genau das gibt das Gefuehl, dass man an einem Stein ankommt, statt ihm
- * nachzufahren. Mit einer einzigen Gruppe muesste die Kamera jeden Frame
- * mitwandern.
- *
- * DIE REISE
- *
- * Der Raum ist EINE Strecke entlang -Z, und alles liegt darauf:
- *
- *   z = +12       die Kamera im Hero, ausserhalb
- *   z = -30       die Galaxie, durch die man hindurchfliegt
- *   z = -16…-42   drei Wegpunkte darin – das ist der Werdegang
- *   z = -70       der Kristallring mit den Projekten
- *
- * Vorher stand die Kamera im Hero-Abstand still, bis die Projekt-Sektion sie
- * heranzog. Zwischen Hero und Projekten passierte im Raum also nichts, waehrend
- * der Werdegang im DOM eine ganze Sektion lang etwas tat. Genau daran merkte man,
- * dass er obendrauf gesetzt war.
- *
- * Jetzt fuehrt der Scroll die Kamera durchgehend: der Werdegang IST der Flug
- * durch die Galaxie, und seine Kapitel haengen an Wegpunkten, die dabei
- * vorbeikommen.
- *
- * Bewusst ohne React: die Klasse laeuft in ihrer eigenen rAF-Schleife und
- * bekommt von aussen nur Zahlen.
- */
-
-/**
- * Wo der Kristallring im Raum liegt – am Ende der Reise.
- *
- * Er lag bei -70. Dann steht die Ring-Kamera bei -48, also VOR der Galaxie
- * (-54): der Durchflug waere erst mitten in der Projekt-Sektion passiert, und der
- * Werdegang endete bereits in der Scheibe. Bei -90 ist hinter der Galaxie Platz
- * fuer eine eigene Etappe, in der man durch sie hindurchfliegt.
- */
 const RING_Z = -90
 
-/**
- * Wo die Galaxie liegt und wie weit ihre Scheibe reicht.
- *
- * Sie stand auf -18. Die Reise geht von +12 bis etwa -48, also war die Scheibe
- * nach knapp der Haelfte des Werdegangs durchflogen – bei Station 3 lag sie
- * hinter der Kamera und war weg. Die Galaxie endete deutlich zu frueh.
- *
- * -54 heisst: sie wird ueber den ganzen Werdegang groesser und fuellt am Ende das
- * Bild. Durchflogen wird sie erst, wenn die Projekte uebernehmen – und dort
- * blendet sie ohnehin aus, damit sie die Kristalle nicht ueberstrahlt.
- */
 const GALAXY_Z = -54
-/**
- * Seitlicher Versatz der Galaxie.
- *
- * Ohne ihn liegt ihr Kern genau auf der Flugbahn – die Passage fuehrt also mitten
- * durch den Kern, und dort ist alles gleissend weiss. Neun Einheiten sind aus dem
- * Hero (66 Einheiten entfernt) nur acht Grad, also kaum aus der Mitte, bringen die
- * Bahn aber an der Verdickung vorbei durch die Arme. Das ist die schoenere Stelle
- * zum Durchfliegen, und rechts liegt sie auch besser, weil im Hero der Name links
- * steht.
- */
 const GALAXY_X = 9
 const GALAXY_RADIUS = 26
 
-/**
- * Abstand, in dem ein Wegpunkt vor der Kamera steht, wenn sein Kapitel dran ist.
- *
- * Die z-Werte der Wegpunkte werden daraus GERECHNET und nicht gesetzt: sonst
- * muesste man sie jedes Mal nachziehen, wenn sich die Reiselaenge aendert, und
- * ein Kapitel stuende neben seinem Wegpunkt statt davor.
- */
 const WAYPOINT_VIEW_DISTANCE = 8
 
-/**
- * Wie viele Punkte die Galaxie je Qualitaetsstufe bekommt.
- *
- * Stand auf 1800 bis 8000. Im Nahflug verteilen sich 6000 Punkte ueber einen
- * bildschirmfuellenden Durchmesser – das sind ein paar blasse Tupfen, und genau
- * so sah es aus. Punkte sind billig (ein Draw-Call, nur Vertex-Arbeit), also darf
- * die Dichte das Bild tragen.
- */
 const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
 
-/**
- * Sterne des Himmels und des Nahfelds je Qualitaetsstufe.
- *
- * Der Himmel traegt zusaetzlich das Band der Milchstrasse, und ein Band lebt von
- * Masse: es besteht aus Sternen, die einzeln kaum sichtbar sind. Deshalb sind es
- * hier deutlich mehr als fuer einen Himmel aus Einzelsternen noetig waere.
- */
 const SKY_STARS = [4000, 9000, 16000, 26000, 38000]
 const NEAR_STARS = [400, 800, 1400, 2000, 2800]
 
-/** Anteil der Himmelssterne im Band. Der Rest steht ueber die Kugel verteilt. */
+/** Fraction of the sky stars in the band; the rest spread over the sphere. */
 const BAND_FRACTION = 0.62
 
-/**
- * Ab welcher Qualitaetsstufe die echte Milchstrassen-Aufnahme geladen wird.
- *
- * 250 KB ueber das Netz und 11 MB Grafikspeicher sind auf einem alten Telefon
- * nicht selbstverstaendlich, und dort laeuft ohnehin die kleinste Stufe. Darunter
- * bleibt das prozedurale Band – das ist kein Notbehelf, sondern sieht schlicht
- * eine Spur weniger echt aus.
- */
 const MILKYWAY_MAP_MIN_QUALITY = 0.5
 
-/** Wie schnell die Aufnahme ueber das prozedurale Band blendet. */
+/** How fast the photo fades over the procedural band. */
 const MILKYWAY_MAP_FADE = 0.02
 
-/** Radien der beiden Sternschalen und der Himmelskugel. */
+/** Radii of the two star shells and of the sky sphere. */
 const MILKYWAY_RADIUS = 900
 const SKY_RADIUS = 700
 const NEAR_RADIUS = 150
 
-/**
- * Sichtweite der Kamera.
- *
- * Stand auf 300 – und damit lag alles, was den Sternenhimmel ausmacht, dahinter:
- * die Himmelskugel bei 900, die Sternschale zwischen 385 und 700. Gemessen waren
- * 0 von 26000 Himmelssternen innerhalb der Ebene und die Milchstrasse vollstaendig
- * weg; sichtbar blieb allein das Nahfeld bei 150. Deshalb war der Himmel auf der
- * Seite fast leer, obwohl die Felder laengst in der Szene lagen. Das Kappen
- * passiert in der Projektion – daran aendert depthTest: false nichts.
- *
- * 1600 laesst Luft hinter der Himmelskugel. Genauigkeit im Tiefenpuffer kostet das
- * praktisch nichts: Tiefe schreiben in dieser Szene nur die Planeten, und die
- * stehen bei 5 bis 25 Einheiten – also dort, wo ein perspektivischer Puffer seine
- * Aufloesung ohnehin hat.
- */
 const CAMERA_FAR = 1600
 
-/** Mitte der Reise – dort sitzt das Nahfeld, damit die Kamera darin bleibt. */
+/** Middle of the journey; the near field sits here. */
 const NEAR_CENTER_Z = -33
 
-/** Anzahl der Werdegang-Wegpunkte – muss zu den Kapiteln in About.tsx passen. */
+/** Number of career waypoints; must match the chapters in About.tsx. */
 export const WAYPOINT_COUNT = 3
 
-/** Kamera-z im Hero: weit ausserhalb, die Galaxie liegt als Scheibe voraus. */
+/** Camera z in the hero: far outside, with the galaxy ahead. */
 const CAMERA_Z_HERO = 12
 
-/**
- * Wo der Flug durch den Werdegang endet – deutlich VOR der Galaxie.
- *
- * Vorher endete er bei -48 und damit sechs Einheiten vor der Scheibe: bei Station
- * 03 steckte man schon darin. Bei -26 sind es 28 Einheiten Abstand – die Galaxie
- * naehert sich ueber den ganzen Werdegang (von 66 auf 28) und fuellt das Bild,
- * ohne dass man drin ist.
- *
- * Der Durchflug gehoert danach der Passage.
- */
 const ABOUT_END_Z = -26
 
-/** Radius des Rings. */
+/** Radius of the ring. */
 const RING_RADIUS = 5.4
 
-/** Neigung des Rings – ohne sie saehe man einen Strich statt einer Ellipse. */
+/** Tilt of the ring. */
 const RING_TILT = 0.30
 
-/**
- * Kameraabstand zum vorderen Stein: im Hero weit weg, im Feld naeher, beim
- * Heranzoomen am naechsten.
- *
- * FOCUS_DISTANCE stand zuerst auf 4,6 – bei 46 Grad Blickwinkel sind das 3,9
- * Einheiten Sichthoehe, und der Stein war mit ~4 Einheiten hoeher als der
- * Bildschirm. Die Beschriftungsfahnen setzen am Steinrand an und landeten
- * dadurch ausserhalb des Fensters (Titel bei x = 1746 auf 1440 px Breite).
- * Bei 6,4 nimmt der Stein etwa ein Drittel der Bildhoehe ein.
- */
 const HERO_DISTANCE = 17
 const FIELD_DISTANCE = 11
 const FOCUS_DISTANCE = 6.4
 
-/**
- * Eigenbewegung des Rings, wenn nicht gescrollt wird: ein langsames Pendeln um
- * ±0,12 rad, kein Weiterdrehen.
- *
- * Erst driftete der Ring frei weiter. Das bricht aber die Ausrichtung: die
- * Kamera schaut auf einen FESTEN Punkt, an dem die Steine ankommen, und nach
- * zehn Sekunden stand Stein 0 gut 26 Grad daneben. Damit zeigte der Zaehler ein
- * anderes Projekt als der Stein vor der Kamera, und die Beschriftungsfahnen
- * landeten ausserhalb des Bildes.
- *
- * Ein Pendeln ist begrenzt und kehrt immer zurueck. Es wird ausserdem mit
- * (1 - enter) ausgeblendet: in der Projekt-Sektion steht die Drehung damit
- * ausschliesslich am Scroll, und Stein i steht bei Station i exakt vorne.
- */
 const IDLE_SWAY = 0.12
 const IDLE_SWAY_SPEED = 0.1
 
-/** Seitlicher Kamera-Versatz im Hero, damit links der Name Platz hat. */
+/** Lateral camera offset in the hero, leaving room for the name. */
 const HERO_LATERAL = 2.6
 
-/**
- * Ab welchem Heranziehen die Steine ueberhaupt anfassbar sind.
- *
- * Der Ring liegt die ganze Zeit in der Szene – er ist im Hero und im Werdegang
- * nur weit weg. Ohne diese Schwelle trifft der Raycast ihn trotzdem: ein Klick
- * irgendwo im Hero oeffnete ein Projekt, und der Zeiger wurde dort schon zur
- * Hand. Entfernung interessiert einen Strahl nicht.
- *
- * 0.75 heisst: erst wenn die Projekt-Sektion praktisch steht. Unterhalb davon
- * gehoert die Szene zur Kulisse und nimmt keine Eingaben.
- */
 const INTERACTIVE_ENTER = 0.75
 
-/**
- * Der Nebel bleibt ueber die ganze Seite stehen und wird nur leiser.
- *
- * Er war bei 34 % der Seitenlaenge einmal ganz ausgeblendet – dann steht der
- * Kristallring im Nichts. Der Weltraum muss durchgehen.
- *
- * 0.35 statt 0.55: seit es eine Galaxie gibt, ist der Nebel nicht mehr der
- * Hauptdarsteller, sondern Hintergrund. Und er ist der teuerste Teil der Szene –
- * ein bildschirmfuellender FBM-Shader laeuft ueber die ganze Seitenlaenge mit.
- */
-/**
- * Wie viel vom Nebel-Rechteck uebrig bleibt.
- *
- * Deutlich weniger als vorher (1.0 im Hero, 0.35 spaeter). Der Nebel liegt auf
- * einem bildschirmfesten Rechteck – er kann sich nicht mitbewegen und ist damit
- * genau der Teil, der aufgeklebt wirkt. Seit die Himmelskugel (milkyway.ts) die
- * Struktur traegt, ist seine Aufgabe nur noch Farbe: ein Hauch Staubrot und
- * Tuerkis ueber dem Ganzen.
- */
 const NEBULA_MAX = 0.5
 const NEBULA_MIN = 0.2
 
-/**
- * Obergrenze der Nebel-Qualitaet.
- *
- * Der Shader rechnet je Stufe mehr FBM-Oktaven; auf einem Retina-Bildschirm sind
- * das bei voller Stufe sechs Oktaven fuer mehrere Millionen Pixel pro Frame –
- * neben der Galaxie zu viel, und genau daran ruckelte das Scrollen. Als
- * Hintergrund braucht er die feinsten Oktaven nicht.
- */
 const NEBULA_MAX_QUALITY = 0.5
 
 const SAMPLE_FRAMES = 60
 const MIN_ACCEPTABLE_FPS = 45
 const SHARD_COUNT = 20
 
-/* Farbpaare der Steine – im Farbraum der Seite (Cyan als Primaerakzent,
-   Violett als Gegenpol). Fuenf frei gewaehlte Buntfarben waeren genau der
-   Fehler, den die Seite vorher an jeder Karte gemacht hat. */
 const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#0b3a5c", rim: "#22d3ee"},
     {core: "#2a1b52", rim: "#a78bfa"},
@@ -289,48 +91,20 @@ const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#123a5e", rim: "#38bdf8"},
 ]
 
-/**
- * Die drei Wegpunkte als echte Planeten des Sonnensystems.
- *
- * Vorher waren es drei gleich grosse Kugeln mit demselben Sinusmuster in drei
- * Farben, jede mit einem zufaellig gekippten Ring. Das faellt auf: gleiche Form,
- * gleiche Silhouette, und drei beringte Planeten gibt es in keinem Sonnensystem.
- *
- * Jetzt traegt jeder Koerper seine eigenen Messwerte. Was den Unterschied macht,
- * ist nicht die Karte, sondern die FORM:
- *
- *   flattening  Abplattung durch die Rotation. Saturn ist um 9,8 % abgeplattet,
- *               Jupiter um 6,5 %, Mars nur um 0,6 %. Bei Saturn sieht man das mit
- *               dem Auge – er ist sichtbar oval, nicht rund.
- *   tilt        Achsneigung. Mars 25,2 Grad, Saturn 26,7 Grad, Jupiter nur 3,1 –
- *               der Gasriese steht auffaellig gerade.
- *   spin        Rotationsdauer, umgerechnet. Jupiter dreht in 9,9 Stunden, Mars
- *               braucht 24,6 – der grosse ist der schnelle.
- *   radius      Groesse, gestaucht. Echte Verhaeltnisse waeren 1 : 17 : 21, damit
- *               waere Mars ein Punkt und Jupiter aus dem Bild. Die Reihenfolge
- *               bleibt aber erhalten, und das ist, was man sieht.
- *
- * Der Ring gehoert allein zu Saturn und liegt in dessen Aequatorebene – deshalb
- * kippt er mit der Achse mit, statt frei im Raum zu stehen. Innen- und Aussenradius
- * sind die echten: 1,18 bis 2,27 Planetenradien (D-Ring bis Aussenkante A-Ring).
- *
- * Die Reihenfolge folgt den Kapiteln: Station 01 ein Gesteinsplanet, dann der
- * Gasriese, zum Schluss der beringte.
- */
 type PlanetSpec = {
     name: string
     texture: string
-    /** Radius in Szeneneinheiten – gestaucht, siehe oben. */
+    /** Radius in scene units, compressed. */
     radius: number
-    /** Abplattung: der Pol-Radius ist um diesen Anteil kleiner. */
+    /** Flattening: the polar radius is smaller by this fraction. */
     flattening: number
-    /** Achsneigung in Radiant. */
+    /** Axial tilt in radians. */
     tilt: number
-    /** Drehung pro Sekunde in Radiant. */
+    /** Rotation per second in radians. */
     spin: number
-    /** Staerke des Randlichts – Gasriesen haben eine deutliche Atmosphaere. */
+    /** Strength of the rim light. */
     atmosphere: number
-    /** Grundton, bis die Karte geladen ist, plus Nacht- und Randfarbe. */
+    /** Base tone until the map is loaded, plus night and rim color. */
     surface: string
     shadow: string
     rim: string
@@ -380,51 +154,34 @@ const PLANETS: ReadonlyArray<PlanetSpec> = [
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-/** Weiche Ein-/Ausblendkurve – ohne sie setzt eine Ueberblendung hart ein. */
+/** Smooth fade curve. */
 const smooth = (t: number) => {
     const c = clamp01(t)
     return c * c * (3 - 2 * c)
 }
 
-/**
- * Ab wann und bis wann die Steine erscheinen, gemessen am Heranziehen der
- * Projekt-Sektion.
- *
- * Sie gehoeren zu den Projekten – vorher stand der vordere Stein aber immer auf
- * voller Deckkraft und die anderen auf 0,5, unabhaengig davon, wo man auf der
- * Seite war. Dadurch lagen sie im Hero und im ganzen Werdegang sichtbar herum und
- * haben sich mit der Galaxie und den Planeten ueberlagert.
- */
 const CRYSTAL_REVEAL_START = 0.12
 const CRYSTAL_REVEAL_END = 0.85
 
-/* Deterministischer Pseudo-Zufall: die Szene soll bei jedem Laden gleich
-   aussehen (Math.random waere jedes Mal eine andere). */
 const hash = (n: number) => {
     const x = Math.sin(n * 127.1) * 43758.5453
     return x - Math.floor(x)
 }
 
-/**
- * Wo ein Objekt im Bild steht – fuer die Beschriftungen im DOM.
- *
- * Kristalle und Werdegang-Wegpunkte nehmen denselben Weg: die Szene projiziert,
- * das DOM haengt Text daran. Deshalb ein Typ mit `kind` statt zweier Kanaele.
- */
 export type Anchor = {
     kind: "crystal" | "waypoint"
-    /** Index innerhalb seiner Art. */
+    /** Index within its kind. */
     index: number
-    /** Bildschirmposition seines Mittelpunkts, in CSS-Pixeln. */
+    /** Screen position of its center, in CSS pixels. */
     x: number
     y: number
-    /** Halbe Hoehe des Steins in Pixeln – Ansatzpunkt fuer die Pfeile. */
+    /** Half the crystal height in pixels, the anchor for the leader lines. */
     radius: number
-    /** 1 wenn ein Stein genau vorne steht, 0 dazwischen. */
+    /** 1 when a crystal is exactly in front, 0 in between. */
     strength: number
 }
 
-/** Was unter dem Zeiger liegt bzw. angeklickt wurde. */
+/** What lies under the pointer or was clicked. */
 export type Pick = {kind: "crystal" | "waypoint"; index: number}
 
 export type SpaceSceneOptions = {
@@ -432,7 +189,7 @@ export type SpaceSceneOptions = {
     count: number
     onHover: (pick: Pick | null) => void
     onSelect: (pick: Pick) => void
-    /** Jeden Frame: wo stehen der vordere Stein und der naechste Wegpunkt? */
+    /** Per frame: where are the front crystal and the next waypoint? */
     onAnchor: (anchor: Anchor) => void
 }
 
@@ -459,39 +216,23 @@ export class SpaceScene {
     private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
 
     private readonly galaxy: Galaxy
-    /* Zwei Sternfelder: der Himmel folgt der Kamera (also praktisch unendlich
-       weit weg), das Nahfeld steht fest im Raum und erzeugt damit die Parallaxe.
-       Ohne das Nahfeld bewegt sich beim Flug nichts ausser der Galaxie, und alles
-       wirkt aufgeklebt. */
     private readonly skyStars: Starfield
     private readonly nearStars: Starfield
-    /* Der diffuse Teil der Milchstrasse. Punkte allein koennen ihn nicht malen:
-       der auffaelligste Teil des echten Himmels ist nicht punktfoermig, sondern das
-       verschmolzene Licht unaufloesbar vieler Sterne. */
     private readonly milkyWay: MilkyWay
-    /** Ist die Aufnahme da? Dann blendet sie ueber das prozedurale Band. */
+    /** Whether the photo is loaded; it then fades over the procedural band. */
     private milkyWayMapLoaded = false
     private milkyWayMapMix = 0
 
     private readonly waypoints: THREE.Object3D[] = []
-    /* Die Kugeln getrennt gemerkt: die Eigendrehung gehoert dem Planeten, nicht
-       der Gruppe – sonst kippt der Ring mit und verliert seine Neigung. */
     private readonly waypointPlanets: THREE.Mesh[] = []
     private readonly waypointMaterials: THREE.ShaderMaterial[] = []
-    /* Nur Saturn hat einen Ring, deshalb sind diese Listen KUERZER als die der
-       Wegpunkte. Sie liefen vorher parallel und wurden mit demselben i indiziert –
-       das ginge jetzt schief. Der zugehoerige Planet steht in userData.ownerIndex. */
     private readonly ringMaterials: THREE.ShaderMaterial[] = []
     private readonly ringMeshes: THREE.Mesh[] = []
-    /* Kugel statt Oktaeder: die Wegpunkte des Werdegangs sind Planeten, nicht
-       Kristalle – dieselbe Form fuer zwei verschiedene Dinge wuerde nichts
-       unterscheiden. 48x32 statt 24x16: mit einer Fotokarte darauf sieht man die
-       Facetten der Silhouette, vorher war die Kugel einfarbig. */
     private readonly waypointGeometry = new THREE.SphereGeometry(1, 48, 32)
-    /** Geladene Karten – fuer dispose(). */
+    /** Loaded textures, for dispose(). */
     private readonly textures: THREE.Texture[] = []
 
-    /** z, an dem die Reise durch die Galaxie endet und der Ring uebernimmt. */
+    /** z where the journey through the galaxy ends and the ring takes over. */
     private readonly journeyEnd: number
 
     private readonly shards: THREE.Mesh[] = []
@@ -500,17 +241,11 @@ export class SpaceScene {
 
     private readonly raycaster = new THREE.Raycaster()
     private readonly pointer = new THREE.Vector2()
-    /* Zwischenspeicher fuer die Lichtrichtung der Ringe – jeden Frame gebraucht,
-       also nicht jeden Frame neu angelegt. */
     private readonly lightLocal = new THREE.Vector3()
     private readonly ringQuaternion = new THREE.Quaternion()
     private readonly projected = new THREE.Vector3()
     private pointerInside = false
 
-    /* Groesse und Lage der Canvas. Sie aendert sich nur bei Resize, wurde aber
-       zweimal pro Frame per getBoundingClientRect gelesen – einmal je Anker-Art.
-       Zusammen mit den Stil-Schreibvorgaengen im selben Frame erzwingt jedes
-       Lesen ein neues Layout. */
     private canvasRect: DOMRect
 
     private readonly clock = new THREE.Clock()
@@ -560,7 +295,7 @@ export class SpaceScene {
         container.appendChild(this.renderer.domElement)
         this.canvasRect = this.renderer.domElement.getBoundingClientRect()
 
-        // --- Hintergrund ---
+        // --- Background ---
         this.bgMaterial = new THREE.ShaderMaterial({
             vertexShader: nebulaVertexShader,
             fragmentShader: nebulaFragmentShader,
@@ -583,10 +318,10 @@ export class SpaceScene {
         this.tiltGroup.add(this.spinGroup)
         this.scene.add(this.tiltGroup)
 
-        // Ende der Reise: dort, wo die Ring-Kamera bei enter = 0 stehen wuerde.
+        // End of the journey: where the ring camera would sit at enter = 0.
         this.journeyEnd = this.frontPoint().z + HERO_DISTANCE
 
-        // --- Galaxie ---
+        // --- Galaxy ---
         this.galaxy = createGalaxy(
             GALAXY_POINTS[Math.round(this.quality * 4)],
             GALAXY_RADIUS,
@@ -596,7 +331,7 @@ export class SpaceScene {
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.scene.add(this.galaxy.object)
 
-        // --- Milchstrasse und Sternfelder ---
+        // --- Milky way and star fields ---
         const level = Math.round(this.quality * 4)
         this.milkyWay = createMilkyWay({
             radius: MILKYWAY_RADIUS,
@@ -604,13 +339,6 @@ export class SpaceScene {
         })
         this.scene.add(this.milkyWay.object)
         if (this.quality >= MILKYWAY_MAP_MIN_QUALITY) {
-            /* Die Aufnahme aus Gaia DR2. Sie blendet ueber das prozedurale Band,
-               sobald sie da ist – siehe milkyway.ts. Kein Mipmapping und lineare
-               Filterung genuegen: die Kugel wird immer aus derselben Entfernung
-               gesehen, es gibt also nur eine sinnvolle Stufe. Das spart ein Drittel
-               des Speichers.
-               wrapS wiederholt, weil die linke und rechte Kante derselbe
-               Laengengrad sind; wrapT klemmt, weil oben und unten die Pole sind. */
             new THREE.TextureLoader().load(milkyWayTexture, (texture) => {
                 if (this.disposed) {
                     texture.dispose()
@@ -633,13 +361,6 @@ export class SpaceScene {
             bandFraction: BAND_FRACTION,
             seed: 7,
         })
-        /* sizeScale muss zur Entfernung des Feldes passen: mit dem Standardwert 26
-           und einer Schale in 80 bis 150 Einheiten blieb jeder Stern unter einem
-           Pixel – gemessen 0,6 bis 1,9 px, also ein unsichtbares Feld und damit
-           gar keine Parallaxe. 110 bringt es auf dieselbe Groesse wie den Himmel.
-           nearFade haelt dafuer die Brocken raus, an denen man dicht vorbeifliegt:
-           unter 45 Einheiten blendet ein Stern aus, statt als Flaeche vors Bild zu
-           rutschen. */
         this.nearStars = createStarfield({
             count: NEAR_STARS[level],
             radius: NEAR_RADIUS,
@@ -656,9 +377,6 @@ export class SpaceScene {
         this.scene.add(this.skyStars.points)
         this.scene.add(this.nearStars.points)
 
-        /* --- Wegpunkte des Werdegangs ---
-           Ihr z wird so gerechnet, dass Wegpunkt i genau dann vor der Kamera
-           steht, wenn Kapitel i dran ist. */
         for (let i = 0; i < WAYPOINT_COUNT; i++) {
             const spec = PLANETS[i % PLANETS.length]
             const material = new THREE.ShaderMaterial({
@@ -674,25 +392,14 @@ export class SpaceScene {
                     uFade: {value: 0},
                 },
                 transparent: true,
-                /* NICHT additiv und MIT Tiefenschreiben, anders als alles andere
-                   in der Szene: ein Planet ist ein Koerper. Additiv gemischt
-                   wuerde man die Sterne der Galaxie durch ihn hindurch sehen, und
-                   dann ist es keine Kugel mehr, sondern ein Schleier. */
                 depthWrite: true,
             })
             this.waypointMaterials.push(material)
             this.loadTexture(spec.texture, material)
 
             const planet = new THREE.Mesh(this.waypointGeometry, material)
-            /* Abplattung. Sie steckt im Mesh und nicht in der Gruppe, weil der Ring
-               ein Geschwister ist und nicht mit gestaucht werden darf – und weil
-               der Anker die Gruppenskalierung liest. */
             planet.scale.y = 1 - spec.flattening
 
-            /* Planet und Ring in einer Gruppe: der Anker projiziert die Gruppe,
-               und die Beschriftungslinie soll an der Kugel ansetzen, nicht am
-               Ring. Deshalb bleibt der Ring ein Kind und die Gruppenposition ist
-               die des Planeten. */
             const group = new THREE.Group()
             group.add(planet)
 
@@ -710,11 +417,6 @@ export class SpaceScene {
                         uFade: {value: 0},
                     },
                     transparent: true,
-                    /* Anders als vorher NICHT additiv: Saturnringe sind Material,
-                       das Licht streut UND den Planeten verdeckt. Additiv gemischt
-                       konnten sie nur heller machen, also nie vor dem Planeten
-                       liegen – und der Schatten des Planeten auf dem Ring waere
-                       unmoeglich, weil additiv nichts abdunkeln kann. */
                     depthWrite: false,
                     side: THREE.DoubleSide,
                 })
@@ -725,35 +427,19 @@ export class SpaceScene {
                     new THREE.RingGeometry(spec.ring.inner, spec.ring.outer, 96),
                     ringMaterial,
                 )
-                /* Die Ringebene IST die Aequatorebene des Planeten. Eine
-                   RingGeometry liegt in der xy-Ebene, der Aequator ist die
-                   xz-Ebene – also einmal um 90 Grad kippen. Die Achsneigung kommt
-                   danach von der Gruppe, deshalb kippt der Ring mit dem Planeten
-                   mit, statt frei im Raum zu haengen. */
                 ring.rotation.x = -Math.PI / 2
                 ring.userData.ownerIndex = i
                 group.add(ring)
                 this.ringMeshes.push(ring)
             }
 
-            /* Die GRUPPE wird skaliert, nicht der Planet: der Anker liest
-               scale.y, um die halbe Hoehe in Pixeln zu bestimmen. Bei einer
-               unskalierten Gruppe waere das 1 und die Beschriftungslinie setzte
-               im Nichts an. Der Ring skaliert dabei mit, was richtig ist. */
             group.scale.setScalar(spec.radius)
-            // Achsneigung: kippt Planet und Ring gemeinsam.
+            // Axial tilt: tips planet and ring together.
             group.rotation.z = spec.tilt
 
             const t = i / (WAYPOINT_COUNT - 1)
-            /* x relativ zur Kamera, nicht absolut: die Kamera steht auf der
-               Reise um HERO_LATERAL nach links versetzt (damit links der Text
-               Platz hat). Absolute x-Werte um +2,5 landeten dadurch am rechten
-               Bildrand statt rechts der Mitte. */
             group.position.set(
                 -HERO_LATERAL + 1.8 + hash(i * 3.1) * 0.7,
-                /* Deutlich unter der Kamerahoehe: der Galaxienkern liegt auf der
-                   Blickachse und wird gegen Ende des Werdegangs am hellsten – ein
-                   Planet davor war schwer zu erkennen. */
                 -2.6 + (hash(i * 5.7) - 0.5) * 1.2,
                 lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - WAYPOINT_VIEW_DISTANCE,
             )
@@ -777,8 +463,6 @@ export class SpaceScene {
                     uFade: {value: 1},
                 },
                 transparent: true,
-                /* Additiv und ohne Tiefenschreiben: ueberlappende Steine
-                   durchleuchten sich, statt sich zu verdecken. */
                 blending: THREE.AdditiveBlending,
                 depthWrite: false,
             })
@@ -786,10 +470,8 @@ export class SpaceScene {
 
             const mesh = new THREE.Mesh(this.geometry, material)
             const angle = i * step
-            // theta = 0 liegt vorne (Richtung Kamera, +z).
+            // theta = 0 is in front (toward the camera, +z).
             mesh.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS)
-            /* Ungleichmaessig skaliert: ein Kristall ist kein Ball. Gleiche
-               Geometrie, trotzdem sieht jeder Stein anders aus. */
             const scale = new THREE.Vector3(
                 0.62 + hash(i) * 0.12,
                 0.9 + hash(i + 5) * 0.3,
@@ -804,7 +486,7 @@ export class SpaceScene {
             this.crystals.push(mesh)
         }
 
-        // --- Splitter, nur Tiefenwirkung ---
+        // --- Shards, depth only ---
         this.shardMaterial = new THREE.ShaderMaterial({
             vertexShader: crystalVertexShader,
             fragmentShader: crystalFragmentShader,
@@ -843,7 +525,7 @@ export class SpaceScene {
         this.sync()
     }
 
-    // ---------------------------------------------------------------- Steuerung
+    // ----------------------------------------------------------------- Controls
 
     setPageProgress(progress: number) {
         this.pageProgress = progress
@@ -855,43 +537,16 @@ export class SpaceScene {
         this.sync()
     }
 
-    /**
-     * Wie weit der Ring herangezogen ist: 0 = Hero-Abstand, 1 = Sektion steht.
-     *
-     * Kommt vom Scroll-Fortschritt der Projekt-Sektion, nicht von einem
-     * IntersectionObserver – dessen Rueckruf kann verspaetet kommen, und dann
-     * bliebe der Ring im Hero-Abstand stehen und die Beschriftung unsichtbar.
-     */
-    /**
-     * Fortschritt durch den Werdegang, 0 bis 1 – fliegt die Kamera durch die
-     * Galaxie. 0 = Hero-Position, 1 = direkt vor dem Kristallring.
-     */
     setAboutProgress(progress: number) {
         this.aboutTarget = progress
         this.sync()
     }
 
-    /**
-     * Ist der Werdegang ueberhaupt an der Reihe? 0 im Hero, 1 in der Sektion.
-     *
-     * Ohne dieses Signal galt im Hero Wegpunkt 0 als "genau vorne": der
-     * Fortschritt ist dort auf 0 geklemmt, der Abstand zur naechsten Station
-     * also exakt 0 und damit die Staerke 1. Die Beschriftungslinie wurde deshalb
-     * schon im Hero voll gezeichnet und lief aus dem Bild. Genau derselbe Fehler
-     * wie frueher bei den Kristallen – geklemmter Fortschritt sagt nicht, ob man
-     * da ist.
-     */
     setAboutActive(active: number) {
         this.aboutActiveTarget = active
         this.sync()
     }
 
-    /**
-     * Der Durchflug durch die Galaxie, 0 bis 1.
-     *
-     * Eigene Etappe zwischen Werdegang und Projekten: der Werdegang bringt die
-     * Kamera bis vor die Scheibe, hier geht sie hindurch und bis vor den Ring.
-     */
     setPassageProgress(progress: number) {
         this.passageTarget = progress
         this.sync()
@@ -907,31 +562,14 @@ export class SpaceScene {
         this.sync()
     }
 
-    /** Stein i ist geoeffnet (HUD offen), oder keiner. */
+    /** Crystal i is open (HUD open), or none. */
     setSelected(index: number | null) {
         this.selected = index
         this.sync()
     }
 
-    // ------------------------------------------------------------------ Innerei
+    // ---------------------------------------------------------------- Internals
 
-    /**
-     * Laedt eine Karte und haengt sie an ein Material.
-     *
-     * Bis sie da ist, steht uHasMap auf 0 und der Koerper zeigt seinen Grundton.
-     * Auf einer Scroll-Seite ist das der Unterschied zwischen einem Planeten, der
-     * eine Sekunde spaeter scharf wird, und einem schwarzen Loch im Bild.
-     *
-     * Zwei Einstellungen sind hier wichtiger als sie aussehen:
-     *
-     * anisotropy – eine Kugel zeigt ihre Karte am Rand extrem schraeg. Ohne
-     *   anisotrope Filterung verschmiert genau der Rand, also der Teil, an dem man
-     *   die Kugel als Koerper erkennt.
-     * wrapS – die Karte ist equirektangular, ihre linke und rechte Kante sind
-     *   dieselbe Laengslinie. Ohne Wiederholung entsteht dort eine sichtbare Naht.
-     *   Beim Ring dagegen ist u der Radius: dort MUSS geklemmt werden, sonst
-     *   erscheint der Aussenrand innen wieder.
-     */
     private loadTexture(
         url: string,
         material: THREE.ShaderMaterial,
@@ -997,11 +635,6 @@ export class SpaceScene {
         this.render()
     }
 
-    /**
-     * Fester Weltpunkt, an dem ein Stein "vorne" ankommt.
-     *
-     * Enthaelt RING_Z: der Ring liegt am Ende der Reise, nicht im Ursprung.
-     */
     private frontPoint() {
         return new THREE.Vector3(
             0,
@@ -1015,7 +648,7 @@ export class SpaceScene {
         const count = this.crystals.length
 
 
-        // --- Nebel: bleibt ueber die ganze Seite stehen, wird nur leiser ---
+        // --- Nebula: stays over the whole page, only gets quieter ---
         this.bgMaterial.uniforms.uTime.value = time
         this.bgMaterial.uniforms.uFade.value = lerp(
             NEBULA_MAX,
@@ -1023,7 +656,7 @@ export class SpaceScene {
             clamp01(this.pageProgress),
         )
 
-        // --- Nachlaufende Werte ---
+        // --- Trailing values ---
         this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
         this.enter = lerp(this.enter, this.approachTarget, 0.09)
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
@@ -1031,17 +664,12 @@ export class SpaceScene {
         this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
-        // --- Ring drehen: Stein `station` kommt nach vorn ---
+        // --- Turn the ring so crystal `station` comes to the front ---
         const step = (Math.PI * 2) / Math.max(count, 1)
         const station = this.fieldProgress * Math.max(count - 1, 1)
         const sway = Math.sin(time * IDLE_SWAY_SPEED) * IDLE_SWAY * (1 - this.enter)
         this.spinGroup.rotation.y = -station * step + sway
 
-        /* --- Kamera ---
-           Sie bleibt an dem festen Punkt stehen, an dem die Steine vorbeikommen,
-           und zieht nur heran: im Hero weit weg (ganzer Ring zu sehen), im Feld
-           naeher, und noch einmal deutlich naeher, wenn ein Stein GENAU vorne
-           steht. Daraus entsteht das Heranzoomen an jeden Stein. */
         const front = this.frontPoint()
         const nearest = Math.round(station)
         const offCentre = Math.abs(station - nearest)
@@ -1049,22 +677,11 @@ export class SpaceScene {
 
         const base = lerp(HERO_DISTANCE, FIELD_DISTANCE, this.enter)
         const distance = lerp(base, FOCUS_DISTANCE, centred * this.enter)
-        // Bei offenem HUD noch ein Stueck naeher.
+        // A bit closer while the HUD is open.
         const finalDistance = lerp(distance, FOCUS_DISTANCE * 0.82, this.selectBlend)
 
-        /* Seitlicher Versatz im Hero: die Kamera steht links, blickt aber parallel
-           nach vorn – dadurch rueckt der Ring nach rechts im Bild und laesst
-           links Platz fuer den Namen. In der Projekt-Sektion faellt der Versatz
-           weg, damit die Beschriftungsfahnen nach beiden Seiten Platz haben.
-           Das Blickziel muss mitwandern, sonst schwenkt die Kamera ein. */
         const lateral = HERO_LATERAL * (1 - this.enter)
 
-        /* --- Die Reise in drei Etappen ---
-           Hero -> Werdegang bis vor die Galaxie -> Passage durch sie hindurch bis
-           vor den Ring. Eine geschachtelte Interpolation genuegt dafuer: solange
-           die Passage auf 0 steht, gilt das Ende des Werdegang-Flugs, und weil
-           journeyEnd genau der Punkt ist, an dem die Ring-Kamera bei enter = 0
-           steht, ist auch die Uebergabe an den Ring nahtlos. */
         const travelZ = lerp(
             lerp(CAMERA_Z_HERO, ABOUT_END_Z, this.aboutProgress),
             this.journeyEnd,
@@ -1075,22 +692,15 @@ export class SpaceScene {
         this.camera.position.set(front.x - lateral, front.y + 0.55, z)
         this.camera.lookAt(front.x - lateral, front.y, z - 10)
 
-        /* --- Uebergabe Galaxie -> Steine ---
-           Eine Kurve fuer beides: waehrend die Steine ankommen, blendet die
-           Galaxie aus. Dadurch loest sich das eine im anderen auf, statt dass
-           beides gleichzeitig im Bild liegt. */
         const reveal = smooth(
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
         )
 
-        // --- Steine ---
+        // --- Crystals ---
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
             const material = this.materials[i]
 
-            /* Eigendrehung am Scroll: der Stein, der vorne steht, dreht sich,
-               waehrend man scrollt. Dazu eine sehr langsame Grunddrehung, damit
-               er auch im Stillstand lebt. */
             mesh.rotation.y = hash(i + 9) * Math.PI + station * 2.4 + time * 0.06
             mesh.rotation.x = hash(i) * Math.PI + Math.sin(time * 0.25 + i) * 0.1
 
@@ -1103,27 +713,18 @@ export class SpaceScene {
                 highlightTarget,
                 0.12,
             )
-            /* Der vordere Stein tritt hervor, die anderen bleiben sichtbar – es
-               ist ein Ring, kein Karussell mit nur einem Bild. Aber ALLES mal
-               `reveal`: ausserhalb der Projekte sind die Steine gar nicht da. */
             material.uniforms.uFade.value = lerp(
                 material.uniforms.uFade.value,
                 (isNearest ? 1 : 0.34) * reveal,
                 0.08,
             )
 
-            /* Sie wachsen beim Erscheinen heran, statt nur aufzublenden – so
-               kommen sie an, wie die Planeten vorher vorbeigezogen sind. */
             const grow =
                 (isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1) *
                 (0.6 + 0.4 * reveal)
             mesh.scale.copy(this.baseScales[i]).multiplyScalar(grow)
         }
 
-        /* --- Sterne ---
-           Der Himmel wird jeden Frame auf die Kamera gesetzt: dadurch liegt er
-           immer gleich weit weg und laeuft nie aus dem Bild. Das Nahfeld bleibt,
-           wo es ist – an ihm zieht man vorbei, und das ist die Bewegung. */
         this.skyStars.points.position.copy(this.camera.position)
         this.milkyWay.object.position.copy(this.camera.position)
         if (this.milkyWayMapLoaded && this.milkyWayMapMix < 1) {
@@ -1133,22 +734,11 @@ export class SpaceScene {
         this.skyStars.setTime(time)
         this.nearStars.setTime(time)
 
-        // --- Galaxie ---
+        // --- Galaxy ---
         this.galaxy.setTime(time)
-        /* Der Kernschein ist – wie das diffuse Licht der Scheibe – eine Naeherung
-           fuer die Ferne. Aus der Naehe muss er den Einzelsternen weichen. */
         this.galaxy.setProximity(this.camera.position.distanceTo(this.galaxy.object.position))
-        /* Ausblenden, waehrend die Steine ankommen – dieselbe Kurve. Sonst liegt
-           die Scheibe als helles Feld hinter den Steinen und frisst deren
-           Kanten. */
         this.galaxy.setOpacity(1 - reveal * 0.92)
 
-        /* --- Wegpunkte des Werdegangs ---
-           Sie enden mit dem Beginn der Passage. Ohne das blieben sie sichtbar,
-           obwohl die Kamera langst an ihnen vorbei ist: aboutActive bleibt nach
-           dem Abschnitt auf 1, und die Beschriftungsebene ist `fixed`, liegt also
-           weiter im Bild – die Linie haette waehrend des Durchflugs ins Nichts
-           gezeigt. */
         const waypointsLive = 1 - this.passageProgress
         const station3 = this.aboutProgress * Math.max(WAYPOINT_COUNT - 1, 1)
         const nearestWaypoint = Math.round(station3)
@@ -1157,23 +747,8 @@ export class SpaceScene {
         for (let i = 0; i < this.waypoints.length; i++) {
             const material = this.waypointMaterials[i]
             const spec = PLANETS[i % PLANETS.length]
-            /* Nur die Kugel dreht sich – und nur um ihre eigene Achse, wie ein
-               Planet. Die Gruppe bleibt stehen, damit die Achsneigung und mit ihr
-               der Ring stehen bleiben.
-
-               Die Drehung pro Sekunde steht in PLANETS und kommt aus der echten
-               Rotationsdauer: Jupiter dreht in 9,9 Stunden, Mars braucht 24,6. Dazu
-               etwas Drehung aus dem Scroll, damit der Planet beim Vorbeiziehen
-               nicht wie festgeschraubt wirkt. */
             this.waypointPlanets[i].rotation.y = station3 * 1.2 + time * spec.spin
 
-            /* Nur der Wegpunkt, der gerade dran ist, leuchtet voll – und alles
-               blendet aus, sobald der Ring uebernimmt. */
-            /* Die nicht aktiven Planeten deutlich schwaecher als vorher (0.25).
-               Mit einer Fotokarte sampelt ein weit entfernter Planet die kleinste
-               Mipmap-Stufe, also den Mittelwert seiner Karte – er wird zur grauen
-               Kugel. Halb durchscheinend fallen die grauen Kugeln nicht mehr auf,
-               und die Tiefe bleibt trotzdem lesbar. */
             const own =
                 i === nearestWaypoint
                     ? 1
@@ -1188,13 +763,6 @@ export class SpaceScene {
             material.uniforms.uFade.value = fade
         }
 
-        /* Ringe: Deckkraft vom zugehoerigen Planeten, und die Lichtrichtung fuer
-           den Schatten im LOKALEN System des Rings.
-           Der Weg dahin: die Lichtrichtung ist im Blickraum definiert (damit der
-           Halbschatten beim Vorbeifliegen stehen bleibt), also erst mit der
-           Kameradrehung in die Welt und dann mit der Umkehrung der Ringdrehung
-           hinein. In GLSL waere das nicht zu machen – ES 1.0 hat weder inverse()
-           noch transpose(). */
         for (const ring of this.ringMeshes) {
             const material = ring.material as THREE.ShaderMaterial
             const owner = ring.userData.ownerIndex as number
@@ -1209,16 +777,9 @@ export class SpaceScene {
         }
 
         this.shardMaterial.uniforms.uTime.value = time
-        /* Die Splitter haengen am Ring und lagen deshalb genauso im Werdegang
-           herum. Ihre Deckkraft stand seit dem Anlegen fest auf 0,45 und wurde
-           nie angefasst. */
         this.shardMaterial.uniforms.uFade.value = 0.45 * reveal
 
-        // --- Ankerpunkt fuer die Beschriftung im DOM ---
-        /* strength enthaelt `enter`: ausserhalb der Projekt-Sektion ist der
-           Fortschritt auf 0 bzw. 1 geklemmt, damit stuende dort rechnerisch immer
-           ein Stein genau vorne – die Beschriftung wuerde schon im Hero
-           auftauchen. */
+        // --- Anchor point for the DOM labels ---
         this.camera.updateMatrixWorld()
         this.reportAnchor("crystal", this.crystals, nearest, centred * this.enter)
         this.reportAnchor(
@@ -1247,9 +808,6 @@ export class SpaceScene {
         const x = ((this.projected.x + 1) / 2) * rect.width
         const y = ((1 - this.projected.y) / 2) * rect.height
 
-        /* Halbe Hoehe in Pixeln: denselben Punkt noch einmal um die Steinhoehe
-           nach oben versetzt projizieren und den Abstand messen. Rechnet die
-           Perspektive automatisch mit. */
         const top = mesh.getWorldPosition(new THREE.Vector3())
         top.y += mesh.scale.y
         top.project(this.camera)
@@ -1258,13 +816,6 @@ export class SpaceScene {
         this.onAnchor({kind, index, x, y, radius: Math.abs(y - topY), strength})
     }
 
-    /**
-     * Was ist gerade anfassbar?
-     *
-     * Beides liegt die ganze Zeit in der Szene und ist nur weit weg – einen
-     * Raycast interessiert Entfernung nicht. Ohne diese Unterscheidung waeren
-     * Steine im Werdegang und Planeten in den Projekten anklickbar.
-     */
     private get target(): "crystal" | "waypoint" | null {
         if (this.enter >= INTERACTIVE_ENTER) return "crystal"
         if (this.aboutActive >= INTERACTIVE_ENTER && this.passageProgress < 0.1) return "waypoint"
@@ -1280,16 +831,12 @@ export class SpaceScene {
 
         this.raycaster.setFromCamera(this.pointer, this.camera)
         const meshes = kind === "crystal" ? this.crystals : this.waypoints
-        /* true = auch Kinder pruefen: ein Planet ist eine Gruppe aus Kugel und
-           Ring, der Strahl trifft also nie die Gruppe selbst. */
         const hit = this.raycaster.intersectObjects(meshes, true)[0]
         if (!hit) {
             this.clearHover()
             return
         }
 
-        /* Vom Treffer zurueck zum Objekt, das den Index traegt – beim Planeten ist
-           das der Grosselternteil, beim Stein das Mesh selbst. */
         let node: THREE.Object3D | null = hit.object
         while (node && node.userData.index === undefined) node = node.parent
         const index = node ? (node.userData.index as number) : null
@@ -1314,11 +861,6 @@ export class SpaceScene {
         this.renderer.render(this.scene, this.camera)
     }
 
-    /**
-     * Die Canvas liegt hinter dem Inhalt (negativer z-index) und kann selbst
-     * keine Klicks bekommen. Deshalb haengen die Zeiger-Ereignisse am window –
-     * ausser wenn der Zeiger auf etwas Bedienbarem steht, dann gehoert er dem.
-     */
     private handlePointerMove = (event: PointerEvent) => {
         if (this.isOverInteractive(event.target)) {
             this.pointerInside = false

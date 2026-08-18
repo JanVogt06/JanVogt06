@@ -1,16 +1,3 @@
-/**
- * Nebel-Hintergrund als Fragment-Shader.
- *
- * Unveraendert aus NebulaWebGL.tsx uebernommen, nur aus der Komponente
- * herausgelost: die Szene rendert jetzt Hintergrund UND Kristalle, und ein
- * 300-Zeilen-Shader-String hat in einer React-Komponente ohnehin nichts zu
- * suchen.
- *
- * uQuality steuert die Zahl der FBM-Oktaven und der Sternebenen (0 = Eco bis
- * 1 = Ultra); die Stufe bestimmt lib/quality.ts und korrigiert sich an der
- * gemessenen Bildrate nach unten.
- */
-
 export const nebulaVertexShader = `
     varying vec2 vUv;
     
@@ -24,9 +11,6 @@ export const nebulaFragmentShader = `
     uniform float uTime;
     uniform vec2 uResolution;
     uniform float uQuality; // 0.0=Eco, 0.25=Low, 0.5=Mid, 0.75=High, 1.0=Ultra
-    /* Deckkraft. Muss im Shader liegen und nicht als opacity am Wrapper:
-       dieselbe Canvas traegt jetzt auch die Kristalle, die NICHT mitausblenden
-       sollen. */
     uniform float uFade;
     
     varying vec2 vUv;
@@ -118,14 +102,6 @@ export const nebulaFragmentShader = `
         return fbm(p + 4.0 * r);
     }
     
-    /* Das Sternfeld lag hier. Es ist nach lib/space/starfield.ts gewandert und
-       liegt jetzt als echte Punkte im Raum.
-
-       Der Grund: dieses Rechteck steht vor einer orthografischen Kamera und
-       bewegt sich NIE. Egal wie weit die Kamera fliegt, die Sterne standen still –
-       beim Zoom in die Galaxie wuchs die Galaxie, der Himmel dahinter nicht. Genau
-       daran merkt man, dass etwas aufgeklebt ist. Ein Hintergrund-Shader kann
-       keine Parallaxe. */
 
     // ============================================
     // NEBULA - 5 quality levels
@@ -135,28 +111,14 @@ export const nebulaFragmentShader = `
         vec3 col = vec3(0.0);
         float t = time * 0.05;
         
-        /* === EBENE 1: Grundhelligkeit ===
-           Fast schwarz mit einem Hauch Blau. Hier stand ein Verlauf nach
-           Violett (0.15, 0.05, 0.25) – das war der Grundton, der die ganze Seite
-           lila gemacht hat. Der leere Weltraum ist praktisch schwarz; alles, was
-           man sieht, ist Struktur davor. */
         float n1 = warpedFbm(uv * 1.5 + t * 0.3, time * 0.3);
         col += mix(vec3(0.010, 0.014, 0.026), vec3(0.020, 0.020, 0.034), n1) * 0.9;
 
-        /* === EBENE 2: Staub ===
-           Der auffaelligste Teil und vorher ein saftiges Magenta
-           (0.5, 0.2, 0.7). Echte Molekuelwolken sind dunkelbraun-rot: sie
-           leuchten in Halpha und werden vom eigenen Staub geroetet. Deutlich
-           dunkler und viel weniger gesaettigt. */
         float n2 = warpedFbm(uv * 2.0 + vec2(100.0, 50.0) + t * 0.5, time * 0.4);
         n2 = pow(n2, 1.6);
         vec3 dust = mix(vec3(0.115, 0.052, 0.042), vec3(0.140, 0.070, 0.058), fbm(uv * 2.0 + t));
         col += dust * n2 * 0.62;
 
-        /* === EBENE 3: OIII ===
-           Der zweite Emissionsbereich echter Nebel, tuerkis. Bleibt, aber als
-           Andeutung statt als Farbfeld – und er ist der Grund, warum das Cyan der
-           Seite im Weltraum ueberhaupt vorkommt. */
         if (uQuality >= 0.2) {
             float n3 = warpedFbm(uv * 2.5 + vec2(-50.0, 30.0) - t * 0.4, time * 0.35);
             n3 = pow(n3, 2.1);
@@ -165,10 +127,6 @@ export const nebulaFragmentShader = `
             col += oiii * n3 * 0.5 * (0.25 + mask * 0.75);
         }
 
-        /* === EBENE 4: Halpha-Faeden ===
-           Vorher heisses Pink (0.9, 0.3, 0.6). Jetzt ein gedecktes Rot, wie es in
-           Weitwinkelaufnahmen der Milchstrasse aussieht, und nur in Faeden statt
-           flaechig (hoehere Potenz auf dem Rauschen). */
         if (uQuality >= 0.45) {
             float n4 = warpedFbm(uv * 3.0 + vec2(25.0, -40.0) + t * 0.6, time * 0.5);
             n4 = pow(n4, 3.2);
@@ -176,9 +134,6 @@ export const nebulaFragmentShader = `
             col += vec3(0.28, 0.085, 0.075) * n4 * 0.5 * mask;
         }
 
-        /* === EBENE 5: Reflexionsnebel ===
-           Staub, der Sternenlicht streut – deshalb kuehl blau und nicht violett
-           (vorher 0.8, 0.6, 0.9). Sehr sparsam. */
         if (uQuality >= 0.7) {
             float n5 = warpedFbm(uv * 1.8 + vec2(10.0, 20.0) + t * 0.2, time * 0.25);
             n5 = pow(n5, 3.6);
@@ -208,19 +163,9 @@ export const nebulaFragmentShader = `
         vec2 correctedUv = uv;
         correctedUv.x *= aspect;
         
-        // === NEBEL ===
-        /* Der Nebel war urspruenglich ein saftiges Magenta, das alles eingefaerbt
-           hat – eher Gaming-Wallpaper als Weltraum. Ein erster Versuch, ihn zu
-           beruhigen, hat ihn dann DOPPELT gedaempft: Farbe auf 42 % und
-           gleichzeitig den Alpha-Faktor gesenkt. Da Alpha aus der Helligkeit
-           berechnet wird, hat sich beides multipliziert und vom Nebel blieben
-           ~13 % – also nichts Sichtbares.
-           0.72 nimmt die Saettigung heraus, ohne ihn wegzunehmen. */
+        // === NEBULA ===
         vec3 col = nebula(correctedUv, time) * 0.72;
 
-        /* === RANDSCHIMMER ===
-           Nur noch eine Andeutung von Tiefe. Links stand ein Violett
-           (0.20, 0.08, 0.38), das kraeftiger war als der Nebel selbst. */
         col += vec3(0.055, 0.045, 0.085) * smoothstep(0.5, 0.0, uv.x) * 0.30;
         col += vec3(0.035, 0.060, 0.090) * smoothstep(0.5, 1.0, uv.x) * 0.26;
 
@@ -230,16 +175,11 @@ export const nebulaFragmentShader = `
         vignette = pow(vignette, 0.25);
         col *= vignette;
 
-        // === ABSCHLUSS ===
+        // === OUTPUT ===
         col = clamp(col, 0.0, 1.0);
 
-        /* Alpha aus der Helligkeit. Wichtig: hier NICHT zusaetzlich daempfen –
-           die Farbe ist oben schon gedaempft, und beides multipliziert sich. */
         float alpha = clamp(length(col) * 1.6, 0.0, 0.92);
 
-        /* Nur der unterste Rand laeuft weich aus, damit die Canvas-Kante nicht
-           zu sehen ist. Vorher lief das ueber die unteren 30 % und hat als
-           dunkles Band die halbe Flaeche gekostet. */
         alpha *= smoothstep(0.0, 0.1, uv.y);
 
         gl_FragColor = vec4(col, alpha * uFade);
