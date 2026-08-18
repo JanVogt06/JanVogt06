@@ -3,10 +3,6 @@ import type {Variants} from "framer-motion"
 import {useRef} from "react"
 import type {CSSProperties, ReactNode} from "react"
 
-/**
- * Scroll-Reveal-Wrapper. Kinder mit eigenen `variants` (z.B. gestaffelte
- * Listen) erben den hidden/show-Zustand über den Variant-Baum.
- */
 export const Reveal = ({
     variants,
     className,
@@ -19,9 +15,7 @@ export const Reveal = ({
     children: ReactNode
 }) => {
     const ref = useRef<HTMLDivElement>(null)
-    // Ohne margin: die Animation laeuft, WAEHREND das Element hereinscrollt –
-    // nicht verspaetet (negativer margin) und nicht off-screen fertig
-    // (positiver margin).
+    // No margin: the animation runs while the element scrolls in.
     const inView = useInView(ref, {once: true})
 
     return (

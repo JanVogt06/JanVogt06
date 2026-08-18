@@ -4,20 +4,6 @@ import {Github} from "lucide-react"
 import {EASE} from "@/lib/motion"
 import {scrollToElement} from "@/lib/smoothScroll"
 
-/**
- * Fixierte Kopfzeile.
- *
- * Hiess RepoBar und war als GitHub-Leiste gebaut: Repo-Pfad "jan-vogt/portfolio",
- * eine Branch-Marke "main", ein "git clone"-Knopf zum Kopieren, ein Stern und
- * eine Navigation aus Dateinamen ("werdegang.md", "projekte/", "kontakt.pr").
- *
- * Das war der lauteste Teil des Git-Leitmotivs und stand direkt ueber einem
- * Weltraum mit Kristallen – zwei Erzaehlungen, die nichts miteinander zu tun
- * haben. Uebrig bleibt, was die Leiste wirklich leisten muss: der Name, drei
- * Sprungmarken und ein echter Link auf das GitHub-Profil (kein Motiv, sondern ein
- * Ziel).
- */
-
 const sections = [
     {id: "about", label: "Über mich"},
     {id: "projects", label: "Projekte"},
@@ -27,7 +13,7 @@ const sections = [
 const TopBar = () => {
     const [active, setActive] = useState<string>("")
 
-    // Aktiven Abschnitt anhand der Scroll-Position markieren.
+    // Mark the active section from the scroll position.
     useEffect(() => {
         const ids = ["hero", ...sections.map((s) => s.id)]
         const observer = new IntersectionObserver(
@@ -52,8 +38,7 @@ const TopBar = () => {
             transition={{duration: 0.6, ease: EASE, delay: 0.2}}
             className="fixed inset-x-0 top-0 z-50 border-b border-white/[0.06] bg-page/60 backdrop-blur-xl"
         >
-            {/* overflow-hidden: die fixierte Leiste darf die Seite unter keinen
-                Umstaenden seitwaerts scrollbar machen. */}
+            {}
             <div className="mx-auto flex h-14 max-w-[88rem] items-center gap-4 overflow-hidden px-4 sm:px-6 lg:px-8">
                 <button
                     onClick={() => scrollToElement("hero")}

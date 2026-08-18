@@ -11,25 +11,6 @@ import {HudSectionHeader} from "./Hud"
 import {space} from "@/lib/space/controller"
 import {scrollToPosition} from "@/lib/smoothScroll"
 
-/**
- * Projekte als Kristallring.
- *
- * Die Sektion ist so hoch wie die Anzahl der Projekte in Bildschirmhoehen; darin
- * klebt ein bildschirmhoher Rahmen. Solange er klebt, laeuft der Fortschritt von
- * 0 auf 1 – und daran haengt die Drehung des Rings: bei jedem ganzen Schritt
- * steht ein Stein vorne und die Kamera zieht an ihn heran.
- *
- * Die Mitte bleibt absichtlich frei. Dort stehen die Steine, und ihre
- * Beschriftung haengt als Fahne an ihnen (CrystalCallouts). Hier liegt nur, was
- * kein Kristall sein kann: die Abschnittsueberschrift oben und eine Steuerzeile
- * unten.
- *
- * Alles ist ohne Maus bedienbar: die Fortschrittsstriche sind Knoepfe zum
- * jeweiligen Stein, "Projekt oeffnen" tut dasselbe wie ein Klick auf den
- * Kristall. Ein Projekt, das man nur durch Klicken auf ein 3D-Objekt erreicht,
- * waere fuer einen Teil der Besucher gar nicht erreichbar.
- */
-
 const total = projects.length
 
 const SectionIntro = () => (
@@ -53,35 +34,16 @@ const SectionIntro = () => (
     </div>
 )
 
-/**
- * Ueber welchen Anteil der Strecke der Ring heranzieht, bevor die Sektion oben
- * ankommt. 0.16 von vier Bildschirmhoehen sind gut eine halbe Fensterhoehe
- * Vorlauf.
- */
 const APPROACH = 0.16
 
 const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     const sectionRef = useRef<HTMLDivElement>(null)
     const [index, setIndex] = useState(0)
 
-    /**
-     * Ein Signal fuer beides.
-     *
-     * `raw` ist nicht begrenzt: vor der Sektion negativ, danach groesser als 1.
-     * Daraus kommt das Heranziehen des Rings (approach) – und zwar durchgehend
-     * beim Scrollen. Vorher hing das an einem IntersectionObserver; dessen
-     * Rueckruf kann verspaetet oder gar nicht kommen, und dann zieht der Ring nie
-     * heran und die Beschriftung erscheint nie. Ein Effekt, der sich beim
-     * Heranscrollen aufbaut, gehoert an das Scrollen selbst.
-     */
     const onProgress = useCallback((raw: number) => {
         const progress = Math.min(Math.max(raw, 0), 1)
         space.setFieldProgress(progress)
 
-        /* An- UND Auslauf. Vorher stand hier nur der Anlauf, und der bleibt fuer
-           raw > 1 auf 1 – also auch noch im Kontakt darunter. Die Steine und ihre
-           Beschriftung waeren dort sichtbar geblieben, weil die Ebene `fixed` ist
-           und im Bild liegt, obwohl die Sektion durchgescrollt ist. */
         const ramp = (v: number) => Math.min(Math.max(v, 0), 1)
         space.setApproach(
             Math.min(ramp((raw + APPROACH) / APPROACH), ramp((1 + APPROACH - raw) / APPROACH)),
@@ -92,7 +54,7 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
 
     useScrollProgress(sectionRef, onProgress)
 
-    /** Zu Stein i scrollen – die Fortschrittsstriche sind Knoepfe. */
+    /** Scroll to crystal i. */
     const goToCrystal = (target: number) => {
         const el = sectionRef.current
         if (!el) return
@@ -108,7 +70,6 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
                     <SectionIntro/>
                 </div>
 
-                {/* Die Mitte gehoert den Kristallen. */}
                 <div className="min-h-0 flex-1"/>
 
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
@@ -155,7 +116,7 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     )
 }
 
-/** Rueckfallebene: gestapelte Liste, wenn die Szene nicht laeuft. */
+/** Fallback: a stacked list when the scene is not running. */
 const ProjectStack = () => {
     const [activeSlug, setActiveSlug] = useState<string | null>(null)
 
@@ -198,12 +159,12 @@ const Projects = ({
     selected,
     onSelect,
 }: {
-    /** Laeuft die Kristall-Szene? Sonst gestapelte Liste. */
+    /** Whether the crystal scene runs; otherwise a stacked list. */
     crystals: boolean
     selected: number | null
     onSelect: (index: number | null) => void
 }) => {
-    // Der Szene sagen, welcher Stein offen ist – sie zieht dann noch etwas heran.
+    // Tell the scene which crystal is open.
     useEffect(() => {
         space.setSelected(selected)
     }, [selected])

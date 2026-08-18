@@ -3,36 +3,6 @@ import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
 import {HudPanel, HudLabel, HudSectionHeader} from "./Hud"
 import useScrollProgress from "@/lib/useScrollProgress"
 
-/**
- * Kontakt als Funkstrecke.
- *
- * War als Pull Request inszeniert: "Open a Pull Request", eine Statuszeile
- * "du:hallo -> jan-vogt:main", ein Knopf "Merge anfragen". Das ist raus – ein
- * Kontaktformular als Git-Vorgang zu verkleiden verlangt vom Besucher, die
- * Metapher zu kennen, bevor er weiss, wie er eine Mail schreibt. Uebrig bleibt
- * die Sache selbst: vier Kanaele und ein Knopf.
- *
- * ANKUNFT AM SCROLL
- *
- * Als einzelne Tafel braucht der Abschnitt keine gepinnten Kapitel wie der
- * Werdegang – aber er darf auch nicht einfach vorbeiscrollen. Deshalb kommt er
- * am Scroll AN: die Tafel faehrt aus der Tiefe heran, die Kanaele folgen
- * versetzt, alles an den Fortschritt gekoppelt statt an eine Zeitachse.
- *
- * Der Unterschied zu einem einmaligen Einblenden ist, dass es umkehrbar ist: wer
- * zurueckscrollt, sieht die Tafel wieder wegfahren. Genau das macht den
- * Kristallring und die Kapitel stimmig, und hier gilt es genauso.
- */
-
-/**
- * Ueber welchen Anteil der eigenen Hoehe die Tafel heranfaehrt, bevor die Sektion
- * oben ankommt.
- *
- * 1.0 heisst: der Anlauf beginnt eine ganze Sektionshoehe vorher. Mit 0.55
- * gemessen war die Ankunft viel zu spaet gewichtet – eine halbe Bildschirmhoehe
- * davor stand sie erst bei 9 %, also passierte fast alles auf den letzten
- * Pixeln und wirkte wie ein Aufblitzen statt wie ein Heranfahren.
- */
 const ARRIVAL = 1
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
@@ -94,11 +64,6 @@ const Contact = () => {
     const panelRef = useRef<HTMLDivElement>(null)
     const channelsRef = useRef<HTMLDivElement>(null)
 
-    /**
-     * `raw` ist nicht begrenzt: oberhalb der Sektion negativ. Daraus wird die
-     * Ankunft – sie ist also schon im Gange, bevor die Sektion oben steht, und
-     * laeuft rueckwaerts wieder ab.
-     */
     const onProgress = useCallback((raw: number) => {
         const arrival = clamp01((raw + ARRIVAL) / ARRIVAL)
 
@@ -108,17 +73,12 @@ const Contact = () => {
         }
 
         if (panelRef.current) {
-            /* Die Tafel faehrt aus der Tiefe heran: etwas kleiner und tiefer,
-               bis sie steht. Derselbe Griff wie bei den Werdegang-Kapiteln. */
             panelRef.current.style.opacity = String(arrival)
             panelRef.current.style.transform =
                 `translate3d(0, ${((1 - arrival) * 7).toFixed(2)}vh, 0) scale(${(0.965 + arrival * 0.035).toFixed(4)})`
         }
 
         if (channelsRef.current) {
-            /* Die Kanaele folgen versetzt. Der Versatz haengt am Fortschritt,
-               nicht an einer Verzoegerung – dadurch laeuft es beim
-               Zurueckscrollen sauber rueckwaerts. */
             const kids = channelsRef.current.children
             for (let i = 0; i < kids.length; i++) {
                 const own = clamp01((arrival - i * 0.12) / (1 - i * 0.12))
@@ -132,8 +92,6 @@ const Contact = () => {
     useScrollProgress(sectionRef, onProgress, "exit")
 
     return (
-        /* min-h statt h: auf kurzen Fenstern waechst die Sektion mit, statt den
-           Inhalt abzuschneiden. */
         <section
             ref={sectionRef}
             id="contact"
@@ -152,7 +110,7 @@ const Contact = () => {
 
                 <div ref={panelRef} className="will-change-transform">
                     <HudPanel className="p-5 sm:p-8">
-                        {/* Verfuegbarkeit – dafuer ist der Emerald-Akzent da */}
+                        {/* Availability */}
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.07] pb-4">
                             <span className="relative flex h-1.5 w-1.5">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
@@ -188,16 +146,7 @@ const Contact = () => {
                     </HudPanel>
                 </div>
 
-                {/* Bildnachweis.
-                    Er steht hier, weil die Seite keinen eigenen Footer hat und der
-                    Kontakt ihr Ende ist. Die Planetenkarten stehen unter CC BY 4.0,
-                    und diese Lizenz verlangt eine Namensnennung – sie ist keine
-                    Hoeflichkeit, sondern die Bedingung, unter der die Dateien hier
-                    liegen duerfen. Beim NASA-Material ist der Credit erbeten und
-                    nennt ausdruecklich auch die Datenquelle: die Sternpositionen
-                    kommen von Gaia, nicht von der NASA.
-                    Bewusst sehr leise gesetzt: es soll auffindbar sein, nicht
-                    auffallen. */}
+                {}
                 <p className="mt-10 max-w-3xl font-mono text-[10px] leading-relaxed tracking-[0.08em] text-white/20">
                     Planetenkarten:{" "}
                     <a

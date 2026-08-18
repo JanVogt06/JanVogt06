@@ -5,19 +5,9 @@ import BrowserFrame from "./BrowserFrame"
 import type {Project} from "@/lib/projects"
 import {primaryLinkOf} from "@/lib/projects"
 
-/**
- * Ein Projekt, formatfuellend.
- *
- * Die Komponente macht keine Annahme darueber, WO sie steckt: in der gepinnten
- * Schiene ist das eine Bildschirmbreite, gestapelt eine Bildschirmhoehe. Sie
- * fuellt einfach ihren Platz.
- */
-
-// Mappt den `icon`-String aus der JSON auf die lucide-Komponente.
+// Maps the `icon` string from the JSON to the lucide component.
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
 
-/* Screenshots kommen aus dem Ordner statt aus Einzel-Imports: eine Datei mit
-   passendem Slug ablegen genuegt, kein Code muss angefasst werden. */
 const screenshots = import.meta.glob<string>(
     "../data/images/screenshots/*.{png,jpg,jpeg,webp}",
     {eager: true, import: "default"},
@@ -47,8 +37,7 @@ const ProjectPanel = ({
     return (
         <div className="relative flex h-full w-full flex-col justify-center gap-8 px-6 sm:px-10 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12 lg:px-16">
 
-            {/* Riesige Ordnungszahl als Hintergrund statt als Beschriftung.
-                Traegt die Orientierung, ohne im Textfluss Platz zu brauchen. */}
+            {}
             <span
                 aria-hidden="true"
                 className="pointer-events-none absolute -left-2 top-2 select-none font-mono text-[7rem] font-bold leading-none text-white/[0.035] sm:text-[10rem] lg:-left-4 lg:top-0 lg:text-[16rem]"
@@ -56,7 +45,7 @@ const ProjectPanel = ({
                 {String(index + 1).padStart(2, "0")}
             </span>
 
-            {/* Fakten */}
+            {/* Facts */}
             <div className="relative lg:col-span-5">
                 <p className="mb-5 flex items-center gap-3 font-mono text-xs text-white/35">
                     <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
@@ -73,8 +62,7 @@ const ProjectPanel = ({
                     {project.description}
                 </p>
 
-                {/* Technologien als Mono-Zeile statt als Pillen: fuenf gerahmte
-                    Kacheln pro Projekt waren der unruhigste Teil der Folie. */}
+                {}
                 <p className="mt-7 font-mono text-[11px] leading-relaxed text-white/40">
                     {project.tech.join("  ·  ")}
                 </p>
@@ -111,7 +99,7 @@ const ProjectPanel = ({
                 </div>
             </div>
 
-            {/* Laufende Anwendung */}
+            {/* Live app */}
             <div className="relative aspect-[16/10] w-full lg:col-span-7 lg:aspect-auto lg:h-[62vh]">
                 <BrowserFrame
                     url={primary?.href}

@@ -4,33 +4,9 @@ import type {Pick} from "@/lib/space/SpaceScene"
 import {attachScene, emitAnchor} from "@/lib/space/controller"
 import useScrollProgress from "@/lib/useScrollProgress"
 
-/**
- * Der Hintergrund der GANZEN Seite – eine Schicht, die ueber alle Sektionen
- * hinweg stehen bleibt und sich mit dem Scroll wandelt.
- *
- * Vorher hat jede Sektion ihren eigenen Hintergrund gemalt: zwei
- * weichgezeichnete Farbflecken, ein Raster, teils eine Rauschebene – vier Mal
- * derselbe Aufbau mit anderen Werten. Genau daran sah man die Naht zwischen den
- * Sektionen, und genau das laesst eine Seite zusammengesetzt statt gebaut wirken.
- *
- * Jetzt gibt es EINEN Raum: Farbebenen aus CSS, darauf die WebGL-Szene mit Nebel,
- * Galaxie und Kristallen.
- *
- * Die Ebenen sind absichtlich sehr dunkel und kaum gefaerbt. Sie trugen einmal
- * ein kraeftiges Violett und ein deutliches Cyan – zusammen mit dem damals
- * magentafarbenen Nebel war die ganze Seite lila. Leerer Weltraum ist fast
- * schwarz; Farbe gehoert in einzelne Strukturen (Galaxie, Emissionsnebel,
- * Sterne), nicht als Waesche darueber. Die Ebenen geben nur noch Tiefe und einen
- * Hauch Richtung: kuehl im Hero, ein Anflug Cyan bei der Arbeit, gedecktes
- * Blauviolett zum Schluss.
- *
- * Die Deckkraft der Ebenen wird pro Frame direkt geschrieben, nicht ueber
- * React-State: das sind drei style-Zuweisungen statt eines Renderbaums.
- */
-
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
 
-/* Wo die drei Stimmungen ihren Hoehepunkt haben, als Anteil der Seitenlaenge. */
+/* Where the three moods peak, as a fraction of the page length. */
 const HERO_END = 0.24
 const WORK_CENTER = 0.52
 const WORK_SPREAD = 0.42
@@ -41,11 +17,11 @@ const Atmosphere = ({
     crystalCount,
     onPick,
 }: {
-    /** Laeuft die WebGL-Szene (Nebel)? Sonst bleibt es bei den CSS-Ebenen. */
+    /** Whether the WebGL scene runs; otherwise only the CSS layers remain. */
     scene: boolean
-    /** Anzahl anklickbarer Steine. 0 = Nebel ohne Kristalle. */
+    /** Number of clickable crystals. 0 = nebula without crystals. */
     crystalCount: number
-    /** Ein Klick im Raum – auf einen Kristall oder auf einen Planeten. */
+    /** A click in space, on a crystal or on a planet. */
     onPick: (pick: Pick) => void
 }) => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
@@ -57,8 +33,6 @@ const Atmosphere = ({
 
     const [hovered, setHovered] = useState<Pick | null>(null)
 
-    /* Die Callbacks liegen in Refs, damit ein neues onPick nicht die Szene neu
-       aufbaut – das waere jedes Mal ein neuer WebGL-Kontext. */
     const selectRef = useRef(onPick)
     useEffect(() => {
         selectRef.current = onPick
@@ -85,7 +59,6 @@ const Atmosphere = ({
     }, [sceneEnabled, crystalCount])
 
     const onProgress = useCallback((raw: number) => {
-        // useScrollProgress begrenzt nicht mehr – hier ist 0..1 gewollt.
         const p = clamp01(raw)
         if (heroRef.current) {
             heroRef.current.style.opacity = String(clamp01(1 - p / HERO_END))
@@ -104,16 +77,10 @@ const Atmosphere = ({
     return (
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
 
-            {/* Grundton, immer da */}
+            {/* Base tone, always present */}
             <div className="absolute inset-0 bg-page"/>
 
-            {/* Hero.
-                Stand auf einem kraeftigen Violett (#2a1552). Das war neben dem
-                Nebel die zweite Quelle des Lilastichs und lag als Flaeche ueber
-                dem ganzen ersten Bildschirm. Jetzt ein sehr dunkles Blaugrau: es
-                gibt dem Hero Tiefe, ohne ihn zu faerben – und traegt weiterhin
-                den Fall, dass die Szene gar nicht laeuft (schwaches Geraet,
-                reduzierte Bewegung, kein WebGL). Flach schwarz ist er nie. */}
+            {}
             <div
                 ref={heroRef}
                 className="absolute inset-0"
@@ -123,8 +90,7 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Werdegang und Projekte – ein Hauch Cyan, halbiert. Es soll die
-                Sektion einfaerben, nicht sie beleuchten. */}
+            {}
             <div
                 ref={workRef}
                 className="absolute inset-0"
@@ -135,8 +101,7 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Kontakt – die Seite schliesst sich, aber gedeckt: ein tiefes
-                Blauviolett bei einem Drittel der vorherigen Deckkraft. */}
+            {}
             <div
                 ref={contactRef}
                 className="absolute inset-0"
@@ -147,10 +112,10 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Nebel und Kristalle – eine Canvas, ein WebGL-Kontext */}
+            {/* Nebula and crystals: one canvas, one WebGL context */}
             <div ref={canvasRef} className="absolute inset-0"/>
 
-            {/* Raster und Rauschen liegen ueber allem, EINMAL statt pro Sektion */}
+            {/* Grid and noise sit above everything, once instead of per section */}
             <div
                 className="absolute inset-0 opacity-[0.025]"
                 style={{
@@ -167,9 +132,7 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Vignette: haelt den Blick in der Mitte. Zurueckhaltend und spaet
-                einsetzend – eine kraeftigere Fassung hat die Violett-Ebene am
-                oberen Rand aufgefressen, genau dort, wo sie leuchten soll. */}
+            {}
             <div
                 className="absolute inset-0"
                 style={{
@@ -178,16 +141,13 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Zeigt an, dass etwas im Raum anklickbar ist – ein Stein in den
-                Projekten oder ein Planet im Werdegang. Die Canvas selbst kann
-                keinen cursor setzen, weil sie hinter dem Inhalt liegt und keine
-                Zeiger-Ereignisse bekommt – deshalb haengt der Zeiger am body. */}
+            {}
             {hovered !== null && <CursorHint/>}
         </div>
     )
 }
 
-/** Setzt den Zeiger auf "anklickbar", solange ein Stein unter ihm liegt. */
+/** Sets the cursor to clickable while a crystal lies under it. */
 const CursorHint = () => {
     useEffect(() => {
         const previous = document.body.style.cursor

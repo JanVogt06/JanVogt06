@@ -2,32 +2,6 @@ import {useEffect, useRef} from "react"
 import {subscribeAnchor} from "@/lib/space/controller"
 import {projects} from "@/lib/projects"
 
-/**
- * Beschriftungspfeile am vorderen Kristall.
- *
- * Wie eine technische Zeichnung: eine kurze Fahne geht vom Stein weg, knickt
- * einmal ab und endet an einer Beschriftung. Zwei davon – der Projekttitel und
- * eine Zeile, die sagt, was das Projekt tut.
- *
- * Hier standen erst drei Fahnen: Titel plus die ersten zwei Technologien als
- * Schlagworte ("C++", "WebAssembly"). Das war die falsche Auskunft an dieser
- * Stelle – wer an einem Stein vorbeifliegt, will wissen, was das Projekt MACHT,
- * nicht womit. Der Stack steht im HUD, wo man ihn nachschlagen kann.
- *
- * Der Anker kommt jeden Frame aus der Szene (Bildschirmposition des vorderen
- * Steins, in CSS-Pixeln) und wird direkt in style geschrieben. Ueber React-State
- * waeren das sechzig Renderbaeume pro Sekunde.
- *
- * Die Ebene ist `fixed`, nicht `absolute`: damit ist ihr Koordinatensystem genau
- * das der Canvas (die ebenfalls fixed ueber dem Viewport liegt) und die
- * projizierten Pixel passen ohne Umrechnung. In einem `absolute` Container
- * innerhalb der klebenden Sektion waere jeder Wert um deren Versatz verschoben.
- *
- * Der Text liegt im DOM und nicht im Canvas – markierbar, vorlesbar, auffindbar.
- */
-
-/* Richtung, Laenge und Ausrichtung der drei Fahnen. dx/dy ist die Richtung im
-   Bildschirmraum (y zeigt nach unten). */
 const CALLOUTS = [
     {dx: 1, dy: -0.62, length: 210, role: "title" as const},
     {dx: 0.9, dy: 0.78, length: 185, role: "tagline" as const},
@@ -47,10 +21,10 @@ const CrystalCallouts = () => {
 
     useEffect(() => {
         return subscribeAnchor(({kind, index, x, y, radius, strength}) => {
-            // Die Szene meldet auch die Werdegang-Wegpunkte; die gehen hier nicht.
+            // The scene also reports the career waypoints; those do not belong here.
             if (kind !== "crystal") return
 
-            // Texte nur bei Wechsel anfassen – nicht jeden Frame.
+            // Only touch the texts on change, not every frame.
             if (index !== shownIndex.current) {
                 shownIndex.current = index
                 const project = projects[index]
@@ -68,7 +42,7 @@ const CrystalCallouts = () => {
                 const ux = callout.dx / length
                 const uy = callout.dy / length
 
-                // Ansatz kurz ausserhalb des Steins, dann Knick, dann waagerecht.
+                // Start just outside the crystal, then a bend, then horizontal.
                 const start = radius * 0.95
                 const x0 = x + ux * start
                 const y0 = y + uy * start
@@ -85,14 +59,10 @@ const CrystalCallouts = () => {
                 label.style.top = `${y1}px`
                 label.style.transform = `translate(${toRight ? "0" : "-100%"}, -50%)`
 
-                /* Versetzt einlaufen: der Titel fuehrt, die Beschreibung folgt.
-                   Gleichzeitig waere es ein Aufblitzen. */
                 const stagger = clamp01((strength - i * 0.15) / (1 - i * 0.15))
                 line.style.opacity = String(stagger)
                 dot.style.opacity = String(stagger)
                 label.style.opacity = String(stagger)
-                /* Bei 0 aus dem Layout nehmen, damit unsichtbare Beschriftungen
-                   nicht doch noch Text markierbar machen. */
                 label.style.visibility = stagger < 0.02 ? "hidden" : "visible"
             })
         })
@@ -134,8 +104,6 @@ const CrystalCallouts = () => {
                     ref={(node) => {
                         refs.current[i].label = node
                     }}
-                    /* Der Titel darf nie umbrechen, die Beschreibungszeile
-                       muss es duerfen – sonst schiebt sie sich aus dem Bild. */
                     className={`absolute ${callout.role === "title" ? "whitespace-nowrap" : ""}`}
                     style={{opacity: 0, visibility: "hidden"}}
                 >

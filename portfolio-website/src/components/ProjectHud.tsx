@@ -9,33 +9,6 @@ import {HudCorners, HudLabel} from "./Hud"
 import {projects, primaryLinkOf} from "@/lib/projects"
 import {space} from "@/lib/space/controller"
 
-/**
- * Das HUD, das ein angeklickter Kristall oeffnet.
- *
- * Bewusst als Instrumententafel gebaut und nicht als Karte: Eckklammern statt
- * Rahmen, Mono-Beschriftungen mit Doppelslash, feine Cyan-Linien, ein Datenblock
- * fuer die Technik. Das ist die einzige Stelle der Seite, an der es laut sein
- * darf – man hat sie ausdruecklich aufgerufen.
- *
- * data-native-scroll: lib/smoothScroll.ts laesst das Rad diesem Element, statt
- * die Seite darunter weiterzuschieben. Sonst dreht sich der Ring unter dem HUD
- * weg, waehrend man darin liest.
- *
- * HOEHE
- *
- * Die Tafel ist immer so hoch wie das Fenster, nie hoeher – man soll darin nicht
- * scrollen muessen. Vorher war sie es: fester Innenabstand von 6 rem oben und
- * unten plus eine Vorschau von 58vh plus Kopfzeile und Datenblock ergaben
- * zwangslaeufig mehr als eine Bildschirmhoehe.
- *
- * Jetzt rechnet sie sich aus dem verfuegbaren Platz: der Rahmen ist ein
- * flex-Container mit max-h-full, Kopf- und Fusszeile sind shrink-0, und der
- * Mittelteil bekommt min-h-0 flex-1. Ohne min-h-0 waere er nicht kleiner als
- * sein Inhalt – das ist die Voreinstellung bei flex und der haeufigste Grund,
- * warum solche Layouts doch ueberlaufen. Die Vorschau bekommt h-full statt einer
- * vh-Hoehe und fuellt damit genau, was uebrig ist.
- */
-
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
 
 const screenshots = import.meta.glob<string>(
@@ -54,7 +27,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
     const closeRef = useRef<HTMLButtonElement>(null)
     const [previewActive, setPreviewActive] = useState(false)
 
-    // Fokus ins HUD holen, damit Tastatur und Screenreader hier landen.
+    // Move focus into the HUD so keyboard and screen readers land here.
     useEffect(() => {
         closeRef.current?.focus()
     }, [])
@@ -67,9 +40,6 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
         return () => window.removeEventListener("keydown", onKey)
     }, [onClose])
 
-    /* Solange eine Live-Vorschau laeuft, haelt die Szene an. Riptide braucht
-       WebGL2 und Cryptborne ist ein Unity-Build – beide wollen einen eigenen
-       Kontext, und die Zahl gleichzeitiger Kontexte ist knapp. */
     useEffect(() => {
         space.setPaused(previewActive)
         return () => space.setPaused(false)
@@ -81,16 +51,12 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             role="dialog"
             aria-modal="true"
             aria-label={project.title}
-            /* items-stretch (Voreinstellung, deshalb kein items-center): die Tafel
-               fuellt die Hoehe, die der Innenabstand uebrig laesst. Mit
-               items-center war sie nur so hoch wie ihr Inhalt – auf 950 px
-               Fensterhoehe blieben 455 px leer und die Vorschau war 311 px hoch. */
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
         >
             <div className="surface relative flex w-full max-w-[84rem] flex-col p-5 sm:p-8">
                 <HudCorners/>
 
-                {/* Kopfzeile: Kennung und Schliessen */}
+                {/* Header: identifier and close */}
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
                     <div className="min-w-0">
                         <HudLabel tone="text-brand/80" className="!text-[11px]">
@@ -118,10 +84,9 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     </div>
                 </div>
 
-                {/* min-h-0: sonst waere der Mittelteil nie kleiner als sein Inhalt */}
+                {/* min-h-0: otherwise the middle never shrinks below its content */}
                 <div className="mt-5 grid min-h-0 flex-1 gap-6 lg:grid-cols-12 lg:gap-8">
-                    {/* Datenblock. Auf kurzen Fenstern darf NUR diese Spalte
-                        scrollen – die Tafel selbst bleibt bildschirmhoch. */}
+                    {}
                     <div className="flex min-h-0 flex-col overflow-y-auto lg:col-span-5">
                         <p className="leading-relaxed text-white/65">{project.description}</p>
 
@@ -163,7 +128,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                         </div>
                     </div>
 
-                    {/* Laufende Anwendung – fuellt genau, was uebrig bleibt. */}
+                    {/* Live app */}
                     <div className="relative min-h-[14rem] lg:col-span-7 lg:min-h-0">
                         <BrowserFrame
                             url={primary?.href}

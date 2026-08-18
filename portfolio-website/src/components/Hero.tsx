@@ -5,34 +5,12 @@ import {EASE} from "@/lib/motion"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {scrollToElement} from "@/lib/smoothScroll"
 
-/**
- * Hero als Titelkarte: der Name, eine Zeile, der Kristallring dahinter.
- *
- * Hier standen einmal vier Dinge gleichzeitig um Aufmerksamkeit: Portrait mittig,
- * Nebel, Terminalfenster rechts, Qualitaets-Regler oben rechts.
- *
- * Das Terminalfenster ist ganz weg, nicht verschoben. Es zeigte als `git status`
- * genau die fuenf Punkte, die der Werdegang direkt darunter ausfuehrlich
- * erzaehlt. Dieselbe Liste zweimal ist keine Verdichtung, sondern Wiederholung.
- * Vom Terminal bleibt die Idee da, wo sie etwas kostet: die `$ whoami`-Zeile
- * tippt sich selbst.
- *
- * Das Portrait ist ebenfalls raus. Der Kristallring der Projekte ist jetzt ueber
- * die ganze Seite sichtbar und kreist im Hero genau dort, wo das Portrait stand –
- * beide auf der rechten Haelfte. Zwei Blickfaenger auf derselben Flaeche gewinnt
- * keiner. Die Datei portrait.webp bleibt liegen, falls es woanders einen Platz
- * bekommt.
- *
- * Beim Scrollen zieht der Text weg und blendet aus, waehrend der Ring naeher
- * kommt: die Bewegung gehoert dem Scroll, nicht einer Zeitachse.
- */
-
 const Hero = () => {
     const sectionRef = useRef<HTMLElement>(null)
     const contentRef = useRef<HTMLDivElement>(null)
 
     const onProgress = useCallback((raw: number) => {
-        // useScrollProgress begrenzt nicht mehr; oberhalb des Hero ist raw < 0.
+        // Above the hero, raw is < 0.
         const p = Math.min(Math.max(raw, 0), 1)
         if (contentRef.current) {
             contentRef.current.style.transform = `translate3d(0, ${(-p * 18).toFixed(2)}vh, 0)`
@@ -58,8 +36,7 @@ const Hero = () => {
                     Informatik · Entwicklung · Schiedsrichter
                 </motion.p>
 
-                {/* Der Name als Bildmarke: eine Zeile pro Wort, dicht gesetzt,
-                    Groesse an die Fensterbreite gekoppelt statt in Stufen. */}
+                {}
                 <h1 className="font-black uppercase leading-[0.82] tracking-[-0.045em]">
                     {["Jan", "Vogt"].map((word, i) => (
                         <span key={word} className="block overflow-hidden">
@@ -113,7 +90,7 @@ const Hero = () => {
                 </motion.div>
             </div>
 
-            {/* Scroll-Hinweis */}
+            {/* Scroll hint */}
             <motion.button
                 onClick={() => scrollToElement("about")}
                 className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-white/30 transition-colors hover:text-white/60"

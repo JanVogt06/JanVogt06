@@ -1,29 +1,6 @@
 import type {ReactNode} from "react"
 
-/**
- * Die Bausteine des HUD-Looks – eine Stelle, damit alle Sektionen dieselbe
- * Sprache sprechen.
- *
- * Vorher hatte jede Sektion ihre eigene Kartenform: abgerundete Ecken,
- * Hairline-Rahmen, mal ein Gradient. Das las sich wie eine Sammlung von
- * Bausteinen aus verschiedenen Kaesten. Der Weltraum-Look braucht dagegen ein
- * knappes, technisches Vokabular:
- *
- *   Eckklammern statt umlaufender Rahmen. Sie deuten die Flaeche an, statt sie
- *   einzukasteln – dadurch bleibt der Blick auf dem Inhalt und der Nebel
- *   dahinter bleibt sichtbar.
- *
- *   Mono-Beschriftungen in Kapitaelchen mit weiter Laufweite. Das ist der Ton
- *   einer Instrumentenanzeige. Sie trugen einmal ein "// " davor, aus dem
- *   Git-Leitmotiv der Seite – das ist raus: es hat jede Beschriftung wie einen
- *   auskommentierten Codezeile aussehen lassen und mit dem Weltraum nichts zu
- *   tun.
- *
- *   Rechte Winkel. Die Radien der Seite stehen in index.css global auf nahezu
- *   null, damit das nicht pro Komponente durchgehalten werden muss.
- */
-
-/** Eine Eckklammer. */
+/** A single corner bracket. */
 const Corner = ({at, tone}: {at: "tl" | "tr" | "bl" | "br"; tone: string}) => {
     const sides = {
         tl: "left-0 top-0 border-l border-t",
@@ -34,7 +11,7 @@ const Corner = ({at, tone}: {at: "tl" | "tr" | "bl" | "br"; tone: string}) => {
     return <span aria-hidden="true" className={`pointer-events-none absolute h-5 w-5 ${tone} ${sides}`}/>
 }
 
-/** Alle vier Eckklammern einer Flaeche. */
+/** All four corner brackets of a surface. */
 export const HudCorners = ({tone = "border-brand/50"}: {tone?: string}) => (
     <>
         <Corner at="tl" tone={tone}/>
@@ -44,12 +21,6 @@ export const HudCorners = ({tone = "border-brand/50"}: {tone?: string}) => (
     </>
 )
 
-/**
- * Eine Flaeche im HUD-Stil: Panel-Ton, feine Hairline, Eckklammern.
- *
- * `as` erlaubt ein semantisch passendes Element (z.B. article), ohne dass die
- * Aufrufstelle die Klassen kennen muss.
- */
 export const HudPanel = ({
     children,
     className = "",
@@ -58,7 +29,7 @@ export const HudPanel = ({
 }: {
     children: ReactNode
     className?: string
-    /** Ohne Klammern, wenn die Flaeche in einer anderen liegt. */
+    /** No brackets when the surface sits inside another one. */
     corners?: boolean
     tone?: string
 }) => (
@@ -68,7 +39,7 @@ export const HudPanel = ({
     </div>
 )
 
-/** Mono-Beschriftung in Kapitaelchen mit weiter Laufweite. */
+/** Mono label in small caps with wide tracking. */
 export const HudLabel = ({
     children,
     className = "",
@@ -83,15 +54,6 @@ export const HudLabel = ({
     </p>
 )
 
-/**
- * Abschnittskopf: laufende Kennung, feine Linie, Ueberschrift.
- *
- * Hier stand vorher eine Kommandozeile darueber (`$ cat README.md`,
- * `$ git log --oneline projekte/`). Die ist raus – sie war der lauteste Teil des
- * Git-Leitmotivs und hat jeden Abschnitt wie ein Terminal eingeleitet, was neben
- * einem Kristallring im Weltraum keinen Sinn ergibt. Die Kennung mit der Linie
- * traegt die Ordnung allein.
- */
 export const HudSectionHeader = ({
     id,
     title,
@@ -99,7 +61,7 @@ export const HudSectionHeader = ({
     lead,
     className = "",
 }: {
-    /** Kennung wie 02 – gibt der Seite eine Ordnung, die man mitliest. */
+    /** Identifier such as 02. */
     id: string
     title: string
     accent: string

@@ -1,16 +1,6 @@
 import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight, Play, X} from "lucide-react"
 
-/**
- * Browser-Rahmen mit Live-Vorschau: zeigt einen Screenshot und lädt die echte
- * Seite erst auf Klick in einen iframe.
- *
- * Der Klick ist Pflicht, nicht Bequemlichkeit – Cryptborne ist ein 74-MB-Unity-
- * Build. Und es ist immer nur EIN iframe aktiv (gesteuert über `active`), weil
- * Browser nur eine Handvoll WebGL-Kontexte gleichzeitig erlauben. Vor der
- * Aktivierung existiert kein iframe, dadurch kann er auch nicht das
- * Seiten-Scrollen abfangen.
- */
 const BrowserFrame = ({
     url,
     embeddable = true,
@@ -21,14 +11,14 @@ const BrowserFrame = ({
     onActivate,
     onClose,
 }: {
-    /** Live-URL, oder undefined wenn das Projekt kein Deployment hat */
+    /** Live URL, or undefined when the project has no deployment */
     url?: string
-    /** false = Seite läuft im iframe nicht zuverlässig, nur öffnen anbieten */
+    /** false = the page is unreliable in an iframe, only offer to open it */
     embeddable?: boolean
-    /** Screenshot; fehlt er, zeigt der Rahmen Icon und Adresse */
+    /** Screenshot; without it the frame shows icon and address */
     poster?: string
     icon: LucideIcon
-    /** Gewichtshinweis am Play-Button, z.B. "74 MB Unity-Build" */
+    /** Size hint on the play button, e.g. "74 MB Unity build" */
     note?: string
     active: boolean
     onActivate: () => void
@@ -39,7 +29,7 @@ const BrowserFrame = ({
     return (
         <div className="surface flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl">
 
-            {/* Fensterleiste mit Adresse */}
+            {/* Window bar with address */}
             <div
                 className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
                 <div className="flex shrink-0 gap-1.5">
@@ -72,7 +62,7 @@ const BrowserFrame = ({
                 ) : null}
             </div>
 
-            {/* Inhalt */}
+            {/* Content */}
             <div className="relative min-h-0 flex-1 bg-[#04060b]">
                 {active && url ? (
                     <iframe
@@ -81,13 +71,7 @@ const BrowserFrame = ({
                         className="h-full w-full border-0"
                         loading="lazy"
                         referrerPolicy="no-referrer"
-                        /* allow-same-origin: die eingebettete Anwendung behaelt
-                           ihren eigenen Origin und kann damit Service Worker und
-                           localStorage nutzen. Cross-Origin bleibt es trotzdem. */
                         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                        /* Wirkt nur, wenn DIESE Seite cross-origin isoliert ist
-                           (COOP + COEP). Ist sie es nicht, wird es ignoriert –
-                           kostet also nichts. */
                         allow="cross-origin-isolated"
                     />
                 ) : (
@@ -101,9 +85,6 @@ const BrowserFrame = ({
                                 decoding="async"
                             />
                         ) : (
-                            /* Ohne Screenshot: Icon und Adresse, ohne Hinweis auf
-                               das fehlende Bild – der Zustand soll gewollt
-                               aussehen, nicht unfertig. */
                             <div className="flex h-full flex-col items-center justify-center gap-5">
                                 <div className="rounded-2xl bg-brand/10 p-5 ring-1 ring-brand/20">
                                     <Icon className="h-10 w-10 text-brand"/>
@@ -112,9 +93,7 @@ const BrowserFrame = ({
                             </div>
                         )}
 
-                        {/* Einbettbar: Vorschau im Rahmen starten. Sonst: in
-                            neuem Tab oeffnen. Gleicher Aufbau, damit die Folien
-                            gleich aussehen. */}
+                        {}
                         {url && embeddable && (
                             <button
                                 onClick={onActivate}

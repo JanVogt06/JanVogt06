@@ -10,48 +10,7 @@ import useMediaQuery from "@/lib/useMediaQuery"
 import {scrollToPosition} from "@/lib/smoothScroll"
 import {space, subscribeAnchor} from "@/lib/space/controller"
 
-/**
- * Der Werdegang als Flug durch die Galaxie.
- *
- * Zwei Fassungen sind daran gescheitert, und beide aus demselben Grund:
- *
- * 1. Ein Kartenraster, das vorbeiscrollte. Es hing an nichts.
- * 2. Gepinnte Kapitel als HUD-Tafeln. Die hingen am Scroll, aber die Kamera stand
- *    still – im Raum passierte nichts, waehrend im DOM Tafeln durchzogen. Es war
- *    dieselbe Mechanik wie beim Kristallring, aber sie fand DANEBEN statt.
- *
- * Jetzt IST der Abschnitt eine Etappe der Reise. Der Scroll fliegt die Kamera vom
- * Hero durch eine Spiralgalaxie bis vor den Kristallring, und in der Galaxie
- * stehen drei Wegpunkte – einer pro Kapitel. Man kommt an ihnen an, so wie man
- * spaeter an den Steinen ankommt.
- *
- * WARUM DER TEXT NICHT AM WEGPUNKT KLEBT
- *
- * Bei den Projekten haengt die Beschriftung direkt am Stein, weil sie kurz ist –
- * ein Titel, zwei Schlagworte. Hier sind es Absaetze und Listen. Text, der jeden
- * Frame mit einem fliegenden Objekt mitwandert, ist nicht lesbar.
- *
- * Deshalb steht der Text ruhig links, und nur eine feine Linie greift von der
- * Ueberschrift zum vorbeiziehenden Wegpunkt hinueber. Das verbindet DOM und Raum,
- * ohne die Lesbarkeit zu opfern.
- *
- * Kein Rahmen, keine Eckklammern, keine Tafel: der Text liegt frei im Raum, mit
- * einem weichen dunklen Schleier dahinter, damit er ueber der Galaxie lesbar
- * bleibt.
- *
- * DIE BILDER
- *
- * Sie standen einmal dauerhaft in der rechten Haelfte. Das war der Fremdkoerper:
- * ein Foto ist ein Rechteck mit eigener Perspektive, eigenem Licht und eigenem
- * Horizont – im freien Raum sieht es aus, als klebe es auf der Scheibe. Und es
- * nahm der Galaxie genau die Haelfte des Bildes weg, durch die man fliegen soll.
- *
- * Jetzt sind die Planeten anklickbar und die Aufnahme kommt erst darauf – dieselbe
- * Geste wie bei den Kristallen. Der Raum bleibt Raum, bis man etwas darin
- * anfasst.
- */
-
-/** Stationen des Werdegangs – frueher ein Git-Graph mit Branches und Hashes. */
+/** Stations of the career timeline. */
 const timeline = [
     {when: "seit 02/2026", what: "Werkstudent Softwareentwicklung", where: "Carl Zeiss Meditec AG"},
     {when: "seit 10/2024", what: "B.Sc. Informatik", where: "Friedrich-Schiller-Universität Jena"},
@@ -73,13 +32,6 @@ const awards = [
     {when: "2016-24", what: "Olympiaden-Preise in Mathematik und Physik"},
 ]
 
-/**
- * Eine Zeile aus Zeitangabe und Inhalt.
- *
- * Dieselbe Form fuer alle drei Kapitel: links eine schmale Mono-Spalte, rechts
- * der Text, dazwischen eine Hairline. Das haelt die Kapitel als eine Familie
- * zusammen, ohne dass sie einen Rahmen braeuchten.
- */
 const Row = ({when, what, where}: {when?: string; what: string; where?: string}) => (
     <div className="flex gap-5 border-t border-white/[0.07] py-3.5 first:border-t-0">
         {when && (
@@ -154,20 +106,8 @@ const chapters: Chapter[] = [
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
-/**
- * Ueber welchen Anteil der Strecke der Abschnitt "anlaeuft", bevor er oben
- * ankommt. Derselbe Griff wie bei den Projekten.
- */
 const APPROACH = 0.14
 
-/**
- * Die Aufnahme zum Kapitel – als Tafel, die ein Klick auf den Planeten oeffnet.
- *
- * Bewusst schlichter als das Projekt-HUD: dort ruft man einen Datensatz auf, hier
- * schaut man ein Bild an. Eckklammern, eine Zeile Beschriftung, sonst nichts.
- *
- * `object-contain`: die Bilder sind freigestellt, es gibt nichts zuzuschneiden.
- */
 const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}) => {
     const closeRef = useRef<HTMLButtonElement>(null)
 
@@ -185,16 +125,13 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
 
     return (
         <div
-            /* Das Rad gehoert dieser Tafel, nicht der Seite darunter – siehe
-               lib/smoothScroll.ts. Die Tafel scrollt selbst nicht, also bleibt
-               das Bild stehen, statt dass die Kamera darunter weiterfliegt. */
             data-native-scroll
             role="dialog"
             aria-modal="true"
             aria-label={chapter.alt}
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
         >
-            {/* Klick daneben schliesst. Der Knopf bleibt der barrierefreie Weg. */}
+            {/* Clicking outside closes; the button stays the accessible way */}
             <button
                 aria-hidden="true"
                 tabIndex={-1}
@@ -230,7 +167,7 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                     </div>
                 </div>
 
-                {/* min-h-0: sonst waere der Bildbereich nie kleiner als das Bild. */}
+                {/* min-h-0: otherwise the image area never shrinks below the image */}
                 <div className="mt-5 min-h-0 flex-1">
                     <img
                         src={chapter.image}
@@ -250,13 +187,12 @@ const ChapterContent = ({
 }: {
     chapter: Chapter
     headingRef?: (node: HTMLDivElement | null) => void
-    /** Fehlt in der gestapelten Fassung – dort steht das Bild einfach da. */
+    /** Absent in the stacked variant. */
     onOpenImage?: () => void
 }) => (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
         <div className="relative max-w-xl lg:col-span-6">
-            {/* Weicher Schleier statt Tafel: haelt den Text ueber der Galaxie
-                lesbar, ohne ihn einzukasteln. */}
+            {}
             <span
                 aria-hidden="true"
                 className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10"
@@ -280,10 +216,7 @@ const ChapterContent = ({
 
             <div className="mt-7">{chapter.body}</div>
 
-            {/* Der Weg zur Aufnahme ohne Maus – und gleichzeitig der Hinweis,
-                dass der Planet ueberhaupt anfassbar ist. Ein Bild, das nur
-                per Klick auf ein 3D-Objekt erreichbar ist, waere fuer einen
-                Teil der Besucher gar nicht erreichbar. */}
+            {}
             {onOpenImage && (
                 <button
                     onClick={onOpenImage}
@@ -300,13 +233,6 @@ const ChapterContent = ({
     </div>
 )
 
-/**
- * Die feine Linie von der Ueberschrift zum Wegpunkt im Raum.
- *
- * Sie ist der einzige Teil, der jeden Frame nachgezogen wird – der Text selbst
- * bleibt ruhig. Position und Deckkraft kommen aus dem Anker der Szene und werden
- * direkt in Attribute geschrieben, nicht ueber React-State.
- */
 const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
     const lineRef = useRef<SVGPolylineElement>(null)
     const dotRef = useRef<SVGCircleElement>(null)
@@ -325,7 +251,7 @@ const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
                 return
             }
 
-            // Ansatz an der rechten Kante der Ueberschrift, Ziel am Wegpunktrand.
+            // Starts at the right edge of the heading, ends at the waypoint rim.
             const sx = box.right + 14
             const sy = box.top + box.height / 2
             const dx = x - radius * 1.2
@@ -377,32 +303,11 @@ const AboutJourney = ({
     const [index, setIndex] = useState(0)
     const activeIndex = useRef(0)
 
-    /**
-     * KEIN Vorlauf auf den Fortschritt.
-     *
-     * Ein erster Versuch schob ihn um 12 % vor, damit die Kamera schon losfliegt,
-     * bevor die Sektion oben steht. Das verschiebt aber die ganze Zuordnung:
-     * Kapitel 0 stand dann bei 21 % statt bei 0, und der zugehoerige Wegpunkt lag
-     * 2,6 Einheiten vor der Kamera statt 9 – gemessen 319 px Radius und x = 1514
-     * auf einem 1500 px breiten Fenster, also riesig und aus dem Bild.
-     *
-     * Die Wegpunkte werden aus derselben Abbildung gerechnet wie die Kamera. Also
-     * darf hier nichts dazwischen liegen.
-     */
     const onProgress = useCallback((raw: number) => {
         const progress = clamp01(raw)
 
-        // Die Kamera fliegt – das ist der Kern: der Raum bewegt sich mit.
         space.setAboutProgress(progress)
 
-        /* Zusaetzlich, ob der Abschnitt ueberhaupt an der Reihe ist. `raw` ist
-           nicht begrenzt, oberhalb also negativ – daraus laesst sich das ableiten,
-           aus `progress` nicht: der steht im Hero auf 0, und 0 heisst dort
-           "Station 1 genau vorne". Genau deshalb wurde die Beschriftungslinie
-           schon im Hero gezeichnet. */
-        /* An- UND Auslauf, aus demselben Grund wie bei den Projekten: nur der
-           Anlauf bliebe fuer raw > 1 auf 1 und haette die Planeten-Beschriftung
-           auch nach dem Abschnitt im Bild gelassen. */
         space.setAboutActive(
             Math.min(
                 clamp01((raw + APPROACH) / APPROACH),
@@ -417,13 +322,8 @@ const AboutJourney = ({
             const distance = Math.abs(d)
 
             layer.style.opacity = String(clamp01(1 - distance * 1.5))
-            /* Nur ein kleiner Versatz: die Tiefenwirkung kommt jetzt von der
-               Kamera, nicht davon, dass Tafeln durchs Bild skalieren. */
             layer.style.transform = `translate3d(0, ${(-d * 4).toFixed(2)}vh, 0)`
 
-            /* Nur das vorderste Kapitel ist bedienbar und fuer Screenreader da.
-               Sonst laege unter dem sichtbaren Kapitel Text, den man markieren und
-               antabben koennte, ohne ihn zu sehen. */
             const active = distance < 0.5
             layer.style.pointerEvents = active ? "auto" : "none"
             layer.setAttribute("aria-hidden", active ? "false" : "true")
@@ -438,19 +338,6 @@ const AboutJourney = ({
 
     useScrollProgress(sectionRef, onProgress)
 
-    /**
-     * Rechteck der aktuellen Ueberschrift – ZWISCHENGESPEICHERT.
-     *
-     * Das war die Ursache fuer das ruckelige Scrollen: die Beschriftungslinie
-     * holte es sich pro Frame ueber getBoundingClientRect(), waehrend im selben
-     * Frame die Ebenen ihre Transformationen geschrieben bekamen. Lesen nach
-     * Schreiben erzwingt jedes Mal ein neues Layout – klassisches Layout
-     * Thrashing, sechzig Mal pro Sekunde.
-     *
-     * Die Ueberschrift steht in einem klebenden Rahmen und bewegt sich praktisch
-     * nicht. Es genuegt, sie beim Kapitelwechsel und bei Groessenaenderungen neu
-     * zu messen.
-     */
     const boxCache = useRef<DOMRect | null>(null)
 
     const remeasure = useCallback(() => {
@@ -500,7 +387,7 @@ const AboutJourney = ({
                     ))}
                 </div>
 
-                {/* Steuerzeile – dieselbe Form wie bei den Projekten */}
+                {/* Control row */}
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
                     <div className="flex flex-1 gap-1.5">
                         {chapters.map((chapter, i) => (
@@ -536,20 +423,12 @@ const AboutJourney = ({
     )
 }
 
-/**
- * Rueckfallebene: gestapelt.
- *
- * Fuer schmale oder flache Fenster und fuer prefers-reduced-motion. Ein Flug
- * durch eine Galaxie ist genau die Bewegung, die dort abgewaehlt wurde, und ein
- * gepinnter Abschnitt braucht eine Bildschirmhoehe, die den Inhalt traegt.
- */
 const AboutStack = () => (
     <div className="mx-auto max-w-[88rem] space-y-20 px-4 py-20 sm:px-6 md:py-28 lg:px-8">
         {chapters.map((chapter) => (
             <div key={chapter.id}>
                 <ChapterContent chapter={chapter}/>
-                {/* Hier gibt es keine Planeten zum Anklicken, also steht das Bild
-                    einfach unter dem Text. */}
+                {}
                 <img
                     src={chapter.image}
                     alt={chapter.alt}
@@ -564,7 +443,7 @@ const About = ({
     station,
     onStation,
 }: {
-    /** Welcher Planet ist angeklickt? Kommt aus App, weil die Szene ihn auslöst. */
+    /** Which planet is clicked; comes from App because the scene triggers it. */
     station: number | null
     onStation: (index: number | null) => void
 }) => {
