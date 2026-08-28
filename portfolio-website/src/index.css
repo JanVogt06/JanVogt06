@@ -47,6 +47,12 @@
 
 
 /* Design tokens of the page: two surfaces, three accents. */
+/** Short viewports - the smaller portrait phones. */
+@custom-variant short (@media (max-height: 760px));
+
+/** Squat viewports - a phone held sideways. Registered second, so it wins. */
+@custom-variant squat (@media (max-height: 520px));
+
 @theme {
     --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -123,6 +129,27 @@
 }
 
 @layer components {
+    /*
+     * Full-viewport stages use svh, not vh. vh is the large viewport, so a sticky pane
+     * would be taller than the screen while the mobile URL bar shows; dvh would resize
+     * the pane mid-scroll and make the choreography jump. svh is the stable one.
+     */
+    .stage {
+        height: 100vh;
+        height: 100svh;
+    }
+
+    .stage-min {
+        min-height: 100vh;
+        min-height: 100svh;
+    }
+
+    /** Scroll track --screens viewports long. */
+    .track {
+        height: calc(var(--screens) * 100vh);
+        height: calc(var(--screens) * 100svh);
+    }
+
     /*
      * A surface lit from above rather than outlined: the wash carries the top edge,
      * the wide drop carries the distance to whatever lies behind it.

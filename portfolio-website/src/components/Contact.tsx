@@ -95,7 +95,7 @@ const Contact = () => {
         <section
             ref={sectionRef}
             id="contact"
-            className="relative flex min-h-screen items-center py-20 md:py-28"
+            className="stage-min relative flex items-center py-20 md:py-28"
         >
             <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
 
