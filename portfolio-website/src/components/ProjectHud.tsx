@@ -140,6 +140,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                             poster={screenshotFor(project.slug)}
                             icon={Icon}
                             note={project.previewNote}
+                            eager
                             active={previewActive}
                             onActivate={() => setPreviewActive(true)}
                             onClose={() => setPreviewActive(false)}

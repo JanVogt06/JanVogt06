@@ -1,5 +1,39 @@
+import type {ReactNode} from "react"
 import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight, Play, X} from "lucide-react"
+
+/**
+ * Affordance over the poster. The scrim is radial, not flat: the screenshot has to
+ * stay readable as a preview, and only the label needs a dark ground under it.
+ */
+const PreviewCue = ({
+    label,
+    note,
+    children,
+}: {
+    label: string
+    note?: string
+    /** The icon; the play triangle needs its own optical offset. */
+    children: ReactNode
+}) => (
+    <>
+        <span
+            aria-hidden="true"
+            className="absolute inset-0"
+            style={{
+                background:
+                    "radial-gradient(closest-side at 50% 50%, rgba(7,8,11,0.85) 0%, rgba(7,8,11,0.6) 45%, transparent 78%)",
+            }}
+        />
+        <span className="relative flex flex-col items-center gap-3">
+            <span className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
+                {children}
+            </span>
+            <span className="text-sm text-white">{label}</span>
+            {note && <span className="text-xs text-white/75">{note}</span>}
+        </span>
+    </>
+)
 
 const BrowserFrame = ({
     url,
@@ -7,6 +41,7 @@ const BrowserFrame = ({
     poster,
     icon: Icon,
     note,
+    eager = false,
     active,
     onActivate,
     onClose,
@@ -20,6 +55,8 @@ const BrowserFrame = ({
     icon: LucideIcon
     /** Size hint on the play button, e.g. "74 MB Unity build" */
     note?: string
+    /** The frame is what the user is waiting for; load the poster right away. */
+    eager?: boolean
     active: boolean
     onActivate: () => void
     onClose: () => void
@@ -81,7 +118,8 @@ const BrowserFrame = ({
                                 src={poster}
                                 alt=""
                                 className="h-full w-full object-cover object-top"
-                                loading="lazy"
+                                loading={eager ? "eager" : "lazy"}
+                                fetchPriority={eager ? "high" : "auto"}
                                 decoding="async"
                             />
                         ) : (
@@ -97,14 +135,11 @@ const BrowserFrame = ({
                         {url && embeddable && (
                             <button
                                 onClick={onActivate}
-                                className="group absolute inset-0 flex flex-col items-center justify-center gap-3 bg-page/40 backdrop-blur-[1px] transition-colors hover:bg-page/25"
+                                className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
-                                <span
-                                    className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
+                                <PreviewCue label="Live-Vorschau starten" note={note}>
                                     <Play className="ml-0.5 h-5 w-5 fill-brand text-brand"/>
-                                </span>
-                                <span className="text-sm text-white/70">Live-Vorschau starten</span>
-                                {note && <span className="text-xs text-white/50">{note}</span>}
+                                </PreviewCue>
                             </button>
                         )}
 
@@ -113,14 +148,11 @@ const BrowserFrame = ({
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group absolute inset-0 flex flex-col items-center justify-center gap-3 bg-page/40 backdrop-blur-[1px] transition-colors hover:bg-page/25"
+                                className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
-                                <span
-                                    className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
+                                <PreviewCue label="In neuem Tab öffnen" note={note}>
                                     <ArrowUpRight className="h-5 w-5 text-brand"/>
-                                </span>
-                                <span className="text-sm text-white/70">in neuem Tab öffnen</span>
-                                {note && <span className="text-xs text-white/50">{note}</span>}
+                                </PreviewCue>
                             </a>
                         )}
                     </>
