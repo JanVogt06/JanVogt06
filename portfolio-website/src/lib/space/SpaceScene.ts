@@ -72,6 +72,13 @@ const IDLE_SWAY_SPEED = 0.1
 /** Lateral camera offset in the hero, leaving room for the name. */
 const HERO_LATERAL = 2.6
 
+/** Where a planet passes by: right of the camera axis, at eye level. */
+const WAYPOINT_LATERAL = 2.4
+const WAYPOINT_RISE = 0.05
+
+/** How far a planet may stray from that spot. */
+const WAYPOINT_SCATTER = 0.24
+
 const INTERACTIVE_ENTER = 0.75
 
 const NEBULA_MAX = 0.5
@@ -377,6 +384,8 @@ export class SpaceScene {
         this.scene.add(this.skyStars.points)
         this.scene.add(this.nearStars.points)
 
+        const heroFront = this.frontPoint()
+
         for (let i = 0; i < WAYPOINT_COUNT; i++) {
             const spec = PLANETS[i % PLANETS.length]
             const material = new THREE.ShaderMaterial({
@@ -439,8 +448,9 @@ export class SpaceScene {
 
             const t = i / (WAYPOINT_COUNT - 1)
             group.position.set(
-                -HERO_LATERAL + 1.8 + hash(i * 3.1) * 0.7,
-                -2.6 + (hash(i * 5.7) - 0.5) * 1.2,
+                heroFront.x - HERO_LATERAL + WAYPOINT_LATERAL +
+                    (hash(i * 3.1) - 0.5) * WAYPOINT_SCATTER,
+                heroFront.y + WAYPOINT_RISE + (hash(i * 5.7) - 0.5) * WAYPOINT_SCATTER,
                 lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - WAYPOINT_VIEW_DISTANCE,
             )
             group.userData.index = i
