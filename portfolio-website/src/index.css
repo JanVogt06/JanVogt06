@@ -84,7 +84,7 @@
         /* No scroll-behavior: smooth here - lib/smoothScroll.ts drives the scroll. */
 
         /* Offset so anchor jumps do not land under the fixed header */
-        scroll-padding-top: 4rem;
+        scroll-padding-top: 5.5rem;
 
         /* clip, not hidden: hidden would create a scroll container and break sticky. */
         overflow-x: clip;
