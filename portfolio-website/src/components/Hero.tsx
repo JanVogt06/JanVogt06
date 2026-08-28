@@ -108,6 +108,17 @@ const Hero = () => {
                     <ArrowDown className="h-4 w-4"/>
                 </motion.span>
             </motion.button>
+
+            {/* Sits above the scroll hint on narrow screens. */}
+            <motion.p
+                className="absolute bottom-24 right-6 z-20 max-w-[15rem] text-right font-mono text-[10px] leading-relaxed tracking-[0.08em] text-white/25 sm:bottom-8 sm:right-8 lg:right-12"
+                initial={{opacity: 0}}
+                animate={{opacity: 1}}
+                transition={{duration: 0.6, delay: 1.4}}
+            >
+                Design und Umsetzung von mir. KI ist dabei mein Werkzeug — neue Modelle
+                teste ich hier direkt am eigenen Projekt.
+            </motion.p>
         </section>
     )
 }
