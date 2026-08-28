@@ -1,21 +1,5 @@
 import type {ReactNode} from "react"
 
-/**
- * A floating surface. Depth comes from the wash and the drop shadow, the edge
- * from the .rim highlight - no drawn border.
- */
-export const HudPanel = ({
-    children,
-    className = "",
-}: {
-    children: ReactNode
-    className?: string
-}) => (
-    <div className={`surface rim rounded-2xl ${className}`}>
-        {children}
-    </div>
-)
-
 /** Quiet label above a group. Sentence case, not a readout. */
 export const HudLabel = ({
     children,

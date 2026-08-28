@@ -51,15 +51,21 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             role="dialog"
             aria-modal="true"
             aria-label={project.title}
-            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
+            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/65 px-4 pb-4 pt-24 backdrop-blur-[10px] sm:px-8 sm:pb-8"
         >
-            <div className="surface relative flex w-full max-w-[84rem] flex-col p-5 sm:p-8">
+            <div className="glass relative flex w-full max-w-[84rem] flex-col rounded-3xl p-5 sm:p-8">
                 {/* Header: identifier and close */}
-                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
+                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.06] pb-4">
                     <div className="min-w-0">
-                        <HudLabel tone="text-brand/80" className="!text-[11px]">
-                            Projekt {String(index + 1).padStart(2, "0")}
-                            <span className="text-white/25"> / {String(projects.length).padStart(2, "0")}</span>
+                        <HudLabel tone="text-brand/80">
+                            Projekt{" "}
+                            <span className="font-mono tabular-nums">
+                                {String(index + 1).padStart(2, "0")}
+                            </span>
+                            <span className="text-white/25">
+                                {" / "}
+                                {String(projects.length).padStart(2, "0")}
+                            </span>
                         </HudLabel>
                         <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
                             {project.title}
@@ -68,14 +74,14 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-4">
-                        <span className="hidden font-mono text-[10px] uppercase tracking-[0.28em] text-white/25 lg:inline">
+                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/40 lg:inline">
                             Esc
-                        </span>
+                        </kbd>
                         <button
                             ref={closeRef}
                             onClick={onClose}
                             aria-label="Projekt schließen"
-                            className="border border-white/10 p-2.5 text-white/60 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                            className="rounded-full bg-white/[0.06] p-2.5 text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white"
                         >
                             <X className="h-4 w-4"/>
                         </button>
@@ -89,11 +95,11 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                         <p className="leading-relaxed text-white/65">{project.description}</p>
 
                         <HudLabel className="mt-6">Stack</HudLabel>
-                        <ul className="mt-3 grid grid-cols-2 border border-white/[0.07]">
+                        <ul className="mt-3 flex flex-wrap gap-2">
                             {project.tech.map((tech) => (
                                 <li
                                     key={tech}
-                                    className="border-b border-r border-white/[0.05] bg-white/[0.02] px-3 py-2 font-mono text-[11px] text-white/60"
+                                    className="rim relative rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
                                 >
                                     {tech}
                                 </li>
@@ -106,10 +112,10 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                                     href={primary.href}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
+                                    className="action group"
                                 >
                                     {primary.label}
-                                    <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                    <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
                                 </a>
                             )}
                             {project.links.github && (
@@ -117,9 +123,9 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                                     href={project.links.github}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-white/50 transition-colors hover:text-white"
+                                    className="group inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
                                 >
-                                    <Github className="h-3.5 w-3.5"/>
+                                    <Github className="h-4 w-4"/>
                                     Code
                                 </a>
                             )}

@@ -27,18 +27,18 @@ const BrowserFrame = ({
     const host = url ? new URL(url).host : "kein Deployment"
 
     return (
-        <div className="surface flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl">
+        <div className="surface rim flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl">
 
             {/* Window bar with address */}
             <div
-                className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+                className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-3 py-2.5">
                 <div className="flex shrink-0 gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/15"/>
+                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
+                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
+                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
                 </div>
                 <span
-                    className="min-w-0 flex-1 truncate rounded-md bg-white/[0.04] px-2.5 py-1 font-mono text-[11px] text-white/45">
+                    className="min-w-0 flex-1 truncate rounded-full bg-white/[0.04] px-3 py-1 font-mono text-[11px] text-white/45">
                     {host}
                 </span>
                 {active ? (
@@ -63,7 +63,7 @@ const BrowserFrame = ({
             </div>
 
             {/* Content */}
-            <div className="relative min-h-0 flex-1 bg-[#04060b]">
+            <div className="relative min-h-0 flex-1 bg-black/40">
                 {active && url ? (
                     <iframe
                         src={url}
@@ -86,7 +86,7 @@ const BrowserFrame = ({
                             />
                         ) : (
                             <div className="flex h-full flex-col items-center justify-center gap-5">
-                                <div className="rounded-2xl bg-brand/10 p-5 ring-1 ring-brand/20">
+                                <div className="rounded-3xl bg-brand/10 p-5">
                                     <Icon className="h-10 w-10 text-brand"/>
                                 </div>
                                 <span className="font-mono text-xs text-white/30">{host}</span>
@@ -100,11 +100,11 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center gap-3 bg-page/40 backdrop-blur-[1px] transition-colors hover:bg-page/25"
                             >
                                 <span
-                                    className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/15 ring-1 ring-brand/40 backdrop-blur-sm transition-all group-hover:scale-110 group-hover:bg-brand/25">
+                                    className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
                                     <Play className="ml-0.5 h-5 w-5 fill-brand text-brand"/>
                                 </span>
-                                <span className="font-mono text-xs text-white/70">Live-Vorschau starten</span>
-                                {note && <span className="font-mono text-[11px] text-white/35">{note}</span>}
+                                <span className="text-sm text-white/70">Live-Vorschau starten</span>
+                                {note && <span className="text-xs text-white/35">{note}</span>}
                             </button>
                         )}
 
@@ -116,11 +116,11 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center gap-3 bg-page/40 backdrop-blur-[1px] transition-colors hover:bg-page/25"
                             >
                                 <span
-                                    className="flex h-14 w-14 items-center justify-center rounded-full bg-brand/15 ring-1 ring-brand/40 backdrop-blur-sm transition-all group-hover:scale-110 group-hover:bg-brand/25">
+                                    className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
                                     <ArrowUpRight className="h-5 w-5 text-brand"/>
                                 </span>
-                                <span className="font-mono text-xs text-white/70">in neuem Tab öffnen</span>
-                                {note && <span className="font-mono text-[11px] text-white/35">{note}</span>}
+                                <span className="text-sm text-white/70">in neuem Tab öffnen</span>
+                                {note && <span className="text-xs text-white/35">{note}</span>}
                             </a>
                         )}
                     </>

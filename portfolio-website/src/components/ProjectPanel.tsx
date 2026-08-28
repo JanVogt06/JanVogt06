@@ -47,13 +47,13 @@ const ProjectPanel = ({
 
             {/* Facts */}
             <div className="relative lg:col-span-5">
-                <p className="mb-5 flex items-center gap-3 font-mono text-xs text-white/35">
+                <p className="mb-5 flex items-center gap-3 font-mono text-xs tabular-nums text-white/35">
                     <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
                     <span className="h-px w-6 bg-white/15"/>
                     <span className="text-white/20">/{String(total).padStart(2, "0")}</span>
                 </p>
 
-                <h3 className="text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
+                <h3 className="text-4xl font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
                     {project.title}
                 </h3>
                 <p className="mt-2 text-lg text-white/45">{project.subtitle}</p>
@@ -62,10 +62,16 @@ const ProjectPanel = ({
                     {project.description}
                 </p>
 
-                {}
-                <p className="mt-7 font-mono text-[11px] leading-relaxed text-white/40">
-                    {project.tech.join("  ·  ")}
-                </p>
+                <ul className="mt-7 flex flex-wrap gap-2">
+                    {project.tech.map((tech) => (
+                        <li
+                            key={tech}
+                            className="rim relative rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
+                        >
+                            {tech}
+                        </li>
+                    ))}
+                </ul>
 
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
                     {primary && (
@@ -73,14 +79,14 @@ const ProjectPanel = ({
                             href={primary.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-white"
+                            className="action group"
                         >
                             {primary.label === "Play Now"
                                 ? <Gamepad2 className="h-4 w-4"/>
                                 : <Globe className="h-4 w-4"/>}
                             {primary.label}
                             <ArrowUpRight
-                                className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
                         </a>
                     )}
                     {project.links.github && (

@@ -1,6 +1,6 @@
 import {useCallback, useRef} from "react"
 import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
-import {HudPanel, HudLabel, HudSectionHeader} from "./Hud"
+import {HudLabel, HudSectionHeader} from "./Hud"
 import useScrollProgress from "@/lib/useScrollProgress"
 
 const ARRIVAL = 1
@@ -44,9 +44,9 @@ const Channel = ({channel}: {channel: (typeof channels)[number]}) => {
             href={channel.href}
             target={channel.external ? "_blank" : undefined}
             rel={channel.external ? "noopener noreferrer" : undefined}
-            className="group flex items-center gap-4 border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 transition-colors hover:border-brand/30 hover:bg-brand/[0.06]"
+            className="rim group relative flex items-center gap-4 rounded-xl bg-white/[0.035] px-4 py-3.5 transition-colors hover:bg-white/[0.075]"
         >
-            <Icon className="h-4 w-4 shrink-0 text-brand"/>
+            <Icon className="h-4 w-4 shrink-0 text-white/40 transition-colors group-hover:text-brand"/>
             <div className="min-w-0 flex-1">
                 <HudLabel tone="text-white/30">{channel.label}</HudLabel>
                 <p className="mt-1 truncate font-mono text-sm text-white/70 transition-colors group-hover:text-white">
@@ -109,14 +109,14 @@ const Contact = () => {
                 </div>
 
                 <div ref={panelRef} className="will-change-transform">
-                    <HudPanel className="p-5 sm:p-8">
+                    <div className="glass rounded-3xl p-5 sm:p-8">
                         {/* Availability */}
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.07] pb-4">
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
                             <span className="relative flex h-1.5 w-1.5">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
                                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-status"/>
                             </span>
-                            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-status">
+                            <span className="text-xs font-medium text-status">
                                 Offen für Gespräche
                             </span>
                         </div>
@@ -132,22 +132,22 @@ const Contact = () => {
                         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
                             <a
                                 href="mailto:contact@jan-vogt.dev"
-                                className="group inline-flex items-center gap-3 border border-brand/30 bg-brand/10 px-6 py-3 font-mono text-xs uppercase tracking-[0.22em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
+                                className="action group"
                             >
                                 <Send className="h-4 w-4"/>
                                 Nachricht schreiben
-                                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
                             </a>
 
-                            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/20">
+                            <p className="text-xs text-white/30">
                                 Antwort meist innerhalb eines Tages
                             </p>
                         </div>
-                    </HudPanel>
+                    </div>
                 </div>
 
                 {}
-                <p className="mt-10 max-w-3xl font-mono text-[10px] leading-relaxed tracking-[0.08em] text-white/20">
+                <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/25">
                     Planetenkarten:{" "}
                     <a
                         href="https://www.solarsystemscope.com/textures/"
