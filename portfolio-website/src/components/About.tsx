@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from "react"
+import {useCallback, useEffect, useRef} from "react"
 import type {ReactNode} from "react"
 import {ImageIcon, X} from "lucide-react"
 import {HudCorners, HudLabel} from "./Hud"
@@ -7,7 +7,6 @@ import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
 import useScrollProgress from "@/lib/useScrollProgress"
 import useMediaQuery from "@/lib/useMediaQuery"
-import {scrollToPosition} from "@/lib/smoothScroll"
 import {space, subscribeAnchor} from "@/lib/space/controller"
 
 /** Stations of the career timeline. */
@@ -300,7 +299,6 @@ const AboutJourney = ({
     const sectionRef = useRef<HTMLDivElement>(null)
     const layerRefs = useRef<(HTMLDivElement | null)[]>([])
     const headingRefs = useRef<(HTMLDivElement | null)[]>([])
-    const [index, setIndex] = useState(0)
     const activeIndex = useRef(0)
 
     const onProgress = useCallback((raw: number) => {
@@ -329,11 +327,7 @@ const AboutJourney = ({
             layer.setAttribute("aria-hidden", active ? "false" : "true")
         })
 
-        const nearest = Math.round(position)
-        if (nearest !== activeIndex.current) {
-            activeIndex.current = nearest
-            setIndex(nearest)
-        }
+        activeIndex.current = Math.round(position)
     }, [])
 
     useScrollProgress(sectionRef, onProgress)
@@ -349,17 +343,9 @@ const AboutJourney = ({
         remeasure()
         window.addEventListener("resize", remeasure)
         return () => window.removeEventListener("resize", remeasure)
-    }, [remeasure, index])
+    }, [remeasure])
 
     const headingBox = useCallback(() => boxCache.current, [])
-
-    const goToChapter = (target: number) => {
-        const el = sectionRef.current
-        if (!el) return
-        const travel = el.offsetHeight - window.innerHeight
-        const top = el.getBoundingClientRect().top + window.scrollY
-        scrollToPosition(top + (target / (chapters.length - 1)) * travel)
-    }
 
     return (
         <div ref={sectionRef} style={{height: `${chapters.length * 100}vh`}}>
@@ -385,34 +371,6 @@ const AboutJourney = ({
                             />
                         </div>
                     ))}
-                </div>
-
-                {/* Control row */}
-                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
-                    <div className="flex flex-1 gap-1.5">
-                        {chapters.map((chapter, i) => (
-                            <button
-                                key={chapter.id}
-                                onClick={() => goToChapter(i)}
-                                aria-label={`Zu ${chapter.title} ${chapter.accent}`}
-                                aria-current={i === index}
-                                className="group flex-1 py-3 text-left"
-                            >
-                                <span
-                                    className={`block h-px w-full transition-colors duration-500 ${
-                                        i <= index ? "bg-brand/70" : "bg-white/10 group-hover:bg-white/30"
-                                    }`}
-                                />
-                                <span
-                                    className={`mt-2 block font-mono text-[10px] uppercase tracking-[0.2em] transition-colors ${
-                                        i === index ? "text-white/60" : "text-white/25"
-                                    }`}
-                                >
-                                    {chapter.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
                 </div>
             </div>
 

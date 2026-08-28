@@ -9,7 +9,6 @@ import {projects} from "@/lib/projects"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {HudSectionHeader} from "./Hud"
 import {space} from "@/lib/space/controller"
-import {scrollToPosition} from "@/lib/smoothScroll"
 
 const total = projects.length
 
@@ -54,15 +53,6 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
 
     useScrollProgress(sectionRef, onProgress)
 
-    /** Scroll to crystal i. */
-    const goToCrystal = (target: number) => {
-        const el = sectionRef.current
-        if (!el) return
-        const travel = el.offsetHeight - window.innerHeight
-        const top = el.getBoundingClientRect().top + window.scrollY
-        scrollToPosition(top + (target / (total - 1)) * travel)
-    }
-
     return (
         <div ref={sectionRef} style={{height: `${total * 100}vh`}}>
             <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
@@ -73,43 +63,13 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
                 <div className="min-h-0 flex-1"/>
 
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-                        <button
-                            onClick={() => onSelect(index)}
-                            className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
-                        >
-                            Projekt öffnen
-                            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
-                        </button>
-
-                        <div className="flex min-w-[12rem] flex-1 items-center gap-4">
-                            <div className="flex flex-1 gap-1.5">
-                                {projects.map((project, i) => (
-                                    <button
-                                        key={project.slug}
-                                        onClick={() => goToCrystal(i)}
-                                        aria-label={`Zu ${project.title}`}
-                                        aria-current={i === index}
-                                        className="group flex-1 py-3"
-                                    >
-                                        <span
-                                            className={`block h-px w-full transition-colors duration-500 ${
-                                                i <= index
-                                                    ? "bg-brand/70"
-                                                    : "bg-white/10 group-hover:bg-white/30"
-                                            }`}
-                                        />
-                                    </button>
-                                ))}
-                            </div>
-                            <span className="shrink-0 font-mono text-xs text-white/35">
-                                <span className="text-white/70">
-                                    {String(index + 1).padStart(2, "0")}
-                                </span>
-                                /{String(total).padStart(2, "0")}
-                            </span>
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => onSelect(index)}
+                        className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
+                    >
+                        Projekt öffnen
+                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
+                    </button>
                 </div>
             </div>
         </div>
