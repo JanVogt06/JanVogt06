@@ -1,6 +1,7 @@
 import {useEffect, useRef} from "react"
 import {subscribeAnchor} from "@/lib/space/controller"
 import {projects} from "@/lib/projects"
+import {loadDescriptions, subscribeDescriptions, taglineOf} from "@/lib/github"
 
 const CALLOUTS = [
     {dx: 1, dy: -0.62, length: 210, role: "title" as const},
@@ -19,6 +20,17 @@ const CrystalCallouts = () => {
     const taglineRef = useRef<HTMLSpanElement>(null)
     const shownIndex = useRef<number>(-1)
 
+    // The taglines come from GitHub, so they can arrive after the first paint.
+    useEffect(() => {
+        loadDescriptions()
+        return subscribeDescriptions(() => {
+            const project = projects[shownIndex.current]
+            if (project && taglineRef.current) {
+                taglineRef.current.textContent = taglineOf(project)
+            }
+        })
+    }, [])
+
     useEffect(() => {
         return subscribeAnchor(({kind, index, x, y, radius, strength}) => {
             // The scene also reports the career waypoints; those do not belong here.
@@ -30,7 +42,7 @@ const CrystalCallouts = () => {
                 const project = projects[index]
                 if (project) {
                     if (titleRef.current) titleRef.current.textContent = project.title
-                    if (taglineRef.current) taglineRef.current.textContent = project.tagline
+                    if (taglineRef.current) taglineRef.current.textContent = taglineOf(project)
                 }
             }
 
@@ -113,7 +125,10 @@ const CrystalCallouts = () => {
                             className="block text-2xl font-semibold tracking-[-0.02em] text-white"
                         />
                     ) : (
-                        <span ref={taglineRef} className="block max-w-[20rem] text-sm text-white/55"/>
+                        <span
+                            ref={taglineRef}
+                            className="block max-w-[22rem] text-sm leading-snug text-white/55"
+                        />
                     )}
                 </div>
             ))}
