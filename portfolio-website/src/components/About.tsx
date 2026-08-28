@@ -1,12 +1,11 @@
 import {useCallback, useEffect, useRef} from "react"
-import type {ReactNode} from "react"
+import type {CSSProperties, ReactNode} from "react"
 import {ImageIcon, X} from "lucide-react"
 import {HudLabel} from "./Hud"
 import portraitImage from "../data/images/portrait.webp"
 import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
 import useScrollProgress from "@/lib/useScrollProgress"
-import useMediaQuery from "@/lib/useMediaQuery"
 import {space, subscribeAnchor} from "@/lib/space/controller"
 
 /** Stations of the career timeline. */
@@ -32,7 +31,7 @@ const awards = [
 ]
 
 const Row = ({when, what, where}: {when?: string; what: string; where?: string}) => (
-    <div className="flex gap-5 border-t border-white/[0.06] py-3.5 first:border-t-0">
+    <div className="flex gap-5 border-t border-white/[0.06] py-3 first:border-t-0 sm:py-3.5 short:py-2 squat:py-1">
         {when && (
             <span className="w-24 shrink-0 pt-0.5 font-mono text-[11px] tabular-nums text-white/50">
                 {when}
@@ -186,7 +185,7 @@ const ChapterContent = ({
     onOpenImage?: () => void
 }) => (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
-        <div className="relative max-w-xl lg:col-span-6">
+        <div className="relative max-w-xl squat:max-w-[26rem] lg:col-span-6">
             {}
             <span
                 aria-hidden="true"
@@ -198,19 +197,19 @@ const ChapterContent = ({
             />
 
             <div ref={headingRef}>
-                <p className="text-xs font-medium text-brand/80">{chapter.label}</p>
-                <h3 className="mt-4 text-4xl font-semibold leading-[1.06] tracking-[-0.035em] text-white sm:text-5xl">
+                <p className="text-xs font-medium text-brand/80 squat:text-[11px]">{chapter.label}</p>
+                <h3 className="mt-4 text-3xl font-semibold leading-[1.06] tracking-[-0.035em] text-white sm:text-4xl lg:text-5xl short:mt-3 short:text-2xl squat:mt-2 squat:text-lg">
                     {chapter.title} <span className="text-brand">{chapter.accent}</span>
                 </h3>
             </div>
 
-            <div className="mt-7">{chapter.body}</div>
+            <div className="mt-7 short:mt-5 squat:mt-3">{chapter.body}</div>
 
             {}
             {onOpenImage && (
                 <button
                     onClick={onOpenImage}
-                    className="action-quiet rim group mt-8"
+                    className="action-quiet rim group mt-8 short:mt-5 squat:mt-2"
                 >
                     <ImageIcon className="h-4 w-4"/>
                     Aufnahme
@@ -289,6 +288,8 @@ const AboutJourney = ({
     const layerRefs = useRef<(HTMLDivElement | null)[]>([])
     const headingRefs = useRef<(HTMLDivElement | null)[]>([])
     const activeIndex = useRef(0)
+    const paneRef = useRef<HTMLDivElement>(null)
+    const contentRef = useRef<HTMLDivElement>(null)
     const boxCache = useRef<DOMRect | null>(null)
     const boxStale = useRef(true)
 
@@ -326,14 +327,33 @@ const AboutJourney = ({
 
     useScrollProgress(sectionRef, onProgress)
 
-    const invalidate = useCallback(() => {
-        boxStale.current = true
+    /**
+     * The scene cannot know how tall the chapters are, and the tallest one decides where
+     * the planets may pass in portrait. offsetHeight, because the layers carry a transform.
+     */
+    const reportFloor = useCallback(() => {
+        const pane = paneRef.current
+        const content = contentRef.current
+        if (!pane || !content) return
+
+        const offset = content.getBoundingClientRect().top - pane.getBoundingClientRect().top
+        const tallest = layerRefs.current.reduce(
+            (deepest, layer) => Math.max(deepest, layer?.offsetHeight ?? 0),
+            0,
+        )
+        space.setTextFloor((offset + tallest) / window.innerHeight)
     }, [])
 
+    const invalidate = useCallback(() => {
+        boxStale.current = true
+        reportFloor()
+    }, [reportFloor])
+
     useEffect(() => {
+        reportFloor()
         window.addEventListener("resize", invalidate)
         return () => window.removeEventListener("resize", invalidate)
-    }, [invalidate])
+    }, [invalidate, reportFloor])
 
     /** Measured on demand: before the first scroll the section is still off screen. */
     const headingBox = useCallback(() => {
@@ -346,18 +366,28 @@ const AboutJourney = ({
     }, [])
 
     return (
-        <div ref={sectionRef} style={{height: `${chapters.length * 100}vh`}}>
-            <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
+        <div
+            ref={sectionRef}
+            className="track"
+            style={{"--screens": chapters.length} as CSSProperties}
+        >
+            <div
+                ref={paneRef}
+                className="stage sticky top-0 flex flex-col overflow-hidden pt-20 squat:pt-16 lg:pt-14"
+            >
                 <WaypointLink headingBox={headingBox}/>
 
-                <div className="relative mx-auto min-h-0 w-full max-w-[88rem] flex-1 px-6 sm:px-10 lg:px-16">
+                <div
+                    ref={contentRef}
+                    className="relative mx-auto min-h-0 w-full max-w-[88rem] flex-1 px-6 sm:px-10 lg:px-16"
+                >
                     {chapters.map((chapter, i) => (
                         <div
                             key={chapter.id}
                             ref={(node) => {
                                 layerRefs.current[i] = node
                             }}
-                            className="absolute inset-x-6 top-1/2 -translate-y-1/2 will-change-transform sm:inset-x-10 lg:inset-x-16"
+                            className="absolute inset-x-6 top-0 will-change-transform sm:inset-x-10 lg:inset-x-16 lg:top-1/2 lg:-translate-y-1/2"
                             style={{opacity: i === 0 ? 1 : 0}}
                         >
                             <ChapterContent
@@ -396,25 +426,19 @@ const AboutStack = () => (
 )
 
 const About = ({
+    scene,
     station,
     onStation,
 }: {
+    /** Without the scene there are no planets to fly past. */
+    scene: boolean
     /** Which planet is clicked; comes from App because the scene triggers it. */
     station: number | null
     onStation: (index: number | null) => void
-}) => {
-    const roomy = useMediaQuery("(min-width: 1024px) and (min-height: 700px)")
-    const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
-
-    return (
-        <section id="about" className="relative">
-            {roomy && !reduced ? (
-                <AboutJourney station={station} onStation={onStation}/>
-            ) : (
-                <AboutStack/>
-            )}
-        </section>
-    )
-}
+}) => (
+    <section id="about" className="relative">
+        {scene ? <AboutJourney station={station} onStation={onStation}/> : <AboutStack/>}
+    </section>
+)
 
 export default About

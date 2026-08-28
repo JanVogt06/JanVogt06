@@ -35,10 +35,10 @@ export const HudSectionHeader = ({
             <span aria-hidden="true" className="h-px w-10 bg-gradient-to-r from-brand/45 to-transparent"/>
         </div>
 
-        <h2 className="mt-5 text-[2.75rem] font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-6xl">
+        <h2 className="mt-5 text-[2rem] font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-[2.75rem] lg:text-6xl short:mt-3 short:text-[1.75rem] squat:mt-2 squat:text-2xl">
             {title} <span className="text-brand">{accent}</span>
         </h2>
 
-        {lead && <p className="mt-5 max-w-2xl leading-relaxed text-white/55">{lead}</p>}
+        {lead && <p className="mt-5 max-w-2xl leading-relaxed text-white/55 short:mt-3">{lead}</p>}
     </div>
 )

@@ -31,6 +31,8 @@ export const space = {
     setAboutActive: (active: number) => current?.setAboutActive(active),
     /** Fly-through of the galaxy between career and projects. */
     setPassageProgress: (progress: number) => current?.setPassageProgress(progress),
+    /** How far down the screen the section text reaches, 0..1. Frames the planets. */
+    setTextFloor: (floor: number) => current?.setTextFloor(floor),
     /** 0 = ring far away, 1 = section in place. Drives the zoom-in. */
     setApproach: (approach: number) => current?.setApproach(approach),
     setPaused: (paused: boolean) => current?.setPaused(paused),

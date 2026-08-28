@@ -25,6 +25,9 @@ const GALAXY_RADIUS = 26
 
 const WAYPOINT_VIEW_DISTANCE = 8
 
+/** Portrait sits further back: Saturn's ring has to fit across a narrow screen. */
+const WAYPOINT_VIEW_DISTANCE_PORTRAIT = 14
+
 const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
 
 const SKY_STARS = [4000, 9000, 16000, 26000, 38000]
@@ -66,15 +69,35 @@ const HERO_DISTANCE = 17
 const FIELD_DISTANCE = 11
 const FOCUS_DISTANCE = 6.4
 
+/**
+ * Portrait framing of the crystal field: further back, because a crystal framed for a
+ * wide screen fills a tall one, and lifted, because the caption sits underneath.
+ */
+const PORTRAIT_FIELD_PULLBACK = 1.45
+const PORTRAIT_FIELD_LIFT = 0.6
+
+/** Up to this height the screen is too short for the wide framing, however wide it is. */
+const SQUAT_HEIGHT = 520
+
 const IDLE_SWAY = 0.12
 const IDLE_SWAY_SPEED = 0.1
 
 /** Lateral camera offset in the hero, leaving room for the name. */
 const HERO_LATERAL = 2.6
 
-/** Where a planet passes by: right of the camera axis, at eye level. */
+/** Where a planet passes by in landscape: right of the camera axis, at eye level. */
 const WAYPOINT_LATERAL = 2.4
 const WAYPOINT_RISE = 0.05
+
+/** Portrait: least it passes below the eye line, as a share of the half-view. */
+const WAYPOINT_DROP = 0.58
+
+/** Gap kept between the text above and the planet, as a share of the screen height. */
+const WAYPOINT_CLEARANCE = 0.03
+
+/** Camera lift above the ring plane, and how far ahead it looks. */
+const CAMERA_RISE = 0.55
+const LOOK_AHEAD = 10
 
 /** How far a planet may stray from that spot. */
 const WAYPOINT_SCATTER = 0.24
@@ -274,6 +297,7 @@ export class SpaceScene {
     private aboutActive = 0
     private passageTarget = 0
     private passageProgress = 0
+    private textFloor = 0
     private hovered: number | null = null
     private hoveredKind: "crystal" | "waypoint" | null = null
     private selected: number | null = null
@@ -384,8 +408,6 @@ export class SpaceScene {
         this.scene.add(this.skyStars.points)
         this.scene.add(this.nearStars.points)
 
-        const heroFront = this.frontPoint()
-
         for (let i = 0; i < WAYPOINT_COUNT; i++) {
             const spec = PLANETS[i % PLANETS.length]
             const material = new THREE.ShaderMaterial({
@@ -446,18 +468,13 @@ export class SpaceScene {
             // Axial tilt: tips planet and ring together.
             group.rotation.z = spec.tilt
 
-            const t = i / (WAYPOINT_COUNT - 1)
-            group.position.set(
-                heroFront.x - HERO_LATERAL + WAYPOINT_LATERAL +
-                    (hash(i * 3.1) - 0.5) * WAYPOINT_SCATTER,
-                heroFront.y + WAYPOINT_RISE + (hash(i * 5.7) - 0.5) * WAYPOINT_SCATTER,
-                lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - WAYPOINT_VIEW_DISTANCE,
-            )
             group.userData.index = i
             this.scene.add(group)
             this.waypoints.push(group)
             this.waypointPlanets.push(planet)
         }
+
+        this.placeWaypoints()
 
         const step = (Math.PI * 2) / Math.max(count, 1)
         for (let i = 0; i < count; i++) {
@@ -567,6 +584,13 @@ export class SpaceScene {
         this.sync()
     }
 
+    /** How far down the screen the section text reaches, 0..1. */
+    setTextFloor(floor: number) {
+        if (Math.abs(floor - this.textFloor) < 0.005) return
+        this.textFloor = floor
+        this.placeWaypoints()
+    }
+
     setPaused(paused: boolean) {
         this.paused = paused
         this.sync()
@@ -599,9 +623,50 @@ export class SpaceScene {
         })
     }
 
+    /**
+     * Landscape puts the planets right of the camera axis at eye level, beside the text.
+     * Portrait has the text above them instead, so they pass centred and low - and from
+     * further away, or Saturn's ring would run off both edges.
+     */
+    private placeWaypoints() {
+        const front = this.frontPoint()
+        const portrait = this.camera.aspect < 1
+        const distance = portrait ? WAYPOINT_VIEW_DISTANCE_PORTRAIT : WAYPOINT_VIEW_DISTANCE
+        const eyeY = front.y + CAMERA_RISE * (1 - distance / LOOK_AHEAD)
+        const halfView = distance * Math.tan((this.camera.fov * Math.PI) / 360)
+
+        for (let i = 0; i < this.waypoints.length; i++) {
+            const offsetX = (hash(i * 3.1) - 0.5) * WAYPOINT_SCATTER
+            const offsetY = (hash(i * 5.7) - 0.5) * WAYPOINT_SCATTER
+            const t = i / Math.max(WAYPOINT_COUNT - 1, 1)
+
+            this.waypoints[i].position.set(
+                portrait
+                    ? front.x + offsetX
+                    : front.x - HERO_LATERAL + WAYPOINT_LATERAL + offsetX,
+                portrait
+                    ? eyeY - this.dropFor(PLANETS[i % PLANETS.length], halfView) * halfView + offsetY
+                    : front.y + WAYPOINT_RISE + offsetY,
+                lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - distance,
+            )
+        }
+    }
+
+    /**
+     * Portrait: how far the planet passes below the eye line. Far enough that its top
+     * edge clears the text above it, which on a short screen means most of the planet
+     * ends up below the fold - and that is the graceful way out, better than a planet
+     * sitting behind the timeline.
+     */
+    private dropFor(spec: PlanetSpec, halfView: number) {
+        const radiusShare = spec.radius / halfView
+        const needed = 2 * (this.textFloor + WAYPOINT_CLEARANCE - 0.5) + radiusShare
+        // Cap: the upper limb stays on screen even when the text leaves no room at all.
+        return Math.min(Math.max(WAYPOINT_DROP, needed), 0.84 + radiusShare)
+    }
+
     private pixelRatio() {
-        const mobile = this.container.clientWidth < 768
-        const ratios = mobile ? [0.5, 0.75, 1.0, 1.5, 2.0] : [0.75, 1.0, 1.25, 1.75, 2.5]
+        const ratios = [0.75, 1.0, 1.25, 1.75, 2.5]
         return Math.min(window.devicePixelRatio, ratios[Math.round(this.quality * 4)])
     }
 
@@ -685,12 +750,22 @@ export class SpaceScene {
         const offCentre = Math.abs(station - nearest)
         const centred = clamp01(1 - offCentre * 2.4)
 
-        const base = lerp(HERO_DISTANCE, FIELD_DISTANCE, this.enter)
-        const distance = lerp(base, FOCUS_DISTANCE, centred * this.enter)
-        // A bit closer while the HUD is open.
-        const finalDistance = lerp(distance, FOCUS_DISTANCE * 0.82, this.selectBlend)
+        const portrait = this.camera.aspect < 1
+        // A phone held sideways is wide but just as short on room as a portrait one.
+        const tight = portrait || this.container.clientHeight <= SQUAT_HEIGHT
+        const pull = tight ? PORTRAIT_FIELD_PULLBACK : 1
 
-        const lateral = HERO_LATERAL * (1 - this.enter)
+        const base = lerp(HERO_DISTANCE, FIELD_DISTANCE * pull, this.enter)
+        const distance = lerp(base, FOCUS_DISTANCE * pull, centred * this.enter)
+        // A bit closer while the HUD is open.
+        const finalDistance = lerp(distance, FOCUS_DISTANCE * pull * 0.82, this.selectBlend)
+
+        // Portrait has no room for a side-by-side composition; stay on the axis.
+        const lateral = (portrait ? 0 : HERO_LATERAL) * (1 - this.enter)
+
+        // Dropping the camera lifts the crystal on screen, clear of the caption below it.
+        // Only portrait needs the lift; sideways the caption sits beside the crystal.
+        const framing = portrait ? -PORTRAIT_FIELD_LIFT * this.enter : 0
 
         const travelZ = lerp(
             lerp(CAMERA_Z_HERO, ABOUT_END_Z, this.aboutProgress),
@@ -699,8 +774,8 @@ export class SpaceScene {
         )
         const z = lerp(travelZ, front.z + finalDistance, this.enter)
 
-        this.camera.position.set(front.x - lateral, front.y + 0.55, z)
-        this.camera.lookAt(front.x - lateral, front.y, z - 10)
+        this.camera.position.set(front.x - lateral, front.y + CAMERA_RISE + framing, z)
+        this.camera.lookAt(front.x - lateral, front.y + framing, z - LOOK_AHEAD)
 
         const reveal = smooth(
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
@@ -871,25 +946,40 @@ export class SpaceScene {
         this.renderer.render(this.scene, this.camera)
     }
 
+    private aimAt(clientX: number, clientY: number) {
+        const rect = this.canvasRect
+        this.pointer.set(
+            ((clientX - rect.left) / rect.width) * 2 - 1,
+            -((clientY - rect.top) / rect.height) * 2 + 1,
+        )
+    }
+
     private handlePointerMove = (event: PointerEvent) => {
+        // Touch has no hover: a finger dragging the page must not light up what it passes.
+        if (event.pointerType !== "mouse") return
         if (this.isOverInteractive(event.target)) {
             this.pointerInside = false
             this.clearHover()
             return
         }
-        const rect = this.canvasRect
-        this.pointer.set(
-            ((event.clientX - rect.left) / rect.width) * 2 - 1,
-            -((event.clientY - rect.top) / rect.height) * 2 + 1,
-        )
+        this.aimAt(event.clientX, event.clientY)
         this.pointerInside = true
         if (!this.running) this.updateHover()
     }
 
     private handleClick = (event: MouseEvent) => {
         if (this.isOverInteractive(event.target)) return
+
+        // A tap sends no pointermove first, so the hit has to be resolved right here.
+        this.aimAt(event.clientX, event.clientY)
+        this.camera.updateMatrixWorld()
+        this.updateHover()
+
         if (this.hovered === null || this.hoveredKind === null) return
-        this.onSelect({kind: this.hoveredKind, index: this.hovered})
+        const pick = {kind: this.hoveredKind, index: this.hovered}
+        // Without a cursor sitting there, the highlight would stay behind.
+        if (!this.pointerInside) this.clearHover()
+        this.onSelect(pick)
     }
 
     private isOverInteractive(target: EventTarget | null) {
@@ -911,6 +1001,7 @@ export class SpaceScene {
         this.bgMaterial.uniforms.uResolution.value.set(width, height)
         this.camera.aspect = width / height
         this.camera.updateProjectionMatrix()
+        this.placeWaypoints()
         if (!this.running) this.render()
     }
 
