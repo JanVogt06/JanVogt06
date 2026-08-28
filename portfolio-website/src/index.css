@@ -58,6 +58,10 @@
     /* One accent, borrowed from the light the planets throw into the scene. */
     --color-brand: #f0a868;
     --color-brand-deep: #c4703c;
+    --color-brand-lift: #f7bb84;
+
+    /* Text that sits on the accent. */
+    --color-ink: #1c1006;
 
     /* Availability, nothing else. */
     --color-status: #5fd39b;
@@ -180,6 +184,43 @@
         mask-composite: exclude;
         -webkit-mask-composite: xor;
         pointer-events: none;
+    }
+
+    /*
+     * Actions. There is exactly one filled action per view - that is the whole
+     * job of the accent - and .action-quiet for everything standing next to it.
+     */
+    .action,
+    .action-quiet {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 9999px;
+        padding: 0.625rem 1.25rem;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        font-weight: 500;
+        transition: background-color 220ms, color 220ms;
+    }
+
+    .action {
+        background-color: var(--color-brand);
+        color: var(--color-ink);
+    }
+
+    .action:hover {
+        background-color: var(--color-brand-lift);
+    }
+
+    .action-quiet {
+        background-color: rgb(255 255 255 / 0.05);
+        color: rgb(255 255 255 / 0.7);
+    }
+
+    .action-quiet:hover {
+        background-color: rgb(255 255 255 / 0.09);
+        color: #fff;
     }
 
     /* Same rim without the blur, for surfaces that must not cost a backdrop pass. */

@@ -93,7 +93,7 @@ const CrystalCallouts = () => {
                                 refs.current[i].line = node
                             }}
                             fill="none"
-                            stroke={callout.role === "title" ? "#22d3ee" : "rgba(255,255,255,0.32)"}
+                            stroke={callout.role === "title" ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.24)"}
                             strokeWidth={1}
                             points=""
                         />
@@ -103,7 +103,7 @@ const CrystalCallouts = () => {
                             }}
                             r={2.5}
                             fill="none"
-                            stroke={callout.role === "title" ? "#22d3ee" : "rgba(255,255,255,0.45)"}
+                            stroke={callout.role === "title" ? "rgba(255,255,255,0.6)" : "rgba(255,255,255,0.32)"}
                             strokeWidth={1}
                         />
                     </g>
@@ -122,12 +122,12 @@ const CrystalCallouts = () => {
                     {callout.role === "title" ? (
                         <span
                             ref={titleRef}
-                            className="block text-2xl font-semibold tracking-[-0.02em] text-white"
+                            className="block text-2xl font-semibold tracking-[-0.03em] text-white"
                         />
                     ) : (
                         <span
                             ref={taglineRef}
-                            className="block max-w-[22rem] text-sm leading-snug text-white/55"
+                            className="block max-w-[22rem] text-sm leading-relaxed text-white/50"
                         />
                     )}
                 </div>

@@ -75,7 +75,7 @@ const Hero = () => {
                 >
                     <button
                         onClick={() => scrollToElement("projects")}
-                        className="group inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-[#1c1006] transition-colors hover:bg-[#f7bb84]"
+                        className="action group"
                     >
                         Projekte ansehen
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
@@ -83,7 +83,7 @@ const Hero = () => {
 
                     <button
                         onClick={() => scrollToElement("contact")}
-                        className="rim relative rounded-full bg-white/[0.05] px-5 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/[0.09] hover:text-white"
+                        className="action-quiet rim"
                     >
                         Kontakt
                     </button>

@@ -32,14 +32,14 @@ const awards = [
 ]
 
 const Row = ({when, what, where}: {when?: string; what: string; where?: string}) => (
-    <div className="flex gap-5 border-t border-white/[0.07] py-3.5 first:border-t-0">
+    <div className="flex gap-5 border-t border-white/[0.06] py-3.5 first:border-t-0">
         {when && (
-            <span className="w-24 shrink-0 pt-0.5 font-mono text-[11px] uppercase tracking-[0.14em] text-brand/60">
+            <span className="w-24 shrink-0 pt-0.5 font-mono text-[11px] tabular-nums text-white/35">
                 {when}
             </span>
         )}
         <span className="min-w-0">
-            <span className="block text-white/90">{what}</span>
+            <span className="block font-medium text-white/90">{what}</span>
             {where && <span className="mt-0.5 block text-sm text-white/45">{where}</span>}
         </span>
     </div>
@@ -128,7 +128,7 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
             role="dialog"
             aria-modal="true"
             aria-label={chapter.alt}
-            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
+            className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/65 px-4 pb-4 pt-24 backdrop-blur-[10px] sm:px-8 sm:pb-8"
         >
             {/* Clicking outside closes; the button stays the accessible way */}
             <button
@@ -138,26 +138,24 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                 className="absolute inset-0 cursor-default"
             />
 
-            <div className="surface relative flex w-full max-w-[64rem] flex-col p-5 sm:p-8">
-                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
+            <div className="glass relative flex w-full max-w-[64rem] flex-col rounded-3xl p-5 sm:p-8">
+                <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.06] pb-4">
                     <div className="min-w-0">
-                        <HudLabel tone="text-brand/80" className="!text-[11px]">
-                            {chapter.label}
-                        </HudLabel>
+                        <HudLabel tone="text-brand/80">{chapter.label}</HudLabel>
                         <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
                             {chapter.title} {chapter.accent}
                         </h2>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-4">
-                        <span className="hidden font-mono text-[10px] uppercase tracking-[0.28em] text-white/25 lg:inline">
+                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/40 lg:inline">
                             Esc
-                        </span>
+                        </kbd>
                         <button
                             ref={closeRef}
                             onClick={onClose}
                             aria-label="Aufnahme schließen"
-                            className="border border-white/10 p-2.5 text-white/60 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                            className="rounded-full bg-white/[0.06] p-2.5 text-white/60 transition-colors hover:bg-white/[0.12] hover:text-white"
                         >
                             <X className="h-4 w-4"/>
                         </button>
@@ -169,7 +167,7 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                     <img
                         src={chapter.image}
                         alt={chapter.alt}
-                        className="h-full w-full object-contain object-center"
+                        className="h-full w-full rounded-2xl object-contain object-center"
                     />
                 </div>
             </div>
@@ -200,14 +198,9 @@ const ChapterContent = ({
             />
 
             <div ref={headingRef}>
-                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-brand/70">
-                    {chapter.label}
-                </p>
-                <h3 className="mt-4 text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
-                    {chapter.title}{" "}
-                    <span className="bg-gradient-to-r from-brand to-brand-deep bg-clip-text text-transparent">
-                        {chapter.accent}
-                    </span>
+                <p className="text-xs font-medium text-brand/80">{chapter.label}</p>
+                <h3 className="mt-4 text-4xl font-semibold leading-[1.06] tracking-[-0.035em] text-white sm:text-5xl">
+                    {chapter.title} <span className="text-brand">{chapter.accent}</span>
                 </h3>
             </div>
 
@@ -217,13 +210,11 @@ const ChapterContent = ({
             {onOpenImage && (
                 <button
                     onClick={onOpenImage}
-                    className="group mt-8 inline-flex items-center gap-2 border border-white/10 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.18em] text-white/50 transition-colors hover:border-brand/40 hover:bg-brand/10 hover:text-brand"
+                    className="action-quiet rim group mt-8"
                 >
-                    <ImageIcon className="h-3.5 w-3.5"/>
+                    <ImageIcon className="h-4 w-4"/>
                     Aufnahme
-                    <span className="text-white/25 group-hover:text-brand/50">
-                        oder Planet anklicken
-                    </span>
+                    <span className="text-white/30">oder Planet anklicken</span>
                 </button>
             )}
         </div>
@@ -265,13 +256,13 @@ const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
     return (
         <svg
             aria-hidden="true"
-            className="pointer-events-none fixed inset-0 z-10 hidden h-full w-full overflow-visible lg:block"
+            className="pointer-events-none fixed inset-0 z-10 hidden h-full w-full overflow-visible text-brand lg:block"
         >
             <polyline
                 ref={lineRef}
                 points=""
                 fill="none"
-                stroke="#22d3ee"
+                stroke="currentColor"
                 strokeWidth={1}
                 style={{opacity: 0}}
             />
@@ -279,7 +270,7 @@ const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
                 ref={dotRef}
                 r={2.5}
                 fill="none"
-                stroke="#22d3ee"
+                stroke="currentColor"
                 strokeWidth={1}
                 style={{opacity: 0}}
             />
@@ -397,7 +388,7 @@ const AboutStack = () => (
                 <img
                     src={chapter.image}
                     alt={chapter.alt}
-                    className="mt-10 max-h-[50vh] w-full object-contain object-center"
+                    className="mt-10 max-h-[50vh] w-full rounded-2xl object-contain object-center"
                 />
             </div>
         ))}

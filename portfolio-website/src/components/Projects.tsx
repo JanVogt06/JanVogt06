@@ -25,10 +25,10 @@ const SectionIntro = () => (
             href="https://github.com/JanVogt06?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="group hidden shrink-0 items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] text-white/35 transition-colors hover:text-brand sm:inline-flex"
+            className="group hidden shrink-0 items-center gap-2 text-sm text-white/40 transition-colors hover:text-white sm:inline-flex"
         >
-            alle Repositories
-            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
+            Alle Repositories
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
         </a>
     </div>
 )
@@ -65,10 +65,10 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
                     <button
                         onClick={() => onSelect(index)}
-                        className="group inline-flex items-center gap-2 border border-brand/30 bg-brand/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-brand transition-colors hover:bg-brand/20 hover:text-white"
+                        className="action group"
                     >
                         Projekt öffnen
-                        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
                     </button>
                 </div>
             </div>
@@ -104,9 +104,9 @@ const ProjectStack = () => {
                     href="https://github.com/JanVogt06?tab=repositories"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2 font-mono text-sm text-brand transition-colors hover:text-white"
+                    className="group inline-flex items-center gap-2 text-sm font-medium text-brand transition-colors hover:text-white"
                 >
-                    weitere Projekte auf GitHub
+                    Weitere Projekte auf GitHub
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1"/>
                 </a>
             </div>
