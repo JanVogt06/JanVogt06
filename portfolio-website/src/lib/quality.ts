@@ -19,11 +19,8 @@ export const detectQuality = (): number => {
     const cores = navigator.hardwareConcurrency ?? 4
     // Not standardised, Chromium only, hence optional.
     const memory = (navigator as {deviceMemory?: number}).deviceMemory ?? 4
-    const coarse = window.matchMedia("(pointer: coarse)").matches
 
     if (cores <= 2 || memory <= 2) return 0.25
-    // Touch devices: almost always a mobile GPU, regardless of core count.
-    if (coarse) return cores >= 8 && memory >= 6 ? 0.5 : 0.25
     if (cores >= 8 && memory >= 8) return 0.75
     return 0.5
 }

@@ -1,10 +1,10 @@
 import {useCallback, useRef} from "react"
+import type {CSSProperties} from "react"
 import useScrollProgress from "@/lib/useScrollProgress"
-import useMediaQuery from "@/lib/useMediaQuery"
 import {space} from "@/lib/space/controller"
 
-/** Length of the stretch, in viewport heights. */
-const LENGTH_VH = 200
+/** Length of the stretch, in viewports. */
+const SCREENS = 2
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
@@ -17,15 +17,16 @@ const PassageFlight = () => {
 
     useScrollProgress(sectionRef, onProgress)
 
-    return <div ref={sectionRef} aria-hidden="true" style={{height: `${LENGTH_VH}vh`}}/>
+    return (
+        <div
+            ref={sectionRef}
+            aria-hidden="true"
+            className="track"
+            style={{"--screens": SCREENS} as CSSProperties}
+        />
+    )
 }
 
-const Passage = () => {
-    const roomy = useMediaQuery("(min-width: 1024px) and (min-height: 700px)")
-    const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
-
-    if (!roomy || reduced) return null
-    return <PassageFlight/>
-}
+const Passage = ({scene}: {scene: boolean}) => (scene ? <PassageFlight/> : null)
 
 export default Passage

@@ -9,15 +9,15 @@ import Projects from './components/Projects'
 import Contact from './components/Contact'
 import {useSmoothScroll} from '@/lib/smoothScroll'
 import useMediaQuery from '@/lib/useMediaQuery'
-import {sceneSupported, CRYSTALS_MIN_WIDTH} from '@/lib/space/support'
+import {hasWebGL2} from '@/lib/space/support'
 import {projects} from '@/lib/projects'
 
 function App() {
     useSmoothScroll()
 
-    const scene = sceneSupported()
-    const wideEnough = useMediaQuery(`(min-width: ${CRYSTALS_MIN_WIDTH}px)`)
-    const crystals = scene && wideEnough
+    // The scene carries the whole choreography; without it every section falls back.
+    const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
+    const scene = hasWebGL2() && !reduced
 
     const [selected, setSelected] = useState<number | null>(null)
     const [station, setStation] = useState<number | null>(null)
@@ -26,17 +26,17 @@ function App() {
         <MotionConfig reducedMotion="user">
             <Atmosphere
                 scene={scene}
-                crystalCount={crystals ? projects.length : 0}
+                crystalCount={scene ? projects.length : 0}
                 onPick={(pick) =>
                     pick.kind === "crystal" ? setSelected(pick.index) : setStation(pick.index)
                 }
             />
             <TopBar/>
             <Hero/>
-            <About station={station} onStation={setStation}/>
+            <About scene={scene} station={station} onStation={setStation}/>
             {/* Scroll-only stretch: the fly-through of the galaxy */}
-            <Passage/>
-            <Projects crystals={crystals} selected={selected} onSelect={setSelected}/>
+            <Passage scene={scene}/>
+            <Projects crystals={scene} selected={selected} onSelect={setSelected}/>
             <Contact/>
         </MotionConfig>
     )
