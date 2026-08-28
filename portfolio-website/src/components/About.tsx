@@ -300,9 +300,14 @@ const AboutJourney = ({
     const layerRefs = useRef<(HTMLDivElement | null)[]>([])
     const headingRefs = useRef<(HTMLDivElement | null)[]>([])
     const activeIndex = useRef(0)
+    const boxCache = useRef<DOMRect | null>(null)
+    const boxStale = useRef(true)
 
     const onProgress = useCallback((raw: number) => {
         const progress = clamp01(raw)
+
+        // The heading rides along with the layer, so its box is outdated now.
+        boxStale.current = true
 
         space.setAboutProgress(progress)
 
@@ -332,20 +337,24 @@ const AboutJourney = ({
 
     useScrollProgress(sectionRef, onProgress)
 
-    const boxCache = useRef<DOMRect | null>(null)
-
-    const remeasure = useCallback(() => {
-        boxCache.current =
-            headingRefs.current[activeIndex.current]?.getBoundingClientRect() ?? null
+    const invalidate = useCallback(() => {
+        boxStale.current = true
     }, [])
 
     useEffect(() => {
-        remeasure()
-        window.addEventListener("resize", remeasure)
-        return () => window.removeEventListener("resize", remeasure)
-    }, [remeasure])
+        window.addEventListener("resize", invalidate)
+        return () => window.removeEventListener("resize", invalidate)
+    }, [invalidate])
 
-    const headingBox = useCallback(() => boxCache.current, [])
+    /** Measured on demand: before the first scroll the section is still off screen. */
+    const headingBox = useCallback(() => {
+        if (boxStale.current) {
+            boxStale.current = false
+            boxCache.current =
+                headingRefs.current[activeIndex.current]?.getBoundingClientRect() ?? null
+        }
+        return boxCache.current
+    }, [])
 
     return (
         <div ref={sectionRef} style={{height: `${chapters.length * 100}vh`}}>
