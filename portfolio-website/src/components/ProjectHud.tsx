@@ -5,7 +5,7 @@ import {
 } from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
-import {HudCorners, HudLabel} from "./Hud"
+import {HudLabel} from "./Hud"
 import {projects, primaryLinkOf} from "@/lib/projects"
 import {space} from "@/lib/space/controller"
 
@@ -54,8 +54,6 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/85 px-4 pb-4 pt-20 backdrop-blur-xl sm:px-8 sm:pb-8"
         >
             <div className="surface relative flex w-full max-w-[84rem] flex-col p-5 sm:p-8">
-                <HudCorners/>
-
                 {/* Header: identifier and close */}
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
                     <div className="min-w-0">

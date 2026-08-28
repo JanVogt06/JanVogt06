@@ -1,55 +1,32 @@
 import type {ReactNode} from "react"
 
-/** A single corner bracket. */
-const Corner = ({at, tone}: {at: "tl" | "tr" | "bl" | "br"; tone: string}) => {
-    const sides = {
-        tl: "left-0 top-0 border-l border-t",
-        tr: "right-0 top-0 border-r border-t",
-        bl: "left-0 bottom-0 border-l border-b",
-        br: "right-0 bottom-0 border-r border-b",
-    }[at]
-    return <span aria-hidden="true" className={`pointer-events-none absolute h-5 w-5 ${tone} ${sides}`}/>
-}
-
-/** All four corner brackets of a surface. */
-export const HudCorners = ({tone = "border-brand/50"}: {tone?: string}) => (
-    <>
-        <Corner at="tl" tone={tone}/>
-        <Corner at="tr" tone={tone}/>
-        <Corner at="bl" tone={tone}/>
-        <Corner at="br" tone={tone}/>
-    </>
-)
-
+/**
+ * A floating surface. Depth comes from the wash and the drop shadow, the edge
+ * from the .rim highlight - no drawn border.
+ */
 export const HudPanel = ({
     children,
     className = "",
-    corners = true,
-    tone,
 }: {
     children: ReactNode
     className?: string
-    /** No brackets when the surface sits inside another one. */
-    corners?: boolean
-    tone?: string
 }) => (
-    <div className={`surface relative ${className}`}>
-        {corners && <HudCorners tone={tone}/>}
+    <div className={`surface rim rounded-2xl ${className}`}>
         {children}
     </div>
 )
 
-/** Mono label in small caps with wide tracking. */
+/** Quiet label above a group. Sentence case, not a readout. */
 export const HudLabel = ({
     children,
     className = "",
-    tone = "text-white/30",
+    tone = "text-white/35",
 }: {
     children: ReactNode
     className?: string
     tone?: string
 }) => (
-    <p className={`font-mono text-[10px] uppercase tracking-[0.28em] ${tone} ${className}`}>
+    <p className={`text-xs font-medium ${tone} ${className}`}>
         {children}
     </p>
 )
@@ -61,7 +38,7 @@ export const HudSectionHeader = ({
     lead,
     className = "",
 }: {
-    /** Identifier such as 02. */
+    /** Identifier such as 02. Mono, because it is data. */
     id: string
     title: string
     accent: string
@@ -69,20 +46,15 @@ export const HudSectionHeader = ({
     className?: string
 }) => (
     <div className={className}>
-        <div className="flex items-center gap-4">
-            <span className="font-mono text-[10px] uppercase tracking-[0.28em] text-brand/70">
-                {id}
-            </span>
-            <span aria-hidden="true" className="h-px flex-1 bg-gradient-to-r from-brand/40 to-transparent"/>
+        <div className="flex items-center gap-3">
+            <span className="font-mono text-xs tabular-nums text-brand">{id}</span>
+            <span aria-hidden="true" className="h-px w-10 bg-gradient-to-r from-brand/45 to-transparent"/>
         </div>
 
-        <h2 className="mt-5 text-4xl font-semibold tracking-[-0.03em] text-white sm:text-5xl">
-            {title}{" "}
-            <span className="bg-gradient-to-r from-brand to-brand-deep bg-clip-text text-transparent">
-                {accent}
-            </span>
+        <h2 className="mt-5 text-[2.75rem] font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-6xl">
+            {title} <span className="text-brand">{accent}</span>
         </h2>
 
-        {lead && <p className="mt-4 max-w-2xl leading-relaxed text-white/50">{lead}</p>}
+        {lead && <p className="mt-5 max-w-2xl leading-relaxed text-white/45">{lead}</p>}
     </div>
 )

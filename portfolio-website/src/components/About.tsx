@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef} from "react"
 import type {ReactNode} from "react"
 import {ImageIcon, X} from "lucide-react"
-import {HudCorners, HudLabel} from "./Hud"
+import {HudLabel} from "./Hud"
 import portraitImage from "../data/images/portrait.webp"
 import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
@@ -139,8 +139,6 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
             />
 
             <div className="surface relative flex w-full max-w-[64rem] flex-col p-5 sm:p-8">
-                <HudCorners/>
-
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.07] pb-4">
                     <div className="min-w-0">
                         <HudLabel tone="text-brand/80" className="!text-[11px]">
