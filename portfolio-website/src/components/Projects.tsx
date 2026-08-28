@@ -1,4 +1,5 @@
 import {useCallback, useEffect, useRef, useState} from "react"
+import type {CSSProperties} from "react"
 import {ArrowRight} from "lucide-react"
 import Reveal from "./Reveal"
 import ProjectPanel from "./ProjectPanel"
@@ -6,6 +7,7 @@ import ProjectHud from "./ProjectHud"
 import CrystalCallouts from "./CrystalCallouts"
 import {fadeUp} from "@/lib/motion"
 import {projects} from "@/lib/projects"
+import {useTagline} from "@/lib/github"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {HudSectionHeader} from "./Hud"
 import {space} from "@/lib/space/controller"
@@ -33,6 +35,21 @@ const SectionIntro = () => (
     </div>
 )
 
+/** What the leader lines carry on wide screens; portrait has no room beside the crystal. */
+const CrystalCaption = ({index}: {index: number}) => {
+    const project = projects[index]
+    const tagline = useTagline(project)
+
+    return (
+        <div className="mb-6 lg:hidden short:mb-4 squat:mb-0 squat:min-w-0 squat:flex-1">
+            <p className="text-2xl font-semibold tracking-[-0.03em] text-white short:text-xl squat:text-lg">
+                {project.title}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-white/60 squat:mt-1 squat:line-clamp-2 squat:text-[13px]">{tagline}</p>
+        </div>
+    )
+}
+
 const APPROACH = 0.16
 
 const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
@@ -54,18 +71,24 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     useScrollProgress(sectionRef, onProgress)
 
     return (
-        <div ref={sectionRef} style={{height: `${total * 100}vh`}}>
-            <div className="sticky top-0 flex h-screen flex-col overflow-hidden pt-14">
-                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pt-8 sm:px-10 lg:px-16">
+        <div
+            ref={sectionRef}
+            className="track"
+            style={{"--screens": total} as CSSProperties}
+        >
+            <div className="stage sticky top-0 flex flex-col overflow-hidden pt-20 squat:pt-16 lg:pt-14">
+                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pt-8 sm:px-10 lg:px-16 short:pt-4">
                     <SectionIntro/>
                 </div>
 
                 <div className="min-h-0 flex-1"/>
 
-                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16">
+                <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pb-10 sm:px-10 lg:px-16 squat:flex squat:items-end squat:justify-between squat:gap-8 squat:pb-6">
+                    <CrystalCaption index={index}/>
+
                     <button
                         onClick={() => onSelect(index)}
-                        className="action group"
+                        className="action group squat:shrink-0"
                     >
                         Projekt öffnen
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
@@ -87,7 +110,7 @@ const ProjectStack = () => {
             </div>
 
             {projects.map((project, i) => (
-                <Reveal key={project.slug} variants={fadeUp} className="min-h-screen py-16">
+                <Reveal key={project.slug} variants={fadeUp} className="stage-min py-16">
                     <ProjectPanel
                         project={project}
                         index={i}

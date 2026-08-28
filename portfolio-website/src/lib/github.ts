@@ -1,3 +1,4 @@
+import {useEffect, useSyncExternalStore} from "react"
 import {projects} from "./projects"
 import type {Project} from "./projects"
 
@@ -85,4 +86,10 @@ export const loadDescriptions = () => {
         persist()
         notify()
     })
+}
+
+/** Tagline of a project, re-rendering once the descriptions arrive. */
+export const useTagline = (project: Project) => {
+    useEffect(loadDescriptions, [])
+    return useSyncExternalStore(subscribeDescriptions, () => taglineOf(project))
 }
