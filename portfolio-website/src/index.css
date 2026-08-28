@@ -59,9 +59,6 @@
     --color-brand: #f0a868;
     --color-brand-deep: #c4703c;
 
-    /* Still carrying the hero gradient; goes when the hero is rebuilt. */
-    --color-glow: #8b5cf6;
-
     /* Availability, nothing else. */
     --color-status: #5fd39b;
 
@@ -205,16 +202,6 @@
     }
 }
 
-@keyframes gradient-shift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
-
-.animate-gradient-shift {
-    animation: gradient-shift 8s ease infinite;
-    background-size: 200% 200%;
-}
-
 @keyframes overlay-in {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -231,10 +218,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .animate-gradient-shift {
-        animation: none;
-    }
-
     .animate-hud {
         animation-name: overlay-in;
     }

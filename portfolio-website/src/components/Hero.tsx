@@ -28,7 +28,7 @@ const Hero = () => {
                 className="relative z-10 mx-auto flex min-h-screen max-w-[88rem] flex-col justify-center px-6 pt-14 will-change-transform sm:px-8 lg:px-12"
             >
                 <motion.p
-                    className="mb-6 font-mono text-[11px] uppercase tracking-[0.3em] text-white/40"
+                    className="mb-7 text-sm font-medium text-white/40"
                     initial={{opacity: 0}}
                     animate={{opacity: 1}}
                     transition={{duration: 0.5, delay: 0.3, ease: EASE}}
@@ -41,10 +41,10 @@ const Hero = () => {
                     {["Jan", "Vogt"].map((word, i) => (
                         <span key={word} className="block overflow-hidden">
                             <motion.span
-                                className={`block text-[clamp(4.5rem,15vw,13rem)] ${
+                                className={`block bg-clip-text text-transparent text-[clamp(4.5rem,15vw,13rem)] ${
                                     i === 1
-                                        ? "bg-gradient-to-r from-glow via-[#c4a3ff] to-glow bg-clip-text text-transparent animate-gradient-shift"
-                                        : "text-white"
+                                        ? "bg-gradient-to-br from-brand via-[#f8cda2] to-brand-deep"
+                                        : "bg-gradient-to-b from-white via-white/95 to-white/55"
                                 }`}
                                 initial={{y: "110%"}}
                                 animate={{y: 0}}
@@ -63,7 +63,7 @@ const Hero = () => {
                     transition={{duration: 0.6, delay: 0.7, ease: EASE}}
                 >
                     Informatik-Student an der FSU Jena,
-                    <span className="text-brand"> Werkstudent bei ZEISS</span> und
+                    <span className="text-white/85"> Werkstudent bei ZEISS</span> und
                     <span className="text-white/85"> Schiedsrichter</span> im NOFV.
                 </motion.p>
 
@@ -75,15 +75,15 @@ const Hero = () => {
                 >
                     <button
                         onClick={() => scrollToElement("projects")}
-                        className="group inline-flex items-center gap-2 text-base font-medium text-white"
+                        className="group inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2.5 text-sm font-medium text-[#1c1006] transition-colors hover:bg-[#f7bb84]"
                     >
                         Projekte ansehen
-                        <ArrowRight className="h-4 w-4 text-brand transition-transform group-hover:translate-x-1"/>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
                     </button>
 
                     <button
                         onClick={() => scrollToElement("contact")}
-                        className="text-base text-white/50 transition-colors hover:text-white"
+                        className="rim relative rounded-full bg-white/[0.05] px-5 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/[0.09] hover:text-white"
                     >
                         Kontakt
                     </button>
@@ -104,14 +104,14 @@ const Hero = () => {
                     animate={{y: [0, 7, 0]}}
                     transition={{duration: 2.2, repeat: Infinity, ease: "easeInOut"}}
                 >
-                    <span className="font-mono text-[10px] uppercase tracking-[0.3em]">scroll</span>
+                    <span className="text-[11px] tracking-[0.02em]">Scroll</span>
                     <ArrowDown className="h-4 w-4"/>
                 </motion.span>
             </motion.button>
 
             {/* Sits above the scroll hint on narrow screens. */}
             <motion.p
-                className="absolute bottom-24 right-6 z-20 max-w-[15rem] text-right font-mono text-[10px] leading-relaxed tracking-[0.08em] text-white/25 sm:bottom-8 sm:right-8 lg:right-12"
+                className="absolute bottom-24 right-6 z-20 max-w-[16rem] text-right text-[11px] leading-relaxed text-white/25 sm:bottom-8 sm:right-8 lg:right-12"
                 initial={{opacity: 0}}
                 animate={{opacity: 1}}
                 transition={{duration: 0.6, delay: 1.4}}
