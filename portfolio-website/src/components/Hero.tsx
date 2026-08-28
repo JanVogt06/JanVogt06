@@ -21,11 +21,11 @@ const Hero = () => {
     useScrollProgress(sectionRef, onProgress, "exit")
 
     return (
-        <section ref={sectionRef} id="hero" className="relative min-h-screen w-full overflow-hidden">
+        <section ref={sectionRef} id="hero" className="stage-min relative w-full overflow-hidden">
 
             <div
                 ref={contentRef}
-                className="relative z-10 mx-auto flex min-h-screen max-w-[88rem] flex-col justify-center px-6 pt-14 will-change-transform sm:px-8 lg:px-12"
+                className="stage-min relative z-10 mx-auto flex max-w-[88rem] flex-col justify-center px-6 pt-20 will-change-transform sm:px-8 lg:px-12 lg:pt-14"
             >
                 <motion.p
                     className="mb-7 text-sm font-medium text-white/55"
@@ -41,7 +41,7 @@ const Hero = () => {
                     {["Jan", "Vogt"].map((word, i) => (
                         <span key={word} className="block overflow-hidden">
                             <motion.span
-                                className={`block bg-clip-text text-transparent text-[clamp(4.5rem,15vw,13rem)] ${
+                                className={`block bg-clip-text text-transparent text-[clamp(4.5rem,15vw,13rem)] squat:text-[clamp(2.5rem,7vw,3.5rem)] ${
                                     i === 1
                                         ? "bg-gradient-to-br from-brand via-[#f8cda2] to-brand-deep"
                                         : "bg-gradient-to-b from-white via-white/95 to-white/55"
@@ -116,7 +116,7 @@ const Hero = () => {
                 animate={{opacity: 1}}
                 transition={{duration: 0.6, delay: 1.4}}
             >
-                Diese Seite ist mit KI-Unterstützung entstanden — ich habe hier neue
+                Diese Seite ist mit KI-Unterstützung entstanden. Ich habe hier neue
                 Modelle getestet. Konzept, Design und jede Entscheidung sind von mir.
             </motion.p>
         </section>
