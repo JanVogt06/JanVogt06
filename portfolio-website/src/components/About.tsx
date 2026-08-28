@@ -34,13 +34,13 @@ const awards = [
 const Row = ({when, what, where}: {when?: string; what: string; where?: string}) => (
     <div className="flex gap-5 border-t border-white/[0.06] py-3.5 first:border-t-0">
         {when && (
-            <span className="w-24 shrink-0 pt-0.5 font-mono text-[11px] tabular-nums text-white/35">
+            <span className="w-24 shrink-0 pt-0.5 font-mono text-[11px] tabular-nums text-white/50">
                 {when}
             </span>
         )}
         <span className="min-w-0">
             <span className="block font-medium text-white/90">{what}</span>
-            {where && <span className="mt-0.5 block text-sm text-white/45">{where}</span>}
+            {where && <span className="mt-0.5 block text-sm text-white/55">{where}</span>}
         </span>
     </div>
 )
@@ -148,7 +148,7 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                     </div>
 
                     <div className="flex shrink-0 items-center gap-4">
-                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/40 lg:inline">
+                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/55 lg:inline">
                             Esc
                         </kbd>
                         <button
@@ -214,7 +214,7 @@ const ChapterContent = ({
                 >
                     <ImageIcon className="h-4 w-4"/>
                     Aufnahme
-                    <span className="text-white/30">oder Planet anklicken</span>
+                    <span className="text-white/45">oder Planet anklicken</span>
                 </button>
             )}
         </div>

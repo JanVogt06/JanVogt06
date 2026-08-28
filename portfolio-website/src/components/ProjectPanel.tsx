@@ -47,16 +47,16 @@ const ProjectPanel = ({
 
             {/* Facts */}
             <div className="relative lg:col-span-5">
-                <p className="mb-5 flex items-center gap-3 font-mono text-xs tabular-nums text-white/35">
+                <p className="mb-5 flex items-center gap-3 font-mono text-xs tabular-nums text-white/50">
                     <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
                     <span className="h-px w-6 bg-white/15"/>
-                    <span className="text-white/20">/{String(total).padStart(2, "0")}</span>
+                    <span className="text-white/55">/{String(total).padStart(2, "0")}</span>
                 </p>
 
                 <h3 className="text-4xl font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
                     {project.title}
                 </h3>
-                <p className="mt-2 text-lg text-white/45">{project.subtitle}</p>
+                <p className="mt-2 text-lg text-white/55">{project.subtitle}</p>
 
                 <p className="mt-6 max-w-xl leading-relaxed text-white/60">
                     {project.description}
@@ -66,7 +66,7 @@ const ProjectPanel = ({
                     {project.tech.map((tech) => (
                         <li
                             key={tech}
-                            className="rim relative rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
+                            className="rim rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
                         >
                             {tech}
                         </li>

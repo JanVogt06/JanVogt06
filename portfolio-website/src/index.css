@@ -224,6 +224,10 @@
     }
 
     /* Same rim without the blur, for surfaces that must not cost a backdrop pass. */
+    .rim {
+        position: relative;
+    }
+
     .rim::before {
         content: "";
         position: absolute;

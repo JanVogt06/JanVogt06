@@ -44,16 +44,16 @@ const Channel = ({channel}: {channel: (typeof channels)[number]}) => {
             href={channel.href}
             target={channel.external ? "_blank" : undefined}
             rel={channel.external ? "noopener noreferrer" : undefined}
-            className="rim group relative flex items-center gap-4 rounded-xl bg-white/[0.035] px-4 py-3.5 transition-colors hover:bg-white/[0.075]"
+            className="rim group flex items-center gap-4 rounded-xl bg-white/[0.035] px-4 py-3.5 transition-colors hover:bg-white/[0.075]"
         >
-            <Icon className="h-4 w-4 shrink-0 text-white/40 transition-colors group-hover:text-brand"/>
+            <Icon className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-brand"/>
             <div className="min-w-0 flex-1">
-                <HudLabel tone="text-white/30">{channel.label}</HudLabel>
+                <HudLabel tone="text-white/50">{channel.label}</HudLabel>
                 <p className="mt-1 truncate font-mono text-sm text-white/70 transition-colors group-hover:text-white">
                     {channel.value}
                 </p>
             </div>
-            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-white/20 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand"/>
+            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-white/35 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand"/>
         </a>
     )
 }
@@ -139,7 +139,7 @@ const Contact = () => {
                                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
                             </a>
 
-                            <p className="text-xs text-white/30">
+                            <p className="text-xs text-white/50">
                                 Antwort meist innerhalb eines Tages
                             </p>
                         </div>
@@ -147,7 +147,7 @@ const Contact = () => {
                 </div>
 
                 {}
-                <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/25">
+                <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/50">
                     Planetenkarten:{" "}
                     <a
                         href="https://www.solarsystemscope.com/textures/"

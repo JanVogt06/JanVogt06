@@ -28,7 +28,7 @@ const Hero = () => {
                 className="relative z-10 mx-auto flex min-h-screen max-w-[88rem] flex-col justify-center px-6 pt-14 will-change-transform sm:px-8 lg:px-12"
             >
                 <motion.p
-                    className="mb-7 text-sm font-medium text-white/40"
+                    className="mb-7 text-sm font-medium text-white/55"
                     initial={{opacity: 0}}
                     animate={{opacity: 1}}
                     transition={{duration: 0.5, delay: 0.3, ease: EASE}}
@@ -93,7 +93,7 @@ const Hero = () => {
             {/* Scroll hint */}
             <motion.button
                 onClick={() => scrollToElement("about")}
-                className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-white/30 transition-colors hover:text-white/60"
+                className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-white/50 transition-colors hover:text-white/60"
                 initial={{opacity: 0}}
                 animate={{opacity: 1}}
                 transition={{duration: 0.6, delay: 1.2}}
@@ -111,7 +111,7 @@ const Hero = () => {
 
             {/* Sits above the scroll hint on narrow screens. */}
             <motion.p
-                className="absolute bottom-24 right-6 z-20 max-w-[16rem] text-right text-[11px] leading-relaxed text-white/25 sm:bottom-8 sm:right-8 lg:right-12"
+                className="absolute bottom-24 right-6 z-20 max-w-[16rem] text-right text-[11px] leading-relaxed text-white/50 sm:bottom-8 sm:right-8 lg:right-12"
                 initial={{opacity: 0}}
                 animate={{opacity: 1}}
                 transition={{duration: 0.6, delay: 1.4}}

@@ -4,7 +4,7 @@ import type {ReactNode} from "react"
 export const HudLabel = ({
     children,
     className = "",
-    tone = "text-white/35",
+    tone = "text-white/50",
 }: {
     children: ReactNode
     className?: string
@@ -39,6 +39,6 @@ export const HudSectionHeader = ({
             {title} <span className="text-brand">{accent}</span>
         </h2>
 
-        {lead && <p className="mt-5 max-w-2xl leading-relaxed text-white/45">{lead}</p>}
+        {lead && <p className="mt-5 max-w-2xl leading-relaxed text-white/55">{lead}</p>}
     </div>
 )

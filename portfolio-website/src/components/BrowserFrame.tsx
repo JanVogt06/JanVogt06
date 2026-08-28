@@ -38,14 +38,14 @@ const BrowserFrame = ({
                     <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
                 </div>
                 <span
-                    className="min-w-0 flex-1 truncate rounded-full bg-white/[0.04] px-3 py-1 font-mono text-[11px] text-white/45">
+                    className="min-w-0 flex-1 truncate rounded-full bg-white/[0.04] px-3 py-1 font-mono text-[11px] text-white/55">
                     {host}
                 </span>
                 {active ? (
                     <button
                         onClick={onClose}
                         aria-label="Vorschau schließen"
-                        className="shrink-0 rounded p-1 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
+                        className="shrink-0 rounded p-1 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
                     >
                         <X className="h-3.5 w-3.5"/>
                     </button>
@@ -55,7 +55,7 @@ const BrowserFrame = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="In neuem Tab öffnen"
-                        className="shrink-0 rounded p-1 text-white/40 transition-colors hover:bg-white/[0.06] hover:text-white"
+                        className="shrink-0 rounded p-1 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
                     >
                         <ArrowUpRight className="h-3.5 w-3.5"/>
                     </a>
@@ -89,7 +89,7 @@ const BrowserFrame = ({
                                 <div className="rounded-3xl bg-brand/10 p-5">
                                     <Icon className="h-10 w-10 text-brand"/>
                                 </div>
-                                <span className="font-mono text-xs text-white/30">{host}</span>
+                                <span className="font-mono text-xs text-white/50">{host}</span>
                             </div>
                         )}
 
@@ -104,7 +104,7 @@ const BrowserFrame = ({
                                     <Play className="ml-0.5 h-5 w-5 fill-brand text-brand"/>
                                 </span>
                                 <span className="text-sm text-white/70">Live-Vorschau starten</span>
-                                {note && <span className="text-xs text-white/35">{note}</span>}
+                                {note && <span className="text-xs text-white/50">{note}</span>}
                             </button>
                         )}
 
@@ -120,7 +120,7 @@ const BrowserFrame = ({
                                     <ArrowUpRight className="h-5 w-5 text-brand"/>
                                 </span>
                                 <span className="text-sm text-white/70">in neuem Tab öffnen</span>
-                                {note && <span className="text-xs text-white/35">{note}</span>}
+                                {note && <span className="text-xs text-white/50">{note}</span>}
                             </a>
                         )}
                     </>

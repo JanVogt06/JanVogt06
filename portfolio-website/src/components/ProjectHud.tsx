@@ -62,7 +62,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                             <span className="font-mono tabular-nums">
                                 {String(index + 1).padStart(2, "0")}
                             </span>
-                            <span className="text-white/25">
+                            <span className="text-white/55">
                                 {" / "}
                                 {String(projects.length).padStart(2, "0")}
                             </span>
@@ -70,11 +70,11 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                         <h2 className="mt-2 truncate text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">
                             {project.title}
                         </h2>
-                        <p className="mt-1 truncate text-sm text-white/45">{project.subtitle}</p>
+                        <p className="mt-1 truncate text-sm text-white/55">{project.subtitle}</p>
                     </div>
 
                     <div className="flex shrink-0 items-center gap-4">
-                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/40 lg:inline">
+                        <kbd className="hidden rounded-md bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-normal text-white/55 lg:inline">
                             Esc
                         </kbd>
                         <button
@@ -99,7 +99,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                             {project.tech.map((tech) => (
                                 <li
                                     key={tech}
-                                    className="rim relative rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
+                                    className="rim rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
                                 >
                                     {tech}
                                 </li>

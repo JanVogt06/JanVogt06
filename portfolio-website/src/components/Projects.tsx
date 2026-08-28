@@ -25,7 +25,7 @@ const SectionIntro = () => (
             href="https://github.com/JanVogt06?tab=repositories"
             target="_blank"
             rel="noopener noreferrer"
-            className="group hidden shrink-0 items-center gap-2 text-sm text-white/40 transition-colors hover:text-white sm:inline-flex"
+            className="group hidden shrink-0 items-center gap-2 text-sm text-white/55 transition-colors hover:text-white sm:inline-flex"
         >
             Alle Repositories
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>

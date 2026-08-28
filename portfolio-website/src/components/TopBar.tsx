@@ -55,7 +55,7 @@ const TopBar = () => {
                                 key={s.id}
                                 onClick={() => scrollToElement(s.id)}
                                 className={`relative shrink-0 rounded-full px-2.5 py-1.5 transition-colors sm:px-3.5 ${
-                                    isActive ? "text-white" : "text-white/45 hover:text-white/80"
+                                    isActive ? "text-white" : "text-white/55 hover:text-white/80"
                                 }`}
                             >
                                 {isActive && (
