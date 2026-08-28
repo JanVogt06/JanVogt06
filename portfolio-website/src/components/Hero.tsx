@@ -116,8 +116,8 @@ const Hero = () => {
                 animate={{opacity: 1}}
                 transition={{duration: 0.6, delay: 1.4}}
             >
-                Design und Umsetzung von mir. KI ist dabei mein Werkzeug — neue Modelle
-                teste ich hier direkt am eigenen Projekt.
+                Diese Seite ist mit KI-Unterstützung entstanden — ich habe hier neue
+                Modelle getestet. Konzept, Design und jede Entscheidung sind von mir.
             </motion.p>
         </section>
     )
