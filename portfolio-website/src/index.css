@@ -225,12 +225,12 @@
         background-color: rgb(11 13 19 / 0.34);
         background-image:
             radial-gradient(130% 150% at 20% -10%,
-                rgb(255 255 255 / 0.18) 0%,
-                rgb(255 255 255 / 0.05) 40%,
-                transparent 68%),
+                rgb(255 255 255 / 0.09) 0%,
+                rgb(255 255 255 / 0.025) 40%,
+                transparent 66%),
             radial-gradient(90% 130% at 88% 112%,
-                color-mix(in oklab, var(--color-brand) 16%, transparent) 0%,
-                transparent 62%);
+                color-mix(in oklab, var(--color-brand) 6%, transparent) 0%,
+                transparent 60%);
         pointer-events: none;
     }
 

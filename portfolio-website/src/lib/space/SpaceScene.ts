@@ -5,6 +5,7 @@ import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
 import {
     planetVertexShader, planetFragmentShader, ringVertexShader, ringFragmentShader,
 } from "./planetShader"
+import {createGem} from "./gemGeometry"
 import {createGalaxy} from "./galaxy"
 import {createStarfield} from "./starfield"
 import {createMilkyWay} from "./milkyway"
@@ -121,6 +122,17 @@ const NEBULA_MAX_QUALITY = 0.5
 const SAMPLE_FRAMES = 60
 const MIN_ACCEPTABLE_FPS = 45
 const SHARD_COUNT = 20
+
+/** Cut of a crystal: a table, a crown down to the girdle, then a pavilion to the culet. */
+const GEM_CUT = {
+    tableRadius: 0.55,
+    crownHeight: 0.45,
+    pavilionDepth: 1.15,
+    girdleHeight: 0.12,
+}
+
+const GEM_ENV_SIZE = [128, 192, 256, 384, 512]
+const TRANSMISSION_SCALE = [0.45, 0.6, 0.75, 0.9, 1]
 
 const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
     {core: "#0b3a5c", rim: "#22d3ee"},
@@ -251,8 +263,10 @@ export class SpaceScene {
 
     private readonly crystals: THREE.Mesh[] = []
     private readonly baseScales: THREE.Vector3[] = []
-    private readonly materials: THREE.ShaderMaterial[] = []
-    private readonly geometry = new THREE.IcosahedronGeometry(1, 0)
+    private readonly materials: THREE.MeshPhysicalMaterial[] = []
+    private readonly gemGeometries: THREE.BufferGeometry[] = []
+    private envTarget: THREE.WebGLCubeRenderTarget | null = null
+    private envCaptured = false
 
     private readonly galaxy: Galaxy
     private readonly skyStars: Starfield
@@ -336,6 +350,7 @@ export class SpaceScene {
         this.renderer.setPixelRatio(this.pixelRatio())
         this.renderer.setClearColor(0x000000, 0)
         this.renderer.autoClear = false
+        this.renderer.transmissionResolutionScale = TRANSMISSION_SCALE[this.level()]
         container.appendChild(this.renderer.domElement)
         this.canvasRect = this.renderer.domElement.getBoundingClientRect()
 
@@ -492,23 +507,31 @@ export class SpaceScene {
         const step = (Math.PI * 2) / Math.max(count, 1)
         for (let i = 0; i < count; i++) {
             const {core, rim} = CRYSTAL_COLORS[i % CRYSTAL_COLORS.length]
-            const material = new THREE.ShaderMaterial({
-                vertexShader: crystalVertexShader,
-                fragmentShader: crystalFragmentShader,
-                uniforms: {
-                    uCore: {value: new THREE.Color(core)},
-                    uRim: {value: new THREE.Color(rim)},
-                    uTime: {value: 0},
-                    uHighlight: {value: 0},
-                    uFade: {value: 1},
-                },
+
+            const material = new THREE.MeshPhysicalMaterial({
+                color: 0xffffff,
+                metalness: 0,
+                roughness: 0.02,
+                transmission: 1,
+                thickness: 1.7,
+                ior: 2.1,
+                dispersion: 4.5,
+                iridescence: 0.25,
+                iridescenceIOR: 1.6,
+                attenuationColor: new THREE.Color(core),
+                attenuationDistance: 0.7,
+                emissive: new THREE.Color(rim),
+                emissiveIntensity: 0,
+                envMapIntensity: 2.4,
+                flatShading: true,
                 transparent: true,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false,
             })
             this.materials.push(material)
 
-            const mesh = new THREE.Mesh(this.geometry, material)
+            const geometry = createGem({sides: 6 + (i % 3), ...GEM_CUT})
+            this.gemGeometries.push(geometry)
+
+            const mesh = new THREE.Mesh(geometry, material)
             const angle = i * step
             // theta = 0 is in front (toward the camera, +z).
             mesh.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS)
@@ -689,6 +712,44 @@ export class SpaceScene {
         return Math.min(Math.max(WAYPOINT_DROP, needed), 0.84 + radiusShare)
     }
 
+    private level() {
+        return Math.round(this.quality * 4)
+    }
+
+    /**
+     * The crystals refract whatever surrounds them, so they need the sky as a cube map.
+     * Captured once, from the middle of the ring, with the ring itself hidden - it barely
+     * changes afterwards and a live capture would cost six renders a frame.
+     */
+    private captureEnvironment() {
+        if (this.envCaptured || this.crystals.length === 0) return
+        this.envCaptured = true
+
+        const target = new THREE.WebGLCubeRenderTarget(GEM_ENV_SIZE[this.level()], {
+            generateMipmaps: true,
+            minFilter: THREE.LinearMipmapLinearFilter,
+        })
+        const cube = new THREE.CubeCamera(1, CAMERA_FAR, target)
+        cube.position.copy(this.frontPoint())
+
+        const autoClear = this.renderer.autoClear
+        this.renderer.autoClear = true
+        this.spinGroup.visible = false
+        this.waypoints.forEach((group) => (group.visible = false))
+
+        cube.update(this.renderer, this.scene)
+
+        this.waypoints.forEach((group) => (group.visible = true))
+        this.spinGroup.visible = true
+        this.renderer.autoClear = autoClear
+
+        this.envTarget = target
+        this.materials.forEach((material) => {
+            material.envMap = target.texture
+            material.needsUpdate = true
+        })
+    }
+
     private pixelRatio() {
         const ratios = [0.75, 1.0, 1.25, 1.75, 2.5]
         return Math.min(window.devicePixelRatio, ratios[Math.round(this.quality * 4)])
@@ -722,6 +783,7 @@ export class SpaceScene {
         this.milkyWay.setQuality(lower)
         this.galaxy.setQuality(lower)
         this.renderer.setPixelRatio(this.pixelRatio())
+        this.renderer.transmissionResolutionScale = TRANSMISSION_SCALE[this.level()]
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
         this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
@@ -807,6 +869,8 @@ export class SpaceScene {
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
         )
 
+        if (this.enter > 0.02) this.captureEnvironment()
+
         // --- Crystals ---
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
@@ -817,21 +881,20 @@ export class SpaceScene {
                 this.fieldScroll * Math.max(count - 1, 1) * CRYSTAL_TURNS_PER_STATION * TAU +
                 time * 0.06
             mesh.rotation.x = hash(i) * Math.PI + Math.sin(time * 0.25 + i) * 0.1
+            mesh.rotation.z = hash(i + 3) * 0.5 + Math.sin(time * 0.18 + i * 2) * 0.05
 
             const isNearest = i === nearest
             const hoveredHere = this.hoveredKind === "crystal" && this.hovered === i
-            const highlightTarget = hoveredHere || this.selected === i ? 1 : 0
-            material.uniforms.uTime.value = time
-            material.uniforms.uHighlight.value = lerp(
-                material.uniforms.uHighlight.value,
-                highlightTarget,
-                0.12,
+            const lit = hoveredHere || this.selected === i ? 1 : 0
+
+            material.emissiveIntensity = lerp(material.emissiveIntensity, lit * 0.35, 0.12)
+            material.opacity = lerp(material.opacity, (isNearest ? 1 : 0.4) * reveal, 0.08)
+            material.envMapIntensity = lerp(
+                material.envMapIntensity,
+                isNearest ? 2.4 + lit * 1.2 : 1.4,
+                0.1,
             )
-            material.uniforms.uFade.value = lerp(
-                material.uniforms.uFade.value,
-                (isNearest ? 1 : 0.34) * reveal,
-                0.08,
-            )
+            mesh.visible = material.opacity > 0.01
 
             const grow =
                 (isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1) *
@@ -1045,7 +1108,8 @@ export class SpaceScene {
         window.removeEventListener("click", this.handleClick)
         document.removeEventListener("visibilitychange", this.sync)
 
-        this.geometry.dispose()
+        this.gemGeometries.forEach((g) => g.dispose())
+        this.envTarget?.dispose()
         this.waypointGeometry.dispose()
         this.ringMeshes.forEach((r) => r.geometry.dispose())
         this.waypointMaterials.forEach((m) => m.dispose())

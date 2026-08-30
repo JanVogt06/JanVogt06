@@ -1,8 +1,8 @@
 import {useId, useLayoutEffect, useRef, useState} from "react"
 
 /** Thickness of the refracting rim in px, and how far it bends what lies behind. */
-const BAND = 22
-const BEND = 34
+const BAND = 26
+const BEND = 74
 
 /** A rim never takes more than this share of the shorter side. */
 const MAX_SHARE = 0.3

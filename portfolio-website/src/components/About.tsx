@@ -188,16 +188,8 @@ const ChapterContent = ({
     onOpenImage?: () => void
 }) => (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
-        <div className="relative max-w-xl squat:max-w-[26rem] lg:col-span-6">
-            {}
-            <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -inset-x-8 -inset-y-10 -z-10"
-                style={{
-                    background:
-                        "radial-gradient(ellipse 70% 60% at 30% 50%, rgba(5,7,13,0.9) 0%, rgba(5,7,13,0.55) 55%, transparent 100%)",
-                }}
-            />
+        <div className="glass max-w-xl rounded-3xl p-6 squat:max-w-[26rem] squat:p-4 lg:col-span-6">
+            <Lens/>
 
             <div ref={headingRef}>
                 <p className="text-xs font-medium text-brand/80 squat:text-[11px]">{chapter.label}</p>
