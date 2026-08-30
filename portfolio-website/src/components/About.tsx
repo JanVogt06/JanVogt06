@@ -3,9 +3,9 @@ import type {CSSProperties, ReactNode} from "react"
 import {ImageIcon, X} from "lucide-react"
 import {HudLabel} from "./Hud"
 import Lens from "./Lens"
-import portraitImage from "../data/images/portrait.webp"
-import refereeImage from "../data/images/referee.webp"
-import skiJumpImage from "../data/images/ski_jump.webp"
+import station01Image from "../data/images/station_01_mein_weg.webp"
+import station02Image from "../data/images/station_02_neben_dem_studium.webp"
+import station03Image from "../data/images/station_03_meine_auszeichnungen.webp"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space, subscribeAnchor} from "@/lib/space/controller"
 import {stationPosition, trackScreens} from "@/lib/stations"
@@ -61,7 +61,7 @@ const chapters: Chapter[] = [
         label: "Station 01",
         title: "Mein",
         accent: "Weg",
-        image: skiJumpImage,
+        image: station01Image,
         alt: "Jan Vogt beim Skifahren",
         body: (
             <div>
@@ -76,7 +76,7 @@ const chapters: Chapter[] = [
         label: "Station 02",
         title: "Neben dem",
         accent: "Studium",
-        image: refereeImage,
+        image: station02Image,
         alt: "Jan Vogt als Schiedsrichter",
         body: (
             <div>
@@ -91,7 +91,7 @@ const chapters: Chapter[] = [
         label: "Station 03",
         title: "Meine",
         accent: "Auszeichnungen",
-        image: portraitImage,
+        image: station03Image,
         alt: "Jan Vogt",
         body: (
             <div>
