@@ -126,6 +126,11 @@
         height: calc(var(--screens) * 100svh);
     }
 
+    .anchor-end {
+        scroll-margin-top: -100vh;
+        scroll-margin-top: -100svh;
+    }
+
     .surface {
         position: relative;
         background:

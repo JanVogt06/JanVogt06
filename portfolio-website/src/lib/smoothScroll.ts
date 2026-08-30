@@ -31,7 +31,10 @@ export const scrollToElement = (id: string) => {
         const padding = parseFloat(
             getComputedStyle(document.documentElement).scrollPaddingTop || "0",
         )
-        controller.scrollTo(el.getBoundingClientRect().top + window.scrollY - (padding || 0))
+        const margin = parseFloat(getComputedStyle(el).scrollMarginTop || "0")
+        controller.scrollTo(
+            el.getBoundingClientRect().top + window.scrollY - (padding || 0) - (margin || 0),
+        )
         return
     }
 

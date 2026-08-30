@@ -101,7 +101,7 @@ const Contact = () => {
     useScrollProgress(sectionRef, onProgress)
 
     return (
-        <section id="contact" className="relative">
+        <section id="contact" className="anchor-end relative">
             <div
                 ref={sectionRef}
                 className="track"
