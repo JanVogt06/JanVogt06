@@ -11,6 +11,7 @@ import {useTagline} from "@/lib/github"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {HudSectionHeader} from "./Hud"
 import {space} from "@/lib/space/controller"
+import {stationPosition, trackScreens} from "@/lib/stations"
 
 const total = projects.length
 
@@ -58,14 +59,20 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
 
     const onProgress = useCallback((raw: number) => {
         const progress = Math.min(Math.max(raw, 0), 1)
-        space.setFieldProgress(progress)
+
+        // Eased for anything that should settle on a crystal, raw for what keeps moving.
+        const position = stationPosition(progress, total)
+        const span = Math.max(total - 1, 1)
+
+        space.setFieldProgress(position / span)
+        space.setFieldScroll(progress)
 
         const ramp = (v: number) => Math.min(Math.max(v, 0), 1)
         space.setApproach(
             Math.min(ramp((raw + APPROACH) / APPROACH), ramp((1 + APPROACH - raw) / APPROACH)),
         )
 
-        setIndex(Math.round(progress * (total - 1)))
+        setIndex(Math.round(position))
     }, [])
 
     useScrollProgress(sectionRef, onProgress)
@@ -74,7 +81,7 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
         <div
             ref={sectionRef}
             className="track"
-            style={{"--screens": total} as CSSProperties}
+            style={{"--screens": trackScreens(total)} as CSSProperties}
         >
             <div className="stage sticky top-0 flex flex-col overflow-hidden pt-20 squat:pt-16 lg:pt-14">
                 <div className="mx-auto w-full max-w-[88rem] shrink-0 px-6 pt-8 sm:px-10 lg:px-16 short:pt-4">

@@ -7,6 +7,7 @@ import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space, subscribeAnchor} from "@/lib/space/controller"
+import {stationPosition, trackScreens} from "@/lib/stations"
 
 /** Stations of the career timeline. */
 const timeline = [
@@ -299,7 +300,12 @@ const AboutJourney = ({
         // The heading rides along with the layer, so its box is outdated now.
         boxStale.current = true
 
-        space.setAboutProgress(progress)
+        // Eased for anything that should settle on a station, raw for what keeps moving.
+        const position = stationPosition(progress, chapters.length)
+        const span = Math.max(chapters.length - 1, 1)
+
+        space.setAboutProgress(position / span)
+        space.setAboutScroll(progress)
 
         space.setAboutActive(
             Math.min(
@@ -308,13 +314,13 @@ const AboutJourney = ({
             ),
         )
 
-        const position = progress * (chapters.length - 1)
         layerRefs.current.forEach((layer, i) => {
             if (!layer) return
             const d = position - i
             const distance = Math.abs(d)
 
-            layer.style.opacity = String(clamp01(1 - distance * 1.5))
+            // Steep, so the two chapters do not ghost over each other while swapping.
+            layer.style.opacity = String(clamp01(1 - distance * 2.2))
             layer.style.transform = `translate3d(0, ${(-d * 4).toFixed(2)}vh, 0)`
 
             const active = distance < 0.5
@@ -369,7 +375,7 @@ const AboutJourney = ({
         <div
             ref={sectionRef}
             className="track"
-            style={{"--screens": chapters.length} as CSSProperties}
+            style={{"--screens": trackScreens(chapters.length)} as CSSProperties}
         >
             <div
                 ref={paneRef}

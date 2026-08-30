@@ -27,6 +27,10 @@ export const space = {
     setFieldProgress: (progress: number) => current?.setFieldProgress(progress),
     /** Flight through the galaxy: 0 = hero position, 1 = in front of the ring. */
     setAboutProgress: (progress: number) => current?.setAboutProgress(progress),
+    /** Raw scroll through the career section; turns the planets while you read. */
+    setAboutScroll: (progress: number) => current?.setAboutScroll(progress),
+    /** Raw scroll through the project field; turns the crystals while you read. */
+    setFieldScroll: (progress: number) => current?.setFieldScroll(progress),
     /** 0 = career section not active yet, 1 = section in place. */
     setAboutActive: (active: number) => current?.setAboutActive(active),
     /** Fly-through of the galaxy between career and projects. */

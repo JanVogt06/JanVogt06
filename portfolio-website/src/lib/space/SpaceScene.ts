@@ -82,6 +82,15 @@ const SQUAT_HEIGHT = 520
 const IDLE_SWAY = 0.12
 const IDLE_SWAY_SPEED = 0.1
 
+/**
+ * Turns a planet and a crystal make per station while you scroll. This is the whole
+ * signal that there is more to come: the text stands still, the body keeps turning.
+ */
+const PLANET_TURNS_PER_STATION = 0.85
+const CRYSTAL_TURNS_PER_STATION = 0.5
+
+const TAU = Math.PI * 2
+
 /** Lateral camera offset in the hero, leaving room for the name. */
 const HERO_LATERAL = 2.6
 
@@ -297,6 +306,10 @@ export class SpaceScene {
     private aboutActive = 0
     private passageTarget = 0
     private passageProgress = 0
+    private aboutScrollTarget = 0
+    private aboutScroll = 0
+    private fieldScrollTarget = 0
+    private fieldScroll = 0
     private textFloor = 0
     private hovered: number | null = null
     private hoveredKind: "crystal" | "waypoint" | null = null
@@ -574,6 +587,17 @@ export class SpaceScene {
         this.sync()
     }
 
+    /** Raw scroll through the section, unlike the eased progress above. */
+    setAboutScroll(progress: number) {
+        this.aboutScrollTarget = progress
+        this.sync()
+    }
+
+    setFieldScroll(progress: number) {
+        this.fieldScrollTarget = progress
+        this.sync()
+    }
+
     setPassageProgress(progress: number) {
         this.passageTarget = progress
         this.sync()
@@ -737,6 +761,8 @@ export class SpaceScene {
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
         this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
         this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
+        this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, 0.12)
+        this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
         // --- Turn the ring so crystal `station` comes to the front ---
@@ -786,7 +812,10 @@ export class SpaceScene {
             const mesh = this.crystals[i]
             const material = this.materials[i]
 
-            mesh.rotation.y = hash(i + 9) * Math.PI + station * 2.4 + time * 0.06
+            mesh.rotation.y =
+                hash(i + 9) * Math.PI +
+                this.fieldScroll * Math.max(count - 1, 1) * CRYSTAL_TURNS_PER_STATION * TAU +
+                time * 0.06
             mesh.rotation.x = hash(i) * Math.PI + Math.sin(time * 0.25 + i) * 0.1
 
             const isNearest = i === nearest
@@ -832,7 +861,10 @@ export class SpaceScene {
         for (let i = 0; i < this.waypoints.length; i++) {
             const material = this.waypointMaterials[i]
             const spec = PLANETS[i % PLANETS.length]
-            this.waypointPlanets[i].rotation.y = station3 * 1.2 + time * spec.spin
+            this.waypointPlanets[i].rotation.y =
+                this.aboutScroll * Math.max(WAYPOINT_COUNT - 1, 1) *
+                    PLANET_TURNS_PER_STATION * TAU +
+                time * spec.spin
 
             const own =
                 i === nearestWaypoint
