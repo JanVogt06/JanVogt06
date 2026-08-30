@@ -36,6 +36,7 @@ export const space = {
     setTextFloor: (floor: number) => current?.setTextFloor(floor),
 
     setApproach: (approach: number) => current?.setApproach(approach),
+    setArrivalProgress: (progress: number) => current?.setArrivalProgress(progress),
     setPaused: (paused: boolean) => current?.setPaused(paused),
     setSelected: (index: number | null) => current?.setSelected(index),
 }

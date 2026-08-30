@@ -1,10 +1,12 @@
 import {useCallback, useRef} from "react"
+import type {CSSProperties} from "react"
 import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
 import {HudLabel, HudSectionHeader} from "./Hud"
 import Lens from "./Lens"
 import useScrollProgress from "@/lib/useScrollProgress"
+import {space} from "@/lib/space/controller"
 
-const ARRIVAL = 1
+const SCREENS = 2
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
@@ -60,29 +62,35 @@ const Channel = ({channel}: {channel: (typeof channels)[number]}) => {
 }
 
 const Contact = () => {
-    const sectionRef = useRef<HTMLElement>(null)
+    const sectionRef = useRef<HTMLDivElement>(null)
     const headerRef = useRef<HTMLDivElement>(null)
     const panelRef = useRef<HTMLDivElement>(null)
     const channelsRef = useRef<HTMLDivElement>(null)
 
     const onProgress = useCallback((raw: number) => {
-        const arrival = clamp01((raw + ARRIVAL) / ARRIVAL)
+        const progress = clamp01(raw)
+        space.setArrivalProgress(progress)
+
+        const header = clamp01(progress / 0.26)
+        const panel = clamp01((progress - 0.14) / 0.34)
+        const channels = clamp01((progress - 0.3) / 0.45)
 
         if (headerRef.current) {
-            headerRef.current.style.opacity = String(arrival)
-            headerRef.current.style.transform = `translate3d(0, ${((1 - arrival) * 4).toFixed(2)}vh, 0)`
+            headerRef.current.style.opacity = String(header)
+            headerRef.current.style.transform = `translate3d(0, ${((1 - header) * 5).toFixed(2)}vh, 0)`
         }
 
         if (panelRef.current) {
-            panelRef.current.style.opacity = String(arrival)
+            panelRef.current.style.opacity = String(panel)
             panelRef.current.style.transform =
-                `translate3d(0, ${((1 - arrival) * 7).toFixed(2)}vh, 0) scale(${(0.965 + arrival * 0.035).toFixed(4)})`
+                `translate3d(0, ${((1 - panel) * 6).toFixed(2)}vh, 0) scale(${(0.955 + panel * 0.045).toFixed(4)})`
         }
 
         if (channelsRef.current) {
             const kids = channelsRef.current.children
             for (let i = 0; i < kids.length; i++) {
-                const own = clamp01((arrival - i * 0.12) / (1 - i * 0.12))
+                const stagger = i * 0.16
+                const own = clamp01((channels - stagger) / (1 - stagger))
                 const el = kids[i] as HTMLElement
                 el.style.opacity = String(own)
                 el.style.transform = `translate3d(0, ${((1 - own) * 2.5).toFixed(2)}rem, 0)`
@@ -90,84 +98,88 @@ const Contact = () => {
         }
     }, [])
 
-    useScrollProgress(sectionRef, onProgress, "exit")
+    useScrollProgress(sectionRef, onProgress)
 
     return (
-        <section
-            ref={sectionRef}
-            id="contact"
-            className="stage-min relative flex items-center py-20 md:py-28"
-        >
-            <div className="relative mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+        <section id="contact" className="relative">
+            <div
+                ref={sectionRef}
+                className="track"
+                style={{"--screens": SCREENS} as CSSProperties}
+            >
+                <div className="stage sticky top-0 flex flex-col justify-center overflow-hidden pt-20 lg:pt-14">
+                    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
 
-                <div ref={headerRef} className="mb-10 will-change-transform md:mb-14">
-                    <HudSectionHeader
-                        id="03"
-                        title="Sag"
-                        accent="Hallo"
-                        lead="Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?"
-                    />
-                </div>
-
-                <div ref={panelRef} className="will-change-transform">
-                    <div className="glass rounded-3xl p-5 sm:p-8">
-                        <Lens/>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
-                            <span className="relative flex h-1.5 w-1.5">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
-                                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-status"/>
-                            </span>
-                            <span className="text-xs font-medium text-status">
-                                Offen für Gespräche
-                            </span>
+                        <div ref={headerRef} className="mb-10 will-change-transform short:mb-6 md:mb-14">
+                            <HudSectionHeader
+                                id="03"
+                                title="Sag"
+                                accent="Hallo"
+                                lead="Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?"
+                            />
                         </div>
 
-                        <HudLabel className="mt-6">Kanäle</HudLabel>
+                        <div ref={panelRef} className="will-change-transform">
+                            <div className="glass rounded-3xl p-5 short:p-4 sm:p-8">
+                                <Lens/>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
+                                    <span className="relative flex h-1.5 w-1.5">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
+                                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-status"/>
+                                    </span>
+                                    <span className="text-xs font-medium text-status">
+                                        Offen für Gespräche
+                                    </span>
+                                </div>
 
-                        <div ref={channelsRef} className="mt-3 grid gap-3 sm:grid-cols-2">
-                            {channels.map((channel) => (
-                                <Channel key={channel.label} channel={channel}/>
-                            ))}
+                                <HudLabel className="mt-6">Kanäle</HudLabel>
+
+                                <div ref={channelsRef} className="mt-3 grid gap-3 sm:grid-cols-2">
+                                    {channels.map((channel) => (
+                                        <Channel key={channel.label} channel={channel}/>
+                                    ))}
+                                </div>
+
+                                <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+                                    <a
+                                        href="mailto:contact@jan-vogt.dev"
+                                        className="action group"
+                                    >
+                                        <Send className="h-4 w-4"/>
+                                        Nachricht schreiben
+                                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                    </a>
+
+                                    <p className="text-xs text-white/50">
+                                        Antwort meist innerhalb eines Tages
+                                    </p>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
+                        <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/50 short:mt-6">
+                            Planetenkarten:{" "}
                             <a
-                                href="mailto:contact@jan-vogt.dev"
-                                className="action group"
+                                href="https://www.solarsystemscope.com/textures/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
                             >
-                                <Send className="h-4 w-4"/>
-                                Nachricht schreiben
-                                <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
+                                Solar System Scope
+                            </a>{" "}
+                            (CC BY 4.0). Milchstraße:{" "}
+                            <a
+                                href="https://svs.gsfc.nasa.gov/4851/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
+                            >
+                                NASA/Goddard Space Flight Center Scientific Visualization Studio
                             </a>
-
-                            <p className="text-xs text-white/50">
-                                Antwort meist innerhalb eines Tages
-                            </p>
-                        </div>
+                            , Gaia DR2: ESA/Gaia/DPAC.
+                        </p>
                     </div>
                 </div>
-
-                <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/50">
-                    Planetenkarten:{" "}
-                    <a
-                        href="https://www.solarsystemscope.com/textures/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
-                    >
-                        Solar System Scope
-                    </a>{" "}
-                    (CC BY 4.0). Milchstraße:{" "}
-                    <a
-                        href="https://svs.gsfc.nasa.gov/4851/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
-                    >
-                        NASA/Goddard Space Flight Center Scientific Visualization Studio
-                    </a>
-                    , Gaia DR2: ESA/Gaia/DPAC.
-                </p>
             </div>
         </section>
     )
