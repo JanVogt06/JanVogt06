@@ -3,6 +3,7 @@ import {motion} from "framer-motion"
 import {Github} from "lucide-react"
 import {EASE} from "@/lib/motion"
 import {scrollToElement} from "@/lib/smoothScroll"
+import Lens from "./Lens"
 
 const sections = [
     {id: "about", label: "Über mich"},
@@ -40,6 +41,7 @@ const TopBar = () => {
         >
             {/* Floats over the scene instead of sealing it off with an edge. */}
             <div className="glass mx-auto flex h-12 max-w-[64rem] items-center gap-2 rounded-full pl-4 pr-2 sm:gap-3">
+                <Lens/>
                 <button
                     onClick={() => scrollToElement("hero")}
                     className="shrink-0 text-sm font-semibold tracking-[-0.01em] text-white/85 transition-colors hover:text-white"

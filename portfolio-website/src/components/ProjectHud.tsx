@@ -5,6 +5,7 @@ import {
 } from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
+import Lens from "./Lens"
 import {HudLabel} from "./Hud"
 import {projects, primaryLinkOf} from "@/lib/projects"
 import {space} from "@/lib/space/controller"
@@ -54,6 +55,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/65 px-4 pb-4 pt-24 backdrop-blur-[10px] sm:px-8 sm:pb-8"
         >
             <div className="glass relative flex w-full max-w-[84rem] flex-col rounded-3xl p-5 sm:p-8">
+                <Lens/>
                 {/* Header: identifier and close */}
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.06] pb-4">
                     <div className="min-w-0">

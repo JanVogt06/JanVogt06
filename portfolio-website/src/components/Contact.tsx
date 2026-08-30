@@ -1,6 +1,7 @@
 import {useCallback, useRef} from "react"
 import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
 import {HudLabel, HudSectionHeader} from "./Hud"
+import Lens from "./Lens"
 import useScrollProgress from "@/lib/useScrollProgress"
 
 const ARRIVAL = 1
@@ -110,6 +111,7 @@ const Contact = () => {
 
                 <div ref={panelRef} className="will-change-transform">
                     <div className="glass rounded-3xl p-5 sm:p-8">
+                        <Lens/>
                         {/* Availability */}
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
                             <span className="relative flex h-1.5 w-1.5">

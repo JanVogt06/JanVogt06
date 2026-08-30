@@ -2,6 +2,7 @@ import {useCallback, useEffect, useRef} from "react"
 import type {CSSProperties, ReactNode} from "react"
 import {ImageIcon, X} from "lucide-react"
 import {HudLabel} from "./Hud"
+import Lens from "./Lens"
 import portraitImage from "../data/images/portrait.webp"
 import refereeImage from "../data/images/referee.webp"
 import skiJumpImage from "../data/images/ski_jump.webp"
@@ -139,6 +140,7 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
             />
 
             <div className="glass relative flex w-full max-w-[64rem] flex-col rounded-3xl p-5 sm:p-8">
+                <Lens/>
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.06] pb-4">
                     <div className="min-w-0">
                         <HudLabel tone="text-brand/80">{chapter.label}</HudLabel>
