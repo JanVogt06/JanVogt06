@@ -19,9 +19,9 @@ const fragmentShader = `
     uniform float uQuality;
 
     uniform sampler2D uMap;
-    /** 0 = procedural band only, 1 = photo only. */
+
     uniform float uMapMix;
-    /** Brightness of the photo so it matches the rest of the scene. */
+
     uniform float uMapGain;
     uniform float uMapLon;
 
@@ -102,9 +102,9 @@ export type MilkyWay = {
     object: THREE.Mesh
     setOpacity: (opacity: number) => void
     setQuality: (quality: number) => void
-    /** Attach the photo; it fades in via setMapMix. */
+
     setMap: (texture: THREE.Texture | null) => void
-    /** 0 = procedural band, 1 = photo. */
+
     setMapMix: (mix: number) => void
     dispose: () => void
 }
@@ -121,7 +121,7 @@ export const createMilkyWay = ({radius = 900, quality = 1} = {}): MilkyWay => {
             uMap: {value: null},
             uMapMix: {value: 0},
             uMapGain: {value: 1.35},
-            /* 0.6 rad: where the bulge sits in the procedural band. */
+
             uMapLon: {value: 0.6},
         },
         side: THREE.BackSide,
@@ -132,9 +132,9 @@ export const createMilkyWay = ({radius = 900, quality = 1} = {}): MilkyWay => {
     })
 
     const object = new THREE.Mesh(geometry, material)
-    // Same orientation as the band stars in starfield.ts.
+
     object.quaternion.copy(galacticOrientation())
-    /* Drawn first: the sphere is the background for everything else. */
+
     object.renderOrder = -1
     object.frustumCulled = false
 

@@ -8,10 +8,10 @@ const vertexShader = `
 
     uniform float uTime;
     uniform float uPixelRatio;
-    /** 0 = fixed size (sky), 1 = shrinking with distance (near field). */
+
     uniform float uAttenuate;
     uniform float uSizeScale;
-    /** Where the near field starts to fade in and where it is fully there. */
+
     uniform vec2 uNearFade;
     uniform float uMaxSize;
 
@@ -66,14 +66,14 @@ export type Starfield = {
 
 export type StarfieldOptions = {
     count: number
-    /** Radius of the shell the stars sit on. */
+
     radius: number
-    /** true = near field with size falloff and parallax, false = sky. */
+
     parallax: boolean
-    /** Shifts the brightness distribution, 1 = normal. */
+
     brightness?: number
     bandFraction?: number
-    /** Near field only: distance at which a star is fully visible. */
+
     nearFade?: [number, number]
     sizeScale?: number
     maxSize?: number
@@ -96,14 +96,12 @@ export const createStarfield = ({
     const sizes = new Float32Array(count)
     const brights = new Float32Array(count)
 
-    /* Deterministic: the same sky on every load. */
     let state = seed
     const rand = () => {
         state = (state * 16807) % 2147483647
         return state / 2147483647
     }
 
-    /** Normally distributed, for the thickness of the band. */
     const gauss = () => {
         const u = Math.max(rand(), 1e-6)
         return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rand())
@@ -139,7 +137,7 @@ export const createStarfield = ({
                 Math.sin(lat),
                 Math.sin(lon) * Math.cos(lat),
             )
-            // Rotate into the galactic plane.
+
             v.applyQuaternion(orientation)
         } else {
             const u = rand() * 2 - 1

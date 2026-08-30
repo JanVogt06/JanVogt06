@@ -14,7 +14,6 @@ const sections = [
 const TopBar = () => {
     const [active, setActive] = useState<string>("")
 
-    // Mark the active section from the scroll position.
     useEffect(() => {
         const ids = ["hero", ...sections.map((s) => s.id)]
         const observer = new IntersectionObserver(
@@ -39,7 +38,6 @@ const TopBar = () => {
             transition={{duration: 0.6, ease: EASE, delay: 0.2}}
             className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6"
         >
-            {/* Floats over the scene instead of sealing it off with an edge. */}
             <div className="glass mx-auto flex h-12 max-w-[64rem] items-center gap-2 rounded-full pl-4 pr-2 sm:gap-3">
                 <Lens/>
                 <button

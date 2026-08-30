@@ -3,7 +3,6 @@ import type {CSSProperties} from "react"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space} from "@/lib/space/controller"
 
-/** Length of the stretch, in viewports. */
 const SCREENS = 2
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)

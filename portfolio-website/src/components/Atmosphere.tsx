@@ -6,7 +6,6 @@ import useScrollProgress from "@/lib/useScrollProgress"
 
 const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
 
-/* Where the three moods peak, as a fraction of the page length. */
 const HERO_END = 0.24
 const WORK_CENTER = 0.52
 const WORK_SPREAD = 0.42
@@ -17,11 +16,10 @@ const Atmosphere = ({
     crystalCount,
     onPick,
 }: {
-    /** Whether the WebGL scene runs; otherwise only the CSS layers remain. */
     scene: boolean
-    /** Number of clickable crystals. 0 = nebula without crystals. */
+
     crystalCount: number
-    /** A click in space, on a crystal or on a planet. */
+
     onPick: (pick: Pick) => void
 }) => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
@@ -77,10 +75,8 @@ const Atmosphere = ({
     return (
         <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
 
-            {/* Base tone, always present */}
             <div className="absolute inset-0 bg-page"/>
 
-            {}
             <div
                 ref={heroRef}
                 className="absolute inset-0"
@@ -90,7 +86,6 @@ const Atmosphere = ({
                 }}
             />
 
-            {}
             <div
                 ref={workRef}
                 className="absolute inset-0"
@@ -101,7 +96,6 @@ const Atmosphere = ({
                 }}
             />
 
-            {}
             <div
                 ref={contactRef}
                 className="absolute inset-0"
@@ -112,10 +106,8 @@ const Atmosphere = ({
                 }}
             />
 
-            {/* Nebula and crystals: one canvas, one WebGL context */}
             <div ref={canvasRef} className="absolute inset-0"/>
 
-            {/* Grid and noise sit above everything, once instead of per section */}
             <div
                 className="absolute inset-0 opacity-[0.025]"
                 style={{
@@ -132,7 +124,6 @@ const Atmosphere = ({
                 }}
             />
 
-            {}
             <div
                 className="absolute inset-0"
                 style={{
@@ -141,13 +132,11 @@ const Atmosphere = ({
                 }}
             />
 
-            {}
             {hovered !== null && <CursorHint/>}
         </div>
     )
 }
 
-/** Sets the cursor to clickable while a crystal lies under it. */
 const CursorHint = () => {
     useEffect(() => {
         const previous = document.body.style.cursor

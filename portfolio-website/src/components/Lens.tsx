@@ -1,10 +1,8 @@
 import {useId, useLayoutEffect, useRef, useState} from "react"
 
-/** Thickness of the refracting rim in px, and how far it bends what lies behind. */
 const BAND = 26
 const BEND = 74
 
-/** A rim never takes more than this share of the shorter side. */
 const MAX_SHARE = 0.3
 
 const stops = (band: number, channel: "r" | "g") => {
@@ -17,12 +15,6 @@ const stops = (band: number, channel: "r" | "g") => {
         <stop offset="1" stop-color="${at(255)}"/>`
 }
 
-/**
- * Displacement map for the lens. Red carries the horizontal shift, green the vertical
- * one, both neutral (128) across the middle and ramping to the extremes inside a band
- * along each edge. The two ramps are combined with `lighten`, which keeps them in their
- * own channel - so a corner bends on both axes at once, and that is what reads as glass.
- */
 const rimOf = (width: number, height: number) =>
     Math.min(BAND, Math.min(width, height) * MAX_SHARE)
 
@@ -41,20 +33,11 @@ const mapUri = (width: number, height: number) => {
     return `data:image/svg+xml,${encodeURIComponent(svg.replace(/\s+/g, " "))}`
 }
 
-/**
- * The refracting layer of a glass surface. Sits behind the content and bends the
- * background along its rim.
- *
- * If the browser cannot resolve the feImage, feDisplacementMap falls back to the neutral
- * flood underneath it, the displacement becomes zero and what is left is the plain
- * blurred backdrop - the surface stays intact, it just loses the refraction.
- */
 const Lens = () => {
     const ref = useRef<HTMLSpanElement>(null)
     const [box, setBox] = useState<{width: number; height: number} | null>(null)
     const id = `lens${useId().replace(/[^a-zA-Z0-9]/g, "")}`
 
-    // Measured before paint, so the surface never shows a frame without its refraction.
     useLayoutEffect(() => {
         const el = ref.current
         if (!el) return

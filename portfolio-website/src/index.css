@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* Geist, self-hosted; only the two Latin slices. SIL OFL 1.1, see data/fonts/LICENSE. */
 @font-face {
     font-family: "Geist";
     font-style: normal;
@@ -45,34 +44,25 @@
         U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-
-/* Design tokens of the page: two surfaces, three accents. */
-/** Short viewports - the smaller portrait phones. */
 @custom-variant short (@media (max-height: 760px));
 
-/** Squat viewports - a phone held sideways. Registered second, so it wins. */
 @custom-variant squat (@media (max-height: 520px));
 
 @theme {
     --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    /* Surfaces: near-black, only just off neutral. */
     --color-page: #07080b;
     --color-panel: #0d0e13;
 
-    /* One accent, borrowed from the light the planets throw into the scene. */
     --color-brand: #f0a868;
     --color-brand-deep: #c4703c;
     --color-brand-lift: #f7bb84;
 
-    /* Text that sits on the accent. */
     --color-ink: #1c1006;
 
-    /* Availability, nothing else. */
     --color-status: #5fd39b;
 
-    /* One continuous radius scale instead of the former right angles. */
     --radius-sm: 6px;
     --radius-md: 8px;
     --radius-lg: 12px;
@@ -82,20 +72,15 @@
 }
 
 @layer base {
-    /* One border color wherever a border is set, without forcing one. */
     * {
         border-color: rgb(255 255 255 / 0.08);
     }
 
     html {
-        /* No scroll-behavior: smooth here - lib/smoothScroll.ts drives the scroll. */
-
-        /* Offset so anchor jumps do not land under the fixed header */
         scroll-padding-top: 5.5rem;
 
-        /* clip, not hidden: hidden would create a scroll container and break sticky. */
         overflow-x: clip;
-        /* Dark scrollbars, form elements and overscroll area */
+
         color-scheme: dark;
         background-color: var(--color-page);
 
@@ -105,7 +90,6 @@
         -moz-osx-font-smoothing: grayscale;
     }
 
-    /* body stays transparent: an opaque background would paint over Atmosphere.tsx. */
     body {
         @apply text-white;
     }
@@ -115,13 +99,11 @@
         color: white;
     }
 
-    /* Pointer cursor on all buttons; Tailwind's preflight sets cursor: default. */
     button:not(:disabled),
     [role="button"]:not(:disabled) {
         cursor: pointer;
     }
 
-    /* Keyboard focus stays visible everywhere; the pointer never triggers it. */
     :focus-visible {
         outline: 2px solid color-mix(in oklab, var(--color-brand) 60%, transparent);
         outline-offset: 3px;
@@ -129,11 +111,6 @@
 }
 
 @layer components {
-    /*
-     * Full-viewport stages use svh, not vh. vh is the large viewport, so a sticky pane
-     * would be taller than the screen while the mobile URL bar shows; dvh would resize
-     * the pane mid-scroll and make the choreography jump. svh is the stable one.
-     */
     .stage {
         height: 100vh;
         height: 100svh;
@@ -144,16 +121,11 @@
         min-height: 100svh;
     }
 
-    /** Scroll track --screens viewports long. */
     .track {
         height: calc(var(--screens) * 100vh);
         height: calc(var(--screens) * 100svh);
     }
 
-    /*
-     * A surface lit from above rather than outlined: the wash carries the top edge,
-     * the wide drop carries the distance to whatever lies behind it.
-     */
     .surface {
         position: relative;
         background:
@@ -178,19 +150,12 @@
             0 32px 80px -30px rgb(0 0 0 / 0.9);
     }
 
-    /*
-     * Glass. Three stacked layers instead of one blurred surface: the .lens child bends
-     * the background along its rim and blurs it, ::before adds the light the body itself
-     * seems to carry, ::after draws the specular edge. The interior stays nearly clear -
-     * a heavy blur is what makes cheap glass look like frosted plastic.
-     */
     .glass {
         position: relative;
         isolation: isolate;
         box-shadow: 0 36px 90px -36px rgb(0 0 0 / 0.9);
     }
 
-    /* Content rides above the three layers. */
     .glass > * {
         position: relative;
         z-index: 2;
@@ -201,27 +166,19 @@
         inset: 0;
         z-index: 0;
         border-radius: inherit;
-        /* Barely any blur: the rim does the work, the middle should stay readable. */
+
         backdrop-filter: blur(3px) saturate(165%);
         -webkit-backdrop-filter: blur(3px) saturate(165%);
         pointer-events: none;
     }
 
-    /*
-     * The light the glass carries itself. Over a near-black starfield there is little to
-     * refract, so without this the surface would read as a grey rectangle.
-     */
     .glass::before {
         content: "";
         position: absolute;
         inset: 0;
         z-index: 1;
         border-radius: inherit;
-        /*
-         * The tint has to sit above the lens, not on .glass: the lens paints its
-         * backdrop over anything below it. Without it a near-clear pane over a black
-         * starfield has no body at all and the text loses its ground.
-         */
+
         background-color: rgb(11 13 19 / 0.34);
         background-image:
             radial-gradient(130% 150% at 20% -10%,
@@ -234,10 +191,6 @@
         pointer-events: none;
     }
 
-    /*
-     * Specular edge. The gradient runs warm at the lit corner and cool at the far one,
-     * which stands in for the colour split a real edge would produce.
-     */
     .glass::after {
         content: "";
         position: absolute;
@@ -258,10 +211,6 @@
         pointer-events: none;
     }
 
-    /*
-     * Actions. There is exactly one filled action per view - that is the whole
-     * job of the accent - and .action-quiet for everything standing next to it.
-     */
     .action,
     .action-quiet {
         position: relative;
@@ -295,7 +244,6 @@
         color: #fff;
     }
 
-    /* Same rim without the blur, for surfaces that must not cost a backdrop pass. */
     .rim {
         position: relative;
     }
@@ -324,7 +272,6 @@
     to   { opacity: 1; }
 }
 
-/* The HUD comes in from depth. */
 @keyframes hud-in {
     from { opacity: 0; transform: scale(0.985); }
     to   { opacity: 1; transform: none; }

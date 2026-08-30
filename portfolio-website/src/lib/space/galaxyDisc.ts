@@ -19,7 +19,7 @@ const fragmentShader = `
     varying float vDist;
 
     uniform float uTime;
-    /** Between these distances the glow resolves into single stars. */
+
     uniform vec2 uResolve;
     uniform float uOpacity;
     uniform float uWeight;
@@ -106,14 +106,14 @@ export type GalaxyDisc = {
 export type GalaxyDiscOptions = {
     radius: number
     arms: number
-    /** Winding of the spiral; must match the point distribution. */
+
     wind: number
-    /** Half thickness of the disc in world units. */
+
     thickness?: number
-    /** Number of stacked layers. Odd, so one lies exactly in the plane. */
+
     layers?: number
     quality?: number
-    /** Distances between which the glow resolves into single stars. */
+
     resolve?: [number, number]
     seed?: number
 }
@@ -162,7 +162,6 @@ export const createGalaxyDisc = ({
         object.add(mesh)
     }
 
-    // Normalize the weights once all of them are known.
     const total = materials.reduce((sum, m) => sum + m.uniforms.uWeight.value, 0)
     materials.forEach((m) => {
         m.uniforms.uWeight.value /= total

@@ -112,7 +112,6 @@ const Contact = () => {
                 <div ref={panelRef} className="will-change-transform">
                     <div className="glass rounded-3xl p-5 sm:p-8">
                         <Lens/>
-                        {/* Availability */}
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
                             <span className="relative flex h-1.5 w-1.5">
                                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
@@ -148,7 +147,6 @@ const Contact = () => {
                     </div>
                 </div>
 
-                {}
                 <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/50">
                     Planetenkarten:{" "}
                     <a

@@ -3,7 +3,6 @@ import {createGalaxyDisc} from "./galaxyDisc"
 
 const ARMS = 2
 
-/** How tightly the arms are wound. Smaller = more open. */
 const ARM_WIND = 0.42
 
 const BULGE_SHARE = 0.14
@@ -13,7 +12,7 @@ const COLOR_BULGE = new THREE.Color("#ffd9a0")
 const COLOR_INNER = new THREE.Color("#fff2df")
 const COLOR_ARM = new THREE.Color("#c3dced")
 const COLOR_OUTER = new THREE.Color("#7d9cba")
-/* HII regions glow reddish in H-alpha. */
+
 const COLOR_HII = new THREE.Color("#d9808c")
 const COLOR_HALO = new THREE.Color("#9aa8bd")
 
@@ -70,11 +69,10 @@ const fragmentShader = `
 `
 
 export type Galaxy = {
-    /** Stars and core glow together, tilted. */
     object: THREE.Object3D
     setPixelRatio: (ratio: number) => void
     setOpacity: (opacity: number) => void
-    /** Camera distance to the core; fades out the core glow up close. */
+
     setProximity: (distance: number) => void
     setTime: (time: number) => void
     setQuality: (quality: number) => void
@@ -108,7 +106,6 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
         let bright: number
 
         if (i < bulgeCount) {
-            // --- Bulge: spherical, strongly concentrated toward the center ---
             const t = Math.pow(rand(), 2.4)
             const r = t * radius * 0.3
             const theta = rand() * Math.PI * 2
@@ -121,7 +118,6 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
             size = 1.0 + rand() * 1.2
             bright = 0.42 + rand() * 0.38
         } else if (i < bulgeCount + haloCount) {
-            // --- Halo: a few faint stars far out ---
             const r = radius * (0.5 + rand() * 0.9)
             const theta = rand() * Math.PI * 2
             x = Math.cos(theta) * r
@@ -132,7 +128,6 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
             size = 0.7 + rand() * 0.8
             bright = 0.1 + rand() * 0.22
         } else {
-            // --- Disc: logarithmic arms with clumping ---
             const t = Math.sqrt(rand())
             const r = radius * (0.12 + t * 0.88)
             const arm = i % ARMS
@@ -145,7 +140,7 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
 
             x = Math.cos(theta) * r
             y = Math.sin(theta) * r
-            // The disc is thicker inside than outside.
+
             z = gauss() * (1 - t * 0.7) * 1.3
 
             if (rand() < 0.22) {
@@ -229,7 +224,6 @@ export const createGalaxy = (count: number, radius: number, quality = 1): Galaxy
         layers: quality >= 0.5 ? 5 : 3,
     })
 
-    // Tilted, so the spiral is not seen face-on.
     const group = new THREE.Group()
     group.rotation.set(1.15, 0.25, 0.15)
     group.add(disc.object)

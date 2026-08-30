@@ -28,7 +28,6 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
     const closeRef = useRef<HTMLButtonElement>(null)
     const [previewActive, setPreviewActive] = useState(false)
 
-    // Move focus into the HUD so keyboard and screen readers land here.
     useEffect(() => {
         closeRef.current?.focus()
     }, [])
@@ -56,7 +55,6 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
         >
             <div className="glass relative flex w-full max-w-[84rem] flex-col rounded-3xl p-5 sm:p-8">
                 <Lens/>
-                {/* Header: identifier and close */}
                 <div className="flex shrink-0 items-start justify-between gap-6 border-b border-white/[0.06] pb-4">
                     <div className="min-w-0">
                         <HudLabel tone="text-brand/80">
@@ -90,9 +88,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     </div>
                 </div>
 
-                {/* min-h-0: otherwise the middle never shrinks below its content */}
                 <div className="mt-5 grid min-h-0 flex-1 gap-6 lg:grid-cols-12 lg:gap-8">
-                    {}
                     <div className="flex min-h-0 flex-col overflow-y-auto lg:col-span-5">
                         <p className="leading-relaxed text-white/65">{project.description}</p>
 
@@ -134,7 +130,6 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                         </div>
                     </div>
 
-                    {/* Live app */}
                     <div className="relative min-h-[14rem] lg:col-span-7 lg:min-h-0">
                         <BrowserFrame
                             url={primary?.href}

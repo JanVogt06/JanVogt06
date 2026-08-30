@@ -1,6 +1,5 @@
 import type {ReactNode} from "react"
 
-/** Quiet label above a group. Sentence case, not a readout. */
 export const HudLabel = ({
     children,
     className = "",
@@ -22,7 +21,6 @@ export const HudSectionHeader = ({
     lead,
     className = "",
 }: {
-    /** Identifier such as 02. Mono, because it is data. */
     id: string
     title: string
     accent: string

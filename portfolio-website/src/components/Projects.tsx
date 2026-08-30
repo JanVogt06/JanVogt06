@@ -36,7 +36,6 @@ const SectionIntro = () => (
     </div>
 )
 
-/** What the leader lines carry on wide screens; portrait has no room beside the crystal. */
 const CrystalCaption = ({index}: {index: number}) => {
     const project = projects[index]
     const tagline = useTagline(project)
@@ -60,7 +59,6 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     const onProgress = useCallback((raw: number) => {
         const progress = Math.min(Math.max(raw, 0), 1)
 
-        // Eased for anything that should settle on a crystal, raw for what keeps moving.
         const position = stationPosition(progress, total)
         const span = Math.max(total - 1, 1)
 
@@ -106,7 +104,6 @@ const ProjectField = ({onSelect}: {onSelect: (index: number) => void}) => {
     )
 }
 
-/** Fallback: a stacked list when the scene is not running. */
 const ProjectStack = () => {
     const [activeSlug, setActiveSlug] = useState<string | null>(null)
 
@@ -149,12 +146,10 @@ const Projects = ({
     selected,
     onSelect,
 }: {
-    /** Whether the crystal scene runs; otherwise a stacked list. */
     crystals: boolean
     selected: number | null
     onSelect: (index: number | null) => void
 }) => {
-    // Tell the scene which crystal is open.
     useEffect(() => {
         space.setSelected(selected)
     }, [selected])

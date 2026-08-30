@@ -1,6 +1,5 @@
 let webgl2: boolean | null = null
 
-/** Whether the browser can run the scene at all. Cached; the answer cannot change. */
 export const hasWebGL2 = () => {
     if (webgl2 !== null) return webgl2
     try {

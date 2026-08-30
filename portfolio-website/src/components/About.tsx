@@ -10,7 +10,6 @@ import useScrollProgress from "@/lib/useScrollProgress"
 import {space, subscribeAnchor} from "@/lib/space/controller"
 import {stationPosition, trackScreens} from "@/lib/stations"
 
-/** Stations of the career timeline. */
 const timeline = [
     {when: "seit 02/2026", what: "Werkstudent Softwareentwicklung", where: "Carl Zeiss Meditec AG"},
     {when: "seit 10/2024", what: "B.Sc. Informatik", where: "Friedrich-Schiller-Universität Jena"},
@@ -131,7 +130,6 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
             aria-label={chapter.alt}
             className="animate-hud fixed inset-0 z-40 flex justify-center overflow-hidden bg-page/65 px-4 pb-4 pt-24 backdrop-blur-[10px] sm:px-8 sm:pb-8"
         >
-            {/* Clicking outside closes; the button stays the accessible way */}
             <button
                 aria-hidden="true"
                 tabIndex={-1}
@@ -164,7 +162,6 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                     </div>
                 </div>
 
-                {/* min-h-0: otherwise the image area never shrinks below the image */}
                 <div className="mt-5 min-h-0 flex-1">
                     <img
                         src={chapter.image}
@@ -184,7 +181,7 @@ const ChapterContent = ({
 }: {
     chapter: Chapter
     headingRef?: (node: HTMLDivElement | null) => void
-    /** Absent in the stacked variant. */
+
     onOpenImage?: () => void
 }) => (
     <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
@@ -200,7 +197,6 @@ const ChapterContent = ({
 
             <div className="mt-7 short:mt-5 squat:mt-3">{chapter.body}</div>
 
-            {}
             {onOpenImage && (
                 <button
                     onClick={onOpenImage}
@@ -233,7 +229,6 @@ const WaypointLink = ({headingBox}: {headingBox: () => DOMRect | null}) => {
                 return
             }
 
-            // Starts at the right edge of the heading, ends at the waypoint rim.
             const sx = box.right + 14
             const sy = box.top + box.height / 2
             const dx = x - radius * 1.2
@@ -291,10 +286,8 @@ const AboutJourney = ({
     const onProgress = useCallback((raw: number) => {
         const progress = clamp01(raw)
 
-        // The heading rides along with the layer, so its box is outdated now.
         boxStale.current = true
 
-        // Eased for anything that should settle on a station, raw for what keeps moving.
         const position = stationPosition(progress, chapters.length)
         const span = Math.max(chapters.length - 1, 1)
 
@@ -313,7 +306,6 @@ const AboutJourney = ({
             const d = position - i
             const distance = Math.abs(d)
 
-            // Steep, so the two chapters do not ghost over each other while swapping.
             layer.style.opacity = String(clamp01(1 - distance * 2.2))
             layer.style.transform = `translate3d(0, ${(-d * 4).toFixed(2)}vh, 0)`
 
@@ -327,10 +319,6 @@ const AboutJourney = ({
 
     useScrollProgress(sectionRef, onProgress)
 
-    /**
-     * The scene cannot know how tall the chapters are, and the tallest one decides where
-     * the planets may pass in portrait. offsetHeight, because the layers carry a transform.
-     */
     const reportFloor = useCallback(() => {
         const pane = paneRef.current
         const content = contentRef.current
@@ -355,7 +343,6 @@ const AboutJourney = ({
         return () => window.removeEventListener("resize", invalidate)
     }, [invalidate, reportFloor])
 
-    /** Measured on demand: before the first scroll the section is still off screen. */
     const headingBox = useCallback(() => {
         if (boxStale.current) {
             boxStale.current = false
@@ -414,7 +401,6 @@ const AboutStack = () => (
         {chapters.map((chapter) => (
             <div key={chapter.id}>
                 <ChapterContent chapter={chapter}/>
-                {}
                 <img
                     src={chapter.image}
                     alt={chapter.alt}
@@ -430,9 +416,8 @@ const About = ({
     station,
     onStation,
 }: {
-    /** Without the scene there are no planets to fly past. */
     scene: boolean
-    /** Which planet is clicked; comes from App because the scene triggers it. */
+
     station: number | null
     onStation: (index: number | null) => void
 }) => (

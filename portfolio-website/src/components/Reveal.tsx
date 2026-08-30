@@ -15,7 +15,7 @@ export const Reveal = ({
     children: ReactNode
 }) => {
     const ref = useRef<HTMLDivElement>(null)
-    // No margin: the animation runs while the element scrolls in.
+
     const inView = useInView(ref, {once: true})
 
     return (

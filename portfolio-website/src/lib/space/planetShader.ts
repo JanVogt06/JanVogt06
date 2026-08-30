@@ -18,13 +18,13 @@ export const planetFragmentShader = `
     precision highp float;
 
     uniform sampler2D uMap;
-    /** 0 = map not loaded yet, uSurface carries it then. */
+
     uniform float uHasMap;
 
-    uniform vec3  uSurface;   // base tone until the map is there
-    uniform vec3  uShadow;    // tone of the night side, cool rather than black
-    uniform vec3  uRim;       // color of the grazing light at the rim
-    /** Strength of the rim light. */
+    uniform vec3  uSurface;
+    uniform vec3  uShadow;
+    uniform vec3  uRim;
+
     uniform float uAtmosphere;
     uniform float uFade;
 
@@ -40,7 +40,6 @@ export const planetFragmentShader = `
 
         vec3 albedo = mix(uSurface, texture2D(uMap, vUv).rgb, uHasMap);
 
-        // Day and night side with a soft terminator.
         float lambert = dot(normal, normalize(LIGHT));
         float day = smoothstep(-0.22, 0.5, lambert);
 
@@ -79,11 +78,11 @@ export const ringFragmentShader = `
     uniform float uHasMap;
     uniform vec3  uColor;
     uniform float uFade;
-    /** Inner and outer radius of the geometry, for the radial coordinate. */
+
     uniform vec2  uRadii;
-    /** Planet radius in the same units, for the shadow. */
+
     uniform float uPlanetRadius;
-    /** Light direction in the ring's local space. */
+
     uniform vec3  uLight;
 
     varying vec3 vLocal;

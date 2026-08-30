@@ -2,10 +2,6 @@ import type {ReactNode} from "react"
 import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight, Play, X} from "lucide-react"
 
-/**
- * Affordance over the poster. The scrim is radial, not flat: the screenshot has to
- * stay readable as a preview, and only the label needs a dark ground under it.
- */
 const PreviewCue = ({
     label,
     note,
@@ -13,7 +9,7 @@ const PreviewCue = ({
 }: {
     label: string
     note?: string
-    /** The icon; the play triangle needs its own optical offset. */
+
     children: ReactNode
 }) => (
     <>
@@ -46,16 +42,15 @@ const BrowserFrame = ({
     onActivate,
     onClose,
 }: {
-    /** Live URL, or undefined when the project has no deployment */
     url?: string
-    /** false = the page is unreliable in an iframe, only offer to open it */
+
     embeddable?: boolean
-    /** Screenshot; without it the frame shows icon and address */
+
     poster?: string
     icon: LucideIcon
-    /** Size hint on the play button, e.g. "74 MB Unity build" */
+
     note?: string
-    /** The frame is what the user is waiting for; load the poster right away. */
+
     eager?: boolean
     active: boolean
     onActivate: () => void
@@ -66,7 +61,6 @@ const BrowserFrame = ({
     return (
         <div className="surface rim flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl">
 
-            {/* Window bar with address */}
             <div
                 className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-3 py-2.5">
                 <div className="flex shrink-0 gap-1.5">
@@ -99,7 +93,6 @@ const BrowserFrame = ({
                 ) : null}
             </div>
 
-            {/* Content */}
             <div className="relative min-h-0 flex-1 bg-black/40">
                 {active && url ? (
                     <iframe
@@ -131,7 +124,6 @@ const BrowserFrame = ({
                             </div>
                         )}
 
-                        {}
                         {url && embeddable && (
                             <button
                                 onClick={onActivate}

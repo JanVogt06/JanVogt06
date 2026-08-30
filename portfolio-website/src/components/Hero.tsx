@@ -10,7 +10,6 @@ const Hero = () => {
     const contentRef = useRef<HTMLDivElement>(null)
 
     const onProgress = useCallback((raw: number) => {
-        // Above the hero, raw is < 0.
         const p = Math.min(Math.max(raw, 0), 1)
         if (contentRef.current) {
             contentRef.current.style.transform = `translate3d(0, ${(-p * 18).toFixed(2)}vh, 0)`
@@ -36,7 +35,6 @@ const Hero = () => {
                     Informatik · Entwicklung · Schiedsrichter
                 </motion.p>
 
-                {}
                 <h1 className="font-black uppercase leading-[0.82] tracking-[-0.045em]">
                     {["Jan", "Vogt"].map((word, i) => (
                         <span key={word} className="block overflow-hidden">
@@ -90,7 +88,6 @@ const Hero = () => {
                 </motion.div>
             </div>
 
-            {/* Scroll hint */}
             <motion.button
                 onClick={() => scrollToElement("about")}
                 className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-white/50 transition-colors hover:text-white/60"
@@ -109,7 +106,6 @@ const Hero = () => {
                 </motion.span>
             </motion.button>
 
-            {/* Sits above the scroll hint on narrow screens. */}
             <motion.p
                 className="absolute bottom-24 right-6 z-20 max-w-[16rem] text-right text-[11px] leading-relaxed text-white/50 sm:bottom-8 sm:right-8 lg:right-12"
                 initial={{opacity: 0}}
@@ -122,6 +118,5 @@ const Hero = () => {
         </section>
     )
 }
-
 
 export default Hero

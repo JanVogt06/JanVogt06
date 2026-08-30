@@ -5,7 +5,6 @@ import BrowserFrame from "./BrowserFrame"
 import type {Project} from "@/lib/projects"
 import {primaryLinkOf} from "@/lib/projects"
 
-// Maps the `icon` string from the JSON to the lucide component.
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
 
 const screenshots = import.meta.glob<string>(
@@ -37,7 +36,6 @@ const ProjectPanel = ({
     return (
         <div className="relative flex h-full w-full flex-col justify-center gap-8 px-6 sm:px-10 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12 lg:px-16">
 
-            {}
             <span
                 aria-hidden="true"
                 className="pointer-events-none absolute -left-2 top-2 select-none font-mono text-[7rem] font-bold leading-none text-white/[0.035] sm:text-[10rem] lg:-left-4 lg:top-0 lg:text-[16rem]"
@@ -45,7 +43,6 @@ const ProjectPanel = ({
                 {String(index + 1).padStart(2, "0")}
             </span>
 
-            {/* Facts */}
             <div className="relative lg:col-span-5">
                 <p className="mb-5 flex items-center gap-3 font-mono text-xs tabular-nums text-white/50">
                     <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
@@ -105,7 +102,6 @@ const ProjectPanel = ({
                 </div>
             </div>
 
-            {/* Live app */}
             <div className="relative aspect-[16/10] w-full lg:col-span-7 lg:aspect-auto lg:h-[62vh]">
                 <BrowserFrame
                     url={primary?.href}

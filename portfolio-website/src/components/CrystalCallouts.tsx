@@ -20,7 +20,6 @@ const CrystalCallouts = () => {
     const taglineRef = useRef<HTMLSpanElement>(null)
     const shownIndex = useRef<number>(-1)
 
-    // The taglines come from GitHub, so they can arrive after the first paint.
     useEffect(() => {
         loadDescriptions()
         return subscribeDescriptions(() => {
@@ -33,10 +32,8 @@ const CrystalCallouts = () => {
 
     useEffect(() => {
         return subscribeAnchor(({kind, index, x, y, radius, strength}) => {
-            // The scene also reports the career waypoints; those do not belong here.
             if (kind !== "crystal") return
 
-            // Only touch the texts on change, not every frame.
             if (index !== shownIndex.current) {
                 shownIndex.current = index
                 const project = projects[index]
@@ -54,7 +51,6 @@ const CrystalCallouts = () => {
                 const ux = callout.dx / length
                 const uy = callout.dy / length
 
-                // Start just outside the crystal, then a bend, then horizontal.
                 const start = radius * 0.95
                 const x0 = x + ux * start
                 const y0 = y + uy * start

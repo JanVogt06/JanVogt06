@@ -4,7 +4,6 @@ export const GALACTIC_POLE = new THREE.Vector3(0.42, 0.9, -0.15).normalize()
 
 export const GALACTIC_SPIN = Math.PI * 0.5
 
-/** The rotation that puts a band at y = 0 into the galactic plane. */
 export const galacticOrientation = () =>
     new THREE.Quaternion()
         .setFromAxisAngle(GALACTIC_POLE, GALACTIC_SPIN)

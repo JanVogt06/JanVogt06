@@ -15,7 +15,6 @@ import {projects} from '@/lib/projects'
 function App() {
     useSmoothScroll()
 
-    // The scene carries the whole choreography; without it every section falls back.
     const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
     const scene = hasWebGL2() && !reduced
 
@@ -34,7 +33,6 @@ function App() {
             <TopBar/>
             <Hero/>
             <About scene={scene} station={station} onStation={setStation}/>
-            {/* Scroll-only stretch: the fly-through of the galaxy */}
             <Passage scene={scene}/>
             <Projects crystals={scene} selected={selected} onSelect={setSelected}/>
             <Contact/>

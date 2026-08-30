@@ -4,7 +4,6 @@ import type {Project} from "./projects"
 
 const API = "https://api.github.com/repos/"
 
-/** Descriptions live for one tab session; a reload picks up GitHub edits. */
 const CACHE_KEY = "github-descriptions"
 
 const descriptions = new Map<string, string>()
@@ -21,7 +20,6 @@ const repoOf = (url?: string) => {
     return owner && repo ? `${owner}/${repo}` : null
 }
 
-/** Description of the repo behind a project; the tagline until it is loaded. */
 export const taglineOf = (project: Project) =>
     descriptions.get(project.slug) ?? project.tagline
 
@@ -51,8 +49,9 @@ const restore = () => {
 const persist = () => {
     try {
         sessionStorage.setItem(CACHE_KEY, JSON.stringify(Object.fromEntries(descriptions)))
+        return true
     } catch {
-        // Storage blocked: the next load fetches again.
+        return false
     }
 }
 
@@ -67,12 +66,12 @@ const fetchDescription = async (project: Project) => {
         const {description} = (await response.json()) as {description?: string | null}
         const text = description?.trim()
         if (text) descriptions.set(project.slug, text)
+        return true
     } catch {
-        // Offline or rate limited: the tagline from the JSON stays.
+        return false
     }
 }
 
-/** Fetches every repo description once, then notifies the subscribers. */
 export const loadDescriptions = () => {
     if (started) return
     started = true
@@ -88,7 +87,6 @@ export const loadDescriptions = () => {
     })
 }
 
-/** Tagline of a project, re-rendering once the descriptions arrive. */
 export const useTagline = (project: Project) => {
     useEffect(loadDescriptions, [])
     return useSyncExternalStore(subscribeDescriptions, () => taglineOf(project))

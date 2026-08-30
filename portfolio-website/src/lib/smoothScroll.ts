@@ -7,7 +7,6 @@ const EPSILON = 0.5
 const FOREIGN_SCROLL_THRESHOLD = 2
 
 type Controller = {
-    /** Set the target directly, e.g. for navigation. */
     scrollTo: (top: number) => void
     active: boolean
 }
@@ -29,7 +28,6 @@ export const scrollToElement = (id: string) => {
     if (!el) return
 
     if (controller?.active) {
-        // Respect scroll-padding-top of <html> so the target clears the fixed bar.
         const padding = parseFloat(
             getComputedStyle(document.documentElement).scrollPaddingTop || "0",
         )
@@ -49,7 +47,7 @@ const ownsWheel = (node: EventTarget | null, deltaY: number) => {
         if (scrollable && el.scrollHeight > el.clientHeight) {
             const atTop = el.scrollTop <= 0
             const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1
-            // Only while it can still scroll itself; the page takes over at the end.
+
             if (!(deltaY < 0 && atTop) && !(deltaY > 0 && atBottom)) return true
         }
         el = el.parentElement
@@ -57,7 +55,6 @@ const ownsWheel = (node: EventTarget | null, deltaY: number) => {
     return false
 }
 
-/** Wheel delta in pixels; devices report lines or pages. */
 const deltaToPixels = (event: WheelEvent) => {
     if (event.deltaMode === 1) return event.deltaY * 16
     if (event.deltaMode === 2) return event.deltaY * window.innerHeight
@@ -95,7 +92,7 @@ export const useSmoothScroll = () => {
         }
 
         const onWheel = (event: WheelEvent) => {
-            if (event.ctrlKey) return // pinch zoom
+            if (event.ctrlKey) return
             if (ownsWheel(event.target, event.deltaY)) return
             event.preventDefault()
             target = clamp(target + deltaToPixels(event))

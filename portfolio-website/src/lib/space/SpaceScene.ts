@@ -26,7 +26,6 @@ const GALAXY_RADIUS = 26
 
 const WAYPOINT_VIEW_DISTANCE = 8
 
-/** Portrait sits further back: Saturn's ring has to fit across a narrow screen. */
 const WAYPOINT_VIEW_DISTANCE_PORTRAIT = 14
 
 const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
@@ -34,82 +33,59 @@ const GALAXY_POINTS = [6000, 12000, 22000, 36000, 55000]
 const SKY_STARS = [4000, 9000, 16000, 26000, 38000]
 const NEAR_STARS = [400, 800, 1400, 2000, 2800]
 
-/** Fraction of the sky stars in the band; the rest spread over the sphere. */
 const BAND_FRACTION = 0.62
 
 const MILKYWAY_MAP_MIN_QUALITY = 0.5
 
-/** How fast the photo fades over the procedural band. */
 const MILKYWAY_MAP_FADE = 0.02
 
-/** Radii of the two star shells and of the sky sphere. */
 const MILKYWAY_RADIUS = 900
 const SKY_RADIUS = 700
 const NEAR_RADIUS = 150
 
 const CAMERA_FAR = 1600
 
-/** Middle of the journey; the near field sits here. */
 const NEAR_CENTER_Z = -33
 
-/** Number of career waypoints; must match the chapters in About.tsx. */
 export const WAYPOINT_COUNT = 3
 
-/** Camera z in the hero: far outside, with the galaxy ahead. */
 const CAMERA_Z_HERO = 12
 
 const ABOUT_END_Z = -26
 
-/** Radius of the ring. */
 const RING_RADIUS = 5.4
 
-/** Tilt of the ring. */
 const RING_TILT = 0.30
 
 const HERO_DISTANCE = 17
 const FIELD_DISTANCE = 11
 const FOCUS_DISTANCE = 6.4
 
-/**
- * Portrait framing of the crystal field: further back, because a crystal framed for a
- * wide screen fills a tall one, and lifted, because the caption sits underneath.
- */
 const PORTRAIT_FIELD_PULLBACK = 1.45
 const PORTRAIT_FIELD_LIFT = 0.6
 
-/** Up to this height the screen is too short for the wide framing, however wide it is. */
 const SQUAT_HEIGHT = 520
 
 const IDLE_SWAY = 0.12
 const IDLE_SWAY_SPEED = 0.1
 
-/**
- * Turns a planet and a crystal make per station while you scroll. This is the whole
- * signal that there is more to come: the text stands still, the body keeps turning.
- */
 const PLANET_TURNS_PER_STATION = 0.85
 const CRYSTAL_TURNS_PER_STATION = 0.5
 
 const TAU = Math.PI * 2
 
-/** Lateral camera offset in the hero, leaving room for the name. */
 const HERO_LATERAL = 2.6
 
-/** Where a planet passes by in landscape: right of the camera axis, at eye level. */
 const WAYPOINT_LATERAL = 2.4
 const WAYPOINT_RISE = 0.05
 
-/** Portrait: least it passes below the eye line, as a share of the half-view. */
 const WAYPOINT_DROP = 0.58
 
-/** Gap kept between the text above and the planet, as a share of the screen height. */
 const WAYPOINT_CLEARANCE = 0.03
 
-/** Camera lift above the ring plane, and how far ahead it looks. */
 const CAMERA_RISE = 0.55
 const LOOK_AHEAD = 10
 
-/** How far a planet may stray from that spot. */
 const WAYPOINT_SCATTER = 0.24
 
 const INTERACTIVE_ENTER = 0.75
@@ -123,7 +99,6 @@ const SAMPLE_FRAMES = 60
 const MIN_ACCEPTABLE_FPS = 45
 const SHARD_COUNT = 20
 
-/** Cut of a crystal: a table, a crown down to the girdle, then a pavilion to the culet. */
 const GEM_CUT = {
     tableRadius: 0.55,
     crownHeight: 0.45,
@@ -145,17 +120,17 @@ const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
 type PlanetSpec = {
     name: string
     texture: string
-    /** Radius in scene units, compressed. */
+
     radius: number
-    /** Flattening: the polar radius is smaller by this fraction. */
+
     flattening: number
-    /** Axial tilt in radians. */
+
     tilt: number
-    /** Rotation per second in radians. */
+
     spin: number
-    /** Strength of the rim light. */
+
     atmosphere: number
-    /** Base tone until the map is loaded, plus night and rim color. */
+
     surface: string
     shadow: string
     rim: string
@@ -205,7 +180,6 @@ const PLANETS: ReadonlyArray<PlanetSpec> = [
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-/** Smooth fade curve. */
 const smooth = (t: number) => {
     const c = clamp01(t)
     return c * c * (3 - 2 * c)
@@ -221,18 +195,17 @@ const hash = (n: number) => {
 
 export type Anchor = {
     kind: "crystal" | "waypoint"
-    /** Index within its kind. */
+
     index: number
-    /** Screen position of its center, in CSS pixels. */
+
     x: number
     y: number
-    /** Half the crystal height in pixels, the anchor for the leader lines. */
+
     radius: number
-    /** 1 when a crystal is exactly in front, 0 in between. */
+
     strength: number
 }
 
-/** What lies under the pointer or was clicked. */
 export type Pick = {kind: "crystal" | "waypoint"; index: number}
 
 export type SpaceSceneOptions = {
@@ -240,7 +213,7 @@ export type SpaceSceneOptions = {
     count: number
     onHover: (pick: Pick | null) => void
     onSelect: (pick: Pick) => void
-    /** Per frame: where are the front crystal and the next waypoint? */
+
     onAnchor: (anchor: Anchor) => void
 }
 
@@ -272,7 +245,7 @@ export class SpaceScene {
     private readonly skyStars: Starfield
     private readonly nearStars: Starfield
     private readonly milkyWay: MilkyWay
-    /** Whether the photo is loaded; it then fades over the procedural band. */
+
     private milkyWayMapLoaded = false
     private milkyWayMapMix = 0
 
@@ -282,10 +255,9 @@ export class SpaceScene {
     private readonly ringMaterials: THREE.ShaderMaterial[] = []
     private readonly ringMeshes: THREE.Mesh[] = []
     private readonly waypointGeometry = new THREE.SphereGeometry(1, 48, 32)
-    /** Loaded textures, for dispose(). */
+
     private readonly textures: THREE.Texture[] = []
 
-    /** z where the journey through the galaxy ends and the ring takes over. */
     private readonly journeyEnd: number
 
     private readonly shards: THREE.Mesh[] = []
@@ -354,7 +326,6 @@ export class SpaceScene {
         container.appendChild(this.renderer.domElement)
         this.canvasRect = this.renderer.domElement.getBoundingClientRect()
 
-        // --- Background ---
         this.bgMaterial = new THREE.ShaderMaterial({
             vertexShader: nebulaVertexShader,
             fragmentShader: nebulaFragmentShader,
@@ -370,17 +341,14 @@ export class SpaceScene {
         })
         this.bgScene.add(new THREE.Mesh(this.bgGeometry, this.bgMaterial))
 
-        // --- Ring ---
         this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, CAMERA_FAR)
         this.tiltGroup.rotation.x = RING_TILT
         this.tiltGroup.position.z = RING_Z
         this.tiltGroup.add(this.spinGroup)
         this.scene.add(this.tiltGroup)
 
-        // End of the journey: where the ring camera would sit at enter = 0.
         this.journeyEnd = this.frontPoint().z + HERO_DISTANCE
 
-        // --- Galaxy ---
         this.galaxy = createGalaxy(
             GALAXY_POINTS[Math.round(this.quality * 4)],
             GALAXY_RADIUS,
@@ -390,7 +358,6 @@ export class SpaceScene {
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.scene.add(this.galaxy.object)
 
-        // --- Milky way and star fields ---
         const level = Math.round(this.quality * 4)
         this.milkyWay = createMilkyWay({
             radius: MILKYWAY_RADIUS,
@@ -493,7 +460,7 @@ export class SpaceScene {
             }
 
             group.scale.setScalar(spec.radius)
-            // Axial tilt: tips planet and ring together.
+
             group.rotation.z = spec.tilt
 
             group.userData.index = i
@@ -533,7 +500,7 @@ export class SpaceScene {
 
             const mesh = new THREE.Mesh(geometry, material)
             const angle = i * step
-            // theta = 0 is in front (toward the camera, +z).
+
             mesh.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS)
             const scale = new THREE.Vector3(
                 0.62 + hash(i) * 0.12,
@@ -549,7 +516,6 @@ export class SpaceScene {
             this.crystals.push(mesh)
         }
 
-        // --- Shards, depth only ---
         this.shardMaterial = new THREE.ShaderMaterial({
             vertexShader: crystalVertexShader,
             fragmentShader: crystalFragmentShader,
@@ -588,8 +554,6 @@ export class SpaceScene {
         this.sync()
     }
 
-    // ----------------------------------------------------------------- Controls
-
     setPageProgress(progress: number) {
         this.pageProgress = progress
         this.sync()
@@ -610,7 +574,6 @@ export class SpaceScene {
         this.sync()
     }
 
-    /** Raw scroll through the section, unlike the eased progress above. */
     setAboutScroll(progress: number) {
         this.aboutScrollTarget = progress
         this.sync()
@@ -631,7 +594,6 @@ export class SpaceScene {
         this.sync()
     }
 
-    /** How far down the screen the section text reaches, 0..1. */
     setTextFloor(floor: number) {
         if (Math.abs(floor - this.textFloor) < 0.005) return
         this.textFloor = floor
@@ -643,13 +605,10 @@ export class SpaceScene {
         this.sync()
     }
 
-    /** Crystal i is open (HUD open), or none. */
     setSelected(index: number | null) {
         this.selected = index
         this.sync()
     }
-
-    // ---------------------------------------------------------------- Internals
 
     private loadTexture(
         url: string,
@@ -670,11 +629,6 @@ export class SpaceScene {
         })
     }
 
-    /**
-     * Landscape puts the planets right of the camera axis at eye level, beside the text.
-     * Portrait has the text above them instead, so they pass centred and low - and from
-     * further away, or Saturn's ring would run off both edges.
-     */
     private placeWaypoints() {
         const front = this.frontPoint()
         const portrait = this.camera.aspect < 1
@@ -699,16 +653,10 @@ export class SpaceScene {
         }
     }
 
-    /**
-     * Portrait: how far the planet passes below the eye line. Far enough that its top
-     * edge clears the text above it, which on a short screen means most of the planet
-     * ends up below the fold - and that is the graceful way out, better than a planet
-     * sitting behind the timeline.
-     */
     private dropFor(spec: PlanetSpec, halfView: number) {
         const radiusShare = spec.radius / halfView
         const needed = 2 * (this.textFloor + WAYPOINT_CLEARANCE - 0.5) + radiusShare
-        // Cap: the upper limb stays on screen even when the text leaves no room at all.
+
         return Math.min(Math.max(WAYPOINT_DROP, needed), 0.84 + radiusShare)
     }
 
@@ -716,11 +664,6 @@ export class SpaceScene {
         return Math.round(this.quality * 4)
     }
 
-    /**
-     * The crystals refract whatever surrounds them, so they need the sky as a cube map.
-     * Captured once, from the middle of the ring, with the ring itself hidden - it barely
-     * changes afterwards and a live capture would cost six renders a frame.
-     */
     private captureEnvironment() {
         if (this.envCaptured || this.crystals.length === 0) return
         this.envCaptured = true
@@ -808,8 +751,6 @@ export class SpaceScene {
         const time = this.clock.getElapsedTime()
         const count = this.crystals.length
 
-
-        // --- Nebula: stays over the whole page, only gets quieter ---
         this.bgMaterial.uniforms.uTime.value = time
         this.bgMaterial.uniforms.uFade.value = lerp(
             NEBULA_MAX,
@@ -817,7 +758,6 @@ export class SpaceScene {
             clamp01(this.pageProgress),
         )
 
-        // --- Trailing values ---
         this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
         this.enter = lerp(this.enter, this.approachTarget, 0.09)
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
@@ -827,7 +767,6 @@ export class SpaceScene {
         this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
-        // --- Turn the ring so crystal `station` comes to the front ---
         const step = (Math.PI * 2) / Math.max(count, 1)
         const station = this.fieldProgress * Math.max(count - 1, 1)
         const sway = Math.sin(time * IDLE_SWAY_SPEED) * IDLE_SWAY * (1 - this.enter)
@@ -839,20 +778,17 @@ export class SpaceScene {
         const centred = clamp01(1 - offCentre * 2.4)
 
         const portrait = this.camera.aspect < 1
-        // A phone held sideways is wide but just as short on room as a portrait one.
+
         const tight = portrait || this.container.clientHeight <= SQUAT_HEIGHT
         const pull = tight ? PORTRAIT_FIELD_PULLBACK : 1
 
         const base = lerp(HERO_DISTANCE, FIELD_DISTANCE * pull, this.enter)
         const distance = lerp(base, FOCUS_DISTANCE * pull, centred * this.enter)
-        // A bit closer while the HUD is open.
+
         const finalDistance = lerp(distance, FOCUS_DISTANCE * pull * 0.82, this.selectBlend)
 
-        // Portrait has no room for a side-by-side composition; stay on the axis.
         const lateral = (portrait ? 0 : HERO_LATERAL) * (1 - this.enter)
 
-        // Dropping the camera lifts the crystal on screen, clear of the caption below it.
-        // Only portrait needs the lift; sideways the caption sits beside the crystal.
         const framing = portrait ? -PORTRAIT_FIELD_LIFT * this.enter : 0
 
         const travelZ = lerp(
@@ -871,7 +807,6 @@ export class SpaceScene {
 
         if (this.enter > 0.02) this.captureEnvironment()
 
-        // --- Crystals ---
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
             const material = this.materials[i]
@@ -911,7 +846,6 @@ export class SpaceScene {
         this.skyStars.setTime(time)
         this.nearStars.setTime(time)
 
-        // --- Galaxy ---
         this.galaxy.setTime(time)
         this.galaxy.setProximity(this.camera.position.distanceTo(this.galaxy.object.position))
         this.galaxy.setOpacity(1 - reveal * 0.92)
@@ -959,7 +893,6 @@ export class SpaceScene {
         this.shardMaterial.uniforms.uTime.value = time
         this.shardMaterial.uniforms.uFade.value = 0.45 * reveal
 
-        // --- Anchor point for the DOM labels ---
         this.camera.updateMatrixWorld()
         this.reportAnchor("crystal", this.crystals, nearest, centred * this.enter)
         this.reportAnchor(
@@ -1050,7 +983,6 @@ export class SpaceScene {
     }
 
     private handlePointerMove = (event: PointerEvent) => {
-        // Touch has no hover: a finger dragging the page must not light up what it passes.
         if (event.pointerType !== "mouse") return
         if (this.isOverInteractive(event.target)) {
             this.pointerInside = false
@@ -1065,14 +997,13 @@ export class SpaceScene {
     private handleClick = (event: MouseEvent) => {
         if (this.isOverInteractive(event.target)) return
 
-        // A tap sends no pointermove first, so the hit has to be resolved right here.
         this.aimAt(event.clientX, event.clientY)
         this.camera.updateMatrixWorld()
         this.updateHover()
 
         if (this.hovered === null || this.hoveredKind === null) return
         const pick = {kind: this.hoveredKind, index: this.hovered}
-        // Without a cursor sitting there, the highlight would stay behind.
+
         if (!this.pointerInside) this.clearHover()
         this.onSelect(pick)
     }

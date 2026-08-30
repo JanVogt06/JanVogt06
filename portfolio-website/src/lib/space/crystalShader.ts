@@ -16,11 +16,11 @@ export const crystalVertexShader = `
 export const crystalFragmentShader = `
     precision highp float;
 
-    uniform vec3  uCore;      // core color of the crystal
-    uniform vec3  uRim;       // color of the glowing edge
+    uniform vec3  uCore;
+    uniform vec3  uRim;
     uniform float uTime;
-    uniform float uHighlight; // 0 = calm, 1 = touched (hover/focus)
-    uniform float uFade;      // overall opacity, driven by scroll
+    uniform float uHighlight;
+    uniform float uFade;
 
     varying vec3 vWorldPosition;
     varying vec3 vViewPosition;
@@ -31,10 +31,8 @@ export const crystalFragmentShader = `
 
         float facing = abs(dot(normal, viewDir));
 
-        // Edge: a grazing view glows.
         float fresnel = pow(1.0 - facing, 2.6);
 
-        // Core: shows through where the surface faces the viewer.
         float core = pow(facing, 1.7);
 
         float breathe = 0.9 + 0.1 * sin(uTime * 0.7 + vWorldPosition.z * 0.6);
@@ -43,7 +41,6 @@ export const crystalFragmentShader = `
 
         vec3 col = uCore * (core * 0.95 + body) + uRim * fresnel * 1.9;
 
-        // Touched: edge much brighter, core a bit warmer.
         col += uRim * fresnel * uHighlight * 1.4;
         col += uCore * core * uHighlight * 0.45;
 
