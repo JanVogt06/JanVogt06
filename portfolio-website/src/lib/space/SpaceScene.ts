@@ -86,6 +86,10 @@ const WAYPOINT_CLEARANCE = 0.03
 const CAMERA_RISE = 0.55
 const LOOK_AHEAD = 10
 
+const ARRIVAL_YAW = 2.42
+const ARRIVAL_RISE = 3.1
+const ARRIVAL_SWAY = 0.22
+
 const WAYPOINT_SCATTER = 0.24
 
 const INTERACTIVE_ENTER = 0.75
@@ -292,6 +296,8 @@ export class SpaceScene {
     private aboutActive = 0
     private passageTarget = 0
     private passageProgress = 0
+    private arrivalTarget = 0
+    private arrival = 0
     private aboutScrollTarget = 0
     private aboutScroll = 0
     private fieldScrollTarget = 0
@@ -478,24 +484,25 @@ export class SpaceScene {
             const material = new THREE.MeshPhysicalMaterial({
                 color: 0xffffff,
                 metalness: 0,
-                roughness: 0.02,
-                transmission: 1,
-                thickness: 1.7,
-                ior: 2.1,
-                dispersion: 4.5,
-                iridescence: 0.25,
-                iridescenceIOR: 1.6,
+                roughness: 0.045,
+                transmission: 0.95,
+                thickness: 4.6,
+                ior: 2.42,
+                dispersion: 5.5,
+                iridescence: 0.3,
+                iridescenceIOR: 1.7,
+                specularIntensity: 1,
                 attenuationColor: new THREE.Color(core),
-                attenuationDistance: 0.7,
+                attenuationDistance: 0.22,
                 emissive: new THREE.Color(rim),
                 emissiveIntensity: 0,
-                envMapIntensity: 2.4,
+                envMapIntensity: 3.2,
                 flatShading: true,
                 transparent: true,
             })
             this.materials.push(material)
 
-            const geometry = createGem({sides: 6 + (i % 3), ...GEM_CUT})
+            const geometry = createGem({sides: 10 + (i % 3) * 2, ...GEM_CUT})
             this.gemGeometries.push(geometry)
 
             const mesh = new THREE.Mesh(geometry, material)
@@ -598,6 +605,11 @@ export class SpaceScene {
         if (Math.abs(floor - this.textFloor) < 0.005) return
         this.textFloor = floor
         this.placeWaypoints()
+    }
+
+    setArrivalProgress(progress: number) {
+        this.arrivalTarget = progress
+        this.sync()
     }
 
     setPaused(paused: boolean) {
@@ -763,6 +775,7 @@ export class SpaceScene {
         this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
         this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
         this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
+        this.arrival = lerp(this.arrival, this.arrivalTarget, 0.055)
         this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, 0.12)
         this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
@@ -798,8 +811,17 @@ export class SpaceScene {
         )
         const z = lerp(travelZ, front.z + finalDistance, this.enter)
 
-        this.camera.position.set(front.x - lateral, front.y + CAMERA_RISE + framing, z)
-        this.camera.lookAt(front.x - lateral, front.y + framing, z - LOOK_AHEAD)
+        const settled = smooth(this.arrival)
+        const yaw = settled * ARRIVAL_YAW + Math.sin(time * IDLE_SWAY_SPEED) * ARRIVAL_SWAY * settled
+        const eyeX = front.x - lateral
+        const eyeY = front.y + CAMERA_RISE + framing + settled * ARRIVAL_RISE
+
+        this.camera.position.set(eyeX, eyeY, z)
+        this.camera.lookAt(
+            eyeX + Math.sin(yaw) * LOOK_AHEAD,
+            front.y + framing + settled * ARRIVAL_RISE,
+            z - Math.cos(yaw) * LOOK_AHEAD,
+        )
 
         const reveal = smooth(
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
@@ -826,7 +848,7 @@ export class SpaceScene {
             material.opacity = lerp(material.opacity, (isNearest ? 1 : 0.4) * reveal, 0.08)
             material.envMapIntensity = lerp(
                 material.envMapIntensity,
-                isNearest ? 2.4 + lit * 1.2 : 1.4,
+                isNearest ? 3.2 + lit * 1.4 : 1.8,
                 0.1,
             )
             mesh.visible = material.opacity > 0.01

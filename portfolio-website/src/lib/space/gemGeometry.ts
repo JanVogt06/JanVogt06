@@ -22,18 +22,16 @@ export const createGem = ({
     const step = (Math.PI * 2) / sides
     const half = girdleHeight / 2
 
-    const table: THREE.Vector3[] = []
-    const upper: THREE.Vector3[] = []
-    const lower: THREE.Vector3[] = []
+    const ring = (count: number, radius: number, y: number, offset: number) =>
+        Array.from({length: count}, (_, i) => {
+            const angle = (i + offset) * step
+            return new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius)
+        })
 
-    for (let i = 0; i < sides; i++) {
-        const angle = i * step
-        const cos = Math.cos(angle)
-        const sin = Math.sin(angle)
-        table.push(new THREE.Vector3(cos * tableRadius, half + crownHeight, sin * tableRadius))
-        upper.push(new THREE.Vector3(cos, half, sin))
-        lower.push(new THREE.Vector3(cos, -half, sin))
-    }
+    const table = ring(sides, tableRadius, half + crownHeight, 0.5)
+    const upper = ring(sides, 1, half, 0)
+    const lower = ring(sides, 1, -half, 0)
+    const mid = ring(sides, 0.52, -half - pavilionDepth * 0.52, 0.5)
 
     const apex = new THREE.Vector3(0, -half - pavilionDepth, 0)
     const centre = new THREE.Vector3(0, half + crownHeight, 0)
@@ -47,7 +45,9 @@ export const createGem = ({
         push(positions, table[i], upper[next], table[next])
         push(positions, upper[i], lower[i], lower[next])
         push(positions, upper[i], lower[next], upper[next])
-        push(positions, lower[i], apex, lower[next])
+        push(positions, lower[i], mid[i], lower[next])
+        push(positions, lower[next], mid[i], mid[next])
+        push(positions, mid[i], apex, mid[next])
     }
 
     const geometry = new THREE.BufferGeometry()
