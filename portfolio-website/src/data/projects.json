@@ -33,7 +33,7 @@
       "Cesium"
     ],
     "links": {
-      "github": "https://github.com/JanVogt06/SatTrak-SatelliteVisualization"
+      "github": "https://github.com/JanVogt06/SatTrak_Satellite-Visualization"
     }
   },
   {
@@ -50,7 +50,7 @@
       "JavaScript"
     ],
     "links": {
-      "github": "https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement",
+      "github": "https://github.com/JanVogt06/SolarFlow_Smart-Energy-Management",
       "website": "https://solarflow.jan-vogt.dev/"
     }
   },
@@ -69,7 +69,7 @@
       "Docker"
     ],
     "links": {
-      "github": "https://github.com/JanVogt06/dfb-spesen-generator",
+      "github": "https://github.com/JanVogt06/Spesenfuchs_Schiri-Spesen-Automat",
       "app": "https://spesen-generator.jan-vogt.dev/"
     }
   },
