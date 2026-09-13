@@ -72,9 +72,11 @@ export const gemFragmentShader = `
         if (dot(through, through) < 0.001) through = mirror;
 
         vec3 reflected = sky(mirror);
-        vec3 transmitted = sky(through) * uBody * 6.5;
 
-        vec3 col = mix(transmitted, reflected, 0.10 + 0.90 * fresnel);
+        vec3 inner = sky(through);
+        vec3 transmitted = inner * uBody * 6.5 + inner * 0.12;
+
+        vec3 col = mix(transmitted, reflected, 0.18 + 0.82 * fresnel);
 
         col += uEdge * fresnel * 1.6;
         col += uSpark * uHighlight * (fresnel * 1.1 + 0.22);
