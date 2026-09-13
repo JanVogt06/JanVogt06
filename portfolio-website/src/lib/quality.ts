@@ -1,22 +1,27 @@
 export const QUALITY_STEPS = [0, 0.25, 0.5, 0.75, 1] as const
 
+export const MIN_QUALITY = 0.25
+
+const indexOf = (quality: number) => {
+    const exact = QUALITY_STEPS.indexOf(quality as (typeof QUALITY_STEPS)[number])
+    return exact === -1 ? QUALITY_STEPS.findIndex((q) => q >= quality) : exact
+}
+
 export const stepDown = (quality: number): number | null => {
-    const i = QUALITY_STEPS.indexOf(quality as (typeof QUALITY_STEPS)[number])
-    const index = i === -1 ? QUALITY_STEPS.findIndex((q) => q >= quality) : i
+    const index = indexOf(quality)
     return index > 0 ? QUALITY_STEPS[index - 1] : null
+}
+
+export const stepUp = (quality: number): number | null => {
+    const index = indexOf(quality)
+    return index >= 0 && index < QUALITY_STEPS.length - 1 ? QUALITY_STEPS[index + 1] : null
 }
 
 export const detectQuality = (): number => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0
 
     const connection = (navigator as {connection?: {saveData?: boolean}}).connection
-    if (connection?.saveData) return 0
+    if (connection?.saveData) return MIN_QUALITY
 
-    const cores = navigator.hardwareConcurrency ?? 4
-
-    const memory = (navigator as {deviceMemory?: number}).deviceMemory ?? 4
-
-    if (cores <= 2 || memory <= 2) return 0.25
-    if (cores >= 8 && memory >= 8) return 0.75
-    return 0.5
+    return 1
 }

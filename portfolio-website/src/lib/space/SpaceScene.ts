@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import {detectQuality, stepDown} from "@/lib/quality"
+import {detectQuality, stepDown, stepUp, MIN_QUALITY} from "@/lib/quality"
 import {nebulaVertexShader, nebulaFragmentShader} from "./nebulaShader"
 import {crystalVertexShader, crystalFragmentShader} from "./crystalShader"
 import {
@@ -9,9 +9,13 @@ import {createGem} from "./gemGeometry"
 import {createGalaxy} from "./galaxy"
 import {createStarfield} from "./starfield"
 import {createMilkyWay} from "./milkyway"
+import {KEY_DIRECTION, RIM_DIRECTION} from "./lighting"
+import {gemVertexShader, gemFragmentShader} from "./gemShader"
+import {createPost} from "./post"
 import type {Galaxy} from "./galaxy"
 import type {Starfield} from "./starfield"
 import type {MilkyWay} from "./milkyway"
+import type {Post} from "./post"
 import marsTexture from "../../data/textures/mars.webp"
 import jupiterTexture from "../../data/textures/jupiter.webp"
 import saturnTexture from "../../data/textures/saturn.webp"
@@ -35,7 +39,7 @@ const NEAR_STARS = [400, 800, 1400, 2000, 2800]
 
 const BAND_FRACTION = 0.62
 
-const MILKYWAY_MAP_MIN_QUALITY = 0.5
+const MILKYWAY_MAP_MIN_QUALITY = 0.25
 
 const MILKYWAY_MAP_FADE = 0.02
 
@@ -101,6 +105,12 @@ const NEBULA_MAX_QUALITY = 0.5
 
 const SAMPLE_FRAMES = 60
 const MIN_ACCEPTABLE_FPS = 45
+const COMFORTABLE_FPS = 57
+
+const WARMUP_FRAMES = 90
+
+const SLOW_SAMPLES_BEFORE_DROP = 2
+const FAST_SAMPLES_BEFORE_LIFT = 4
 const SHARD_COUNT = 20
 
 const GEM_CUT = {
@@ -110,15 +120,14 @@ const GEM_CUT = {
     girdleHeight: 0.12,
 }
 
-const GEM_ENV_SIZE = [128, 192, 256, 384, 512]
-const TRANSMISSION_SCALE = [0.45, 0.6, 0.75, 0.9, 1]
+const MSAA_SAMPLES = [0, 2, 2, 4, 4]
 
-const CRYSTAL_COLORS: ReadonlyArray<{core: string; rim: string}> = [
-    {core: "#0b3a5c", rim: "#22d3ee"},
-    {core: "#2a1b52", rim: "#a78bfa"},
-    {core: "#0a3f4a", rim: "#5eead4"},
-    {core: "#301a4d", rim: "#c4a3ff"},
-    {core: "#123a5e", rim: "#38bdf8"},
+const CRYSTAL_COLORS: ReadonlyArray<{body: string; edge: string; spark: string}> = [
+    {body: "#123b52", edge: "#7fd8ff", spark: "#e8f8ff"},
+    {body: "#1a2a52", edge: "#9ec4ff", spark: "#eef2ff"},
+    {body: "#0f3b42", edge: "#6fe4e0", spark: "#e0fdfb"},
+    {body: "#20254d", edge: "#a9b8ff", spark: "#f0f1ff"},
+    {body: "#103246", edge: "#8ad4ff", spark: "#e9f7ff"},
 ]
 
 type PlanetSpec = {
@@ -240,10 +249,11 @@ export class SpaceScene {
 
     private readonly crystals: THREE.Mesh[] = []
     private readonly baseScales: THREE.Vector3[] = []
-    private readonly materials: THREE.MeshPhysicalMaterial[] = []
+    private readonly materials: THREE.ShaderMaterial[] = []
     private readonly gemGeometries: THREE.BufferGeometry[] = []
-    private envTarget: THREE.WebGLCubeRenderTarget | null = null
-    private envCaptured = false
+    private readonly post: Post
+    private readonly coreView = new THREE.Vector3()
+    private readonly resizeObserver: ResizeObserver
 
     private readonly galaxy: Galaxy
     private readonly skyStars: Starfield
@@ -284,6 +294,9 @@ export class SpaceScene {
     private disposed = false
     private frames = 0
     private sampleStart = 0
+    private warmup = WARMUP_FRAMES
+    private slow = 0
+    private fast = 0
 
     private pageProgress = 0
     private fieldTarget = 0
@@ -316,8 +329,8 @@ export class SpaceScene {
         this.onAnchor = onAnchor
         this.quality = detectQuality()
 
-        const width = container.clientWidth
-        const height = container.clientHeight
+        const width = Math.max(container.clientWidth, 1)
+        const height = Math.max(container.clientHeight, 1)
 
         this.renderer = new THREE.WebGLRenderer({
             antialias: false,
@@ -328,9 +341,11 @@ export class SpaceScene {
         this.renderer.setPixelRatio(this.pixelRatio())
         this.renderer.setClearColor(0x000000, 0)
         this.renderer.autoClear = false
-        this.renderer.transmissionResolutionScale = TRANSMISSION_SCALE[this.level()]
         container.appendChild(this.renderer.domElement)
         this.canvasRect = this.renderer.domElement.getBoundingClientRect()
+
+        this.post = createPost(this.renderer, MSAA_SAMPLES[this.level()])
+        this.post.setSize(width, height, this.renderer.getPixelRatio())
 
         this.bgMaterial = new THREE.ShaderMaterial({
             vertexShader: nebulaVertexShader,
@@ -354,6 +369,7 @@ export class SpaceScene {
         this.scene.add(this.tiltGroup)
 
         this.journeyEnd = this.frontPoint().z + HERO_DISTANCE
+
 
         this.galaxy = createGalaxy(
             GALAXY_POINTS[Math.round(this.quality * 4)],
@@ -479,30 +495,31 @@ export class SpaceScene {
 
         const step = (Math.PI * 2) / Math.max(count, 1)
         for (let i = 0; i < count; i++) {
-            const {core, rim} = CRYSTAL_COLORS[i % CRYSTAL_COLORS.length]
+            const {body, edge, spark} = CRYSTAL_COLORS[i % CRYSTAL_COLORS.length]
 
-            const material = new THREE.MeshPhysicalMaterial({
-                color: 0xffffff,
-                metalness: 0,
-                roughness: 0.045,
-                transmission: 0.95,
-                thickness: 4.6,
-                ior: 2.42,
-                dispersion: 5.5,
-                iridescence: 0.3,
-                iridescenceIOR: 1.7,
-                specularIntensity: 1,
-                attenuationColor: new THREE.Color(core),
-                attenuationDistance: 0.22,
-                emissive: new THREE.Color(rim),
-                emissiveIntensity: 0,
-                envMapIntensity: 3.2,
-                flatShading: true,
+            const material = new THREE.ShaderMaterial({
+                vertexShader: gemVertexShader,
+                fragmentShader: gemFragmentShader,
+                uniforms: {
+                    uBody: {value: new THREE.Color(body)},
+                    uEdge: {value: new THREE.Color(edge)},
+                    uSpark: {value: new THREE.Color(spark)},
+                    uCoreDir: {value: new THREE.Vector3(0, 0, 1)},
+                    uKeyDir: {value: KEY_DIRECTION.clone()},
+                    uRimDir: {value: RIM_DIRECTION.clone()},
+                    uTime: {value: 0},
+                    uHighlight: {value: 0},
+                    uFade: {value: 0},
+                    uGain: {value: 1},
+                },
                 transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                side: THREE.DoubleSide,
             })
             this.materials.push(material)
 
-            const geometry = createGem({sides: 10 + (i % 3) * 2, ...GEM_CUT})
+            const geometry = createGem({sides: 14 + (i % 3) * 2, ...GEM_CUT})
             this.gemGeometries.push(geometry)
 
             const mesh = new THREE.Mesh(geometry, material)
@@ -554,6 +571,8 @@ export class SpaceScene {
         }
 
         window.addEventListener("resize", this.handleResize)
+        this.resizeObserver = new ResizeObserver(this.handleResize)
+        this.resizeObserver.observe(container)
         window.addEventListener("pointermove", this.handlePointerMove, {passive: true})
         window.addEventListener("click", this.handleClick)
         document.addEventListener("visibilitychange", this.sync)
@@ -676,38 +695,9 @@ export class SpaceScene {
         return Math.round(this.quality * 4)
     }
 
-    private captureEnvironment() {
-        if (this.envCaptured || this.crystals.length === 0) return
-        this.envCaptured = true
-
-        const target = new THREE.WebGLCubeRenderTarget(GEM_ENV_SIZE[this.level()], {
-            generateMipmaps: true,
-            minFilter: THREE.LinearMipmapLinearFilter,
-        })
-        const cube = new THREE.CubeCamera(1, CAMERA_FAR, target)
-        cube.position.copy(this.frontPoint())
-
-        const autoClear = this.renderer.autoClear
-        this.renderer.autoClear = true
-        this.spinGroup.visible = false
-        this.waypoints.forEach((group) => (group.visible = false))
-
-        cube.update(this.renderer, this.scene)
-
-        this.waypoints.forEach((group) => (group.visible = true))
-        this.spinGroup.visible = true
-        this.renderer.autoClear = autoClear
-
-        this.envTarget = target
-        this.materials.forEach((material) => {
-            material.envMap = target.texture
-            material.needsUpdate = true
-        })
-    }
-
     private pixelRatio() {
-        const ratios = [0.75, 1.0, 1.25, 1.75, 2.5]
-        return Math.min(window.devicePixelRatio, ratios[Math.round(this.quality * 4)])
+        const ratios = [1, 1.25, 1.5, 1.75, 2]
+        return Math.min(window.devicePixelRatio, ratios[this.level()])
     }
 
     private sync = () => {
@@ -717,6 +707,7 @@ export class SpaceScene {
         this.running = shouldRun
         if (shouldRun) {
             this.frames = 0
+            this.warmup = WARMUP_FRAMES
             this.frame = requestAnimationFrame(this.loop)
         } else {
             cancelAnimationFrame(this.frame)
@@ -726,19 +717,52 @@ export class SpaceScene {
 
     private adapt(now: number) {
         if (this.quality === 0) return
+
+        if (this.warmup > 0) {
+            this.warmup--
+            this.frames = 0
+            return
+        }
+
         if (this.frames === 0) this.sampleStart = now
         if (++this.frames < SAMPLE_FRAMES) return
+
         const fps = (this.frames * 1000) / (now - this.sampleStart)
         this.frames = 0
-        if (fps >= MIN_ACCEPTABLE_FPS) return
-        const lower = stepDown(this.quality)
-        if (lower === null) return
-        this.quality = lower
-        this.bgMaterial.uniforms.uQuality.value = Math.min(lower, NEBULA_MAX_QUALITY)
-        this.milkyWay.setQuality(lower)
-        this.galaxy.setQuality(lower)
+
+        if (fps < MIN_ACCEPTABLE_FPS) {
+            this.fast = 0
+            if (++this.slow < SLOW_SAMPLES_BEFORE_DROP) return
+            this.slow = 0
+            this.shift(stepDown(this.quality))
+            return
+        }
+
+        this.slow = 0
+
+        if (fps < COMFORTABLE_FPS) {
+            this.fast = 0
+            return
+        }
+
+        if (++this.fast < FAST_SAMPLES_BEFORE_LIFT) return
+        this.fast = 0
+        this.shift(stepUp(this.quality))
+    }
+
+    private shift(quality: number | null) {
+        if (quality === null || quality < MIN_QUALITY || quality === this.quality) return
+
+        this.quality = quality
+        this.bgMaterial.uniforms.uQuality.value = Math.min(quality, NEBULA_MAX_QUALITY)
+        this.milkyWay.setQuality(quality)
+        this.galaxy.setQuality(quality)
         this.renderer.setPixelRatio(this.pixelRatio())
-        this.renderer.transmissionResolutionScale = TRANSMISSION_SCALE[this.level()]
+        this.post.setSize(
+            this.container.clientWidth,
+            this.container.clientHeight,
+            this.renderer.getPixelRatio(),
+        )
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
         this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
@@ -827,7 +851,11 @@ export class SpaceScene {
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),
         )
 
-        if (this.enter > 0.02) this.captureEnvironment()
+        this.camera.updateMatrixWorld()
+        this.coreView
+            .copy(this.galaxy.object.position)
+            .applyMatrix4(this.camera.matrixWorldInverse)
+            .normalize()
 
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
@@ -844,14 +872,13 @@ export class SpaceScene {
             const hoveredHere = this.hoveredKind === "crystal" && this.hovered === i
             const lit = hoveredHere || this.selected === i ? 1 : 0
 
-            material.emissiveIntensity = lerp(material.emissiveIntensity, lit * 0.35, 0.12)
-            material.opacity = lerp(material.opacity, (isNearest ? 1 : 0.4) * reveal, 0.08)
-            material.envMapIntensity = lerp(
-                material.envMapIntensity,
-                isNearest ? 3.2 + lit * 1.4 : 1.8,
-                0.1,
-            )
-            mesh.visible = material.opacity > 0.01
+            const gem = material.uniforms
+            gem.uTime.value = time
+            gem.uCoreDir.value.copy(this.coreView)
+            gem.uHighlight.value = lerp(gem.uHighlight.value, lit, 0.12)
+            gem.uFade.value = lerp(gem.uFade.value, (isNearest ? 1 : 0.45) * reveal, 0.08)
+            gem.uGain.value = lerp(gem.uGain.value, isNearest ? 1.25 + lit * 0.6 : 0.8, 0.1)
+            mesh.visible = gem.uFade.value > 0.01
 
             const grow =
                 (isNearest ? 1 + 0.1 * centred * this.enter + 0.06 * this.selectBlend : 1) *
@@ -990,10 +1017,7 @@ export class SpaceScene {
     }
 
     private render() {
-        this.renderer.clear()
-        this.renderer.render(this.bgScene, this.bgCamera)
-        this.renderer.clearDepth()
-        this.renderer.render(this.scene, this.camera)
+        this.post.render(this.scene, this.camera, this.bgScene, this.bgCamera)
     }
 
     private aimAt(clientX: number, clientY: number) {
@@ -1040,8 +1064,10 @@ export class SpaceScene {
     private handleResize = () => {
         const width = this.container.clientWidth
         const height = this.container.clientHeight
+        if (width === 0 || height === 0) return
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
+        this.post.setSize(width, height, this.renderer.getPixelRatio())
         this.galaxy.setPixelRatio(this.renderer.getPixelRatio())
         this.skyStars.setPixelRatio(this.renderer.getPixelRatio())
         this.nearStars.setPixelRatio(this.renderer.getPixelRatio())
@@ -1057,12 +1083,13 @@ export class SpaceScene {
         this.disposed = true
         cancelAnimationFrame(this.frame)
         window.removeEventListener("resize", this.handleResize)
+        this.resizeObserver.disconnect()
         window.removeEventListener("pointermove", this.handlePointerMove)
         window.removeEventListener("click", this.handleClick)
         document.removeEventListener("visibilitychange", this.sync)
 
         this.gemGeometries.forEach((g) => g.dispose())
-        this.envTarget?.dispose()
+        this.post.dispose()
         this.waypointGeometry.dispose()
         this.ringMeshes.forEach((r) => r.geometry.dispose())
         this.waypointMaterials.forEach((m) => m.dispose())
