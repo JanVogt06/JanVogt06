@@ -69,6 +69,11 @@ const compositeFragmentShader = `
 
 const BLOOM_DIVISOR = 4
 
+// Planet daysides sit around 0.8 in the existing shaders, so the cut has to
+// land above them: bloom belongs to speculars, the galaxy core and star cores.
+const BLOOM_THRESHOLD = 0.88
+const BLOOM_KNEE = 0.1
+
 const WIDE_SPREAD = 2.4
 
 export type Post = {
@@ -80,6 +85,7 @@ export type Post = {
     ) => void
     setSize: (width: number, height: number, pixelRatio: number) => void
     setStrength: (strength: number) => void
+    setThreshold: (threshold: number, knee: number) => void
     dispose: () => void
 }
 
@@ -106,8 +112,8 @@ export const createPost = (renderer: THREE.WebGLRenderer, samples: number): Post
         fragmentShader: thresholdFragmentShader,
         uniforms: {
             uScene: {value: sceneTarget.texture},
-            uThreshold: {value: 0.52},
-            uKnee: {value: 0.28},
+            uThreshold: {value: BLOOM_THRESHOLD},
+            uKnee: {value: BLOOM_KNEE},
         },
         depthTest: false,
         depthWrite: false,
@@ -177,6 +183,11 @@ export const createPost = (renderer: THREE.WebGLRenderer, samples: number): Post
 
         setStrength: (strength) => {
             composite.uniforms.uStrength.value = strength
+        },
+
+        setThreshold: (value, knee) => {
+            threshold.uniforms.uThreshold.value = value
+            threshold.uniforms.uKnee.value = knee
         },
 
         render: (scene, camera, background, backgroundCamera) => {

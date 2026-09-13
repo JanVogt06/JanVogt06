@@ -14,7 +14,10 @@ export const gemFragmentShader = `
     uniform vec3 uBody;
     uniform vec3 uEdge;
     uniform vec3 uSpark;
+    uniform vec3 uBand;
+    uniform vec3 uWarm;
 
+    uniform vec3 uPoleDir;
     uniform vec3 uCoreDir;
     uniform vec3 uKeyDir;
     uniform vec3 uRimDir;
@@ -30,6 +33,30 @@ export const gemFragmentShader = `
         return pow(max(dot(dir, axis), 0.0), tightness);
     }
 
+    // The sky the facets have to work with. Analytic rather than a cube map:
+    // it costs no texture, and every direction gives a different answer, which
+    // is the whole reason a cut stone reads as a cut stone.
+    vec3 sky(vec3 dir) {
+        float band = exp(-pow(abs(dot(dir, uPoleDir)) / 0.36, 1.6));
+
+        float speck = sin(dir.x * 9.0) * sin(dir.y * 11.0) * sin(dir.z * 7.0);
+        speck = pow(max(speck, 0.0), 5.0);
+
+        vec3 col = uBand * 0.16;
+        col += uBand * band * 1.0;
+        col += uBand * speck * 0.9;
+
+        col += uWarm * lobe(dir, uCoreDir, 4.0) * 0.30;
+        col += uWarm * lobe(dir, uCoreDir, 40.0) * 4.5;
+
+        col += uSpark * lobe(dir, uKeyDir, 7.0) * 0.22;
+        col += uSpark * lobe(dir, uKeyDir, 70.0) * 7.0;
+
+        col += uEdge * lobe(dir, uRimDir, 110.0) * 4.0;
+
+        return col;
+    }
+
     void main() {
         vec3 normal = normalize(cross(dFdx(vViewPosition), dFdy(vViewPosition)));
         vec3 viewDir = normalize(-vViewPosition);
@@ -37,24 +64,23 @@ export const gemFragmentShader = `
         normal *= sign(dot(normal, viewDir));
 
         float facing = max(dot(normal, viewDir), 0.0);
-        float fresnel = pow(1.0 - facing, 3.0);
+        float fresnel = pow(1.0 - facing, 6.0);
 
         vec3 mirror = reflect(-viewDir, normal);
 
-        float key = lobe(mirror, uKeyDir, 240.0) + lobe(mirror, uKeyDir, 14.0) * 0.16;
-        float rim = lobe(mirror, uRimDir, 180.0);
-        float core = lobe(mirror, uCoreDir, 70.0) + lobe(mirror, uCoreDir, 6.0) * 0.12;
+        vec3 through = refract(-viewDir, normal, 0.62);
+        if (dot(through, through) < 0.001) through = mirror;
 
-        float travel = 0.5 + 0.5 * sin(mirror.y * 3.1 + mirror.x * 2.2 + uTime * 0.12);
-        vec3 chroma = mix(uBody, uEdge, travel);
+        vec3 reflected = sky(mirror);
+        vec3 transmitted = sky(through) * uBody * 6.5;
 
-        vec3 col = chroma * (0.12 + 0.34 * facing);
-        col += uEdge * fresnel * 1.5;
-        col += uSpark * (key * 2.6 + rim * 1.8 + core * 1.5);
-        col += uSpark * uHighlight * (fresnel * 1.2 + 0.25);
+        vec3 col = mix(transmitted, reflected, 0.10 + 0.90 * fresnel);
 
-        float alpha = uFade * clamp(
-            fresnel * 0.8 + facing * 0.2 + key + rim * 0.7 + core * 0.6, 0.0, 1.0);
+        col += uEdge * fresnel * 1.6;
+        col += uSpark * uHighlight * (fresnel * 1.1 + 0.22);
+
+        float body = dot(col, vec3(0.2126, 0.7152, 0.0722));
+        float alpha = uFade * clamp(0.14 + fresnel * 0.55 + body * 0.9, 0.0, 1.0);
 
         gl_FragColor = vec4(col * uGain * alpha, alpha);
     }

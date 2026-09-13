@@ -10,6 +10,7 @@ import {createGalaxy} from "./galaxy"
 import {createStarfield} from "./starfield"
 import {createMilkyWay} from "./milkyway"
 import {KEY_DIRECTION, RIM_DIRECTION} from "./lighting"
+import {GALACTIC_POLE} from "./galactic"
 import {gemVertexShader, gemFragmentShader} from "./gemShader"
 import {createPost} from "./post"
 import type {Galaxy} from "./galaxy"
@@ -253,6 +254,7 @@ export class SpaceScene {
     private readonly gemGeometries: THREE.BufferGeometry[] = []
     private readonly post: Post
     private readonly coreView = new THREE.Vector3()
+    private readonly poleView = new THREE.Vector3()
     private readonly resizeObserver: ResizeObserver
 
     private readonly galaxy: Galaxy
@@ -504,6 +506,9 @@ export class SpaceScene {
                     uBody: {value: new THREE.Color(body)},
                     uEdge: {value: new THREE.Color(edge)},
                     uSpark: {value: new THREE.Color(spark)},
+                    uBand: {value: new THREE.Color("#8fa6d6")},
+                    uWarm: {value: new THREE.Color("#ffdfb4")},
+                    uPoleDir: {value: new THREE.Vector3(0, 1, 0)},
                     uCoreDir: {value: new THREE.Vector3(0, 0, 1)},
                     uKeyDir: {value: KEY_DIRECTION.clone()},
                     uRimDir: {value: RIM_DIRECTION.clone()},
@@ -856,6 +861,9 @@ export class SpaceScene {
             .copy(this.galaxy.object.position)
             .applyMatrix4(this.camera.matrixWorldInverse)
             .normalize()
+        this.poleView
+            .copy(GALACTIC_POLE)
+            .transformDirection(this.camera.matrixWorldInverse)
 
         for (let i = 0; i < count; i++) {
             const mesh = this.crystals[i]
@@ -875,9 +883,10 @@ export class SpaceScene {
             const gem = material.uniforms
             gem.uTime.value = time
             gem.uCoreDir.value.copy(this.coreView)
+            gem.uPoleDir.value.copy(this.poleView)
             gem.uHighlight.value = lerp(gem.uHighlight.value, lit, 0.12)
             gem.uFade.value = lerp(gem.uFade.value, (isNearest ? 1 : 0.45) * reveal, 0.08)
-            gem.uGain.value = lerp(gem.uGain.value, isNearest ? 1.25 + lit * 0.6 : 0.8, 0.1)
+            gem.uGain.value = lerp(gem.uGain.value, isNearest ? 2 + lit * 0.8 : 1.15, 0.1)
             mesh.visible = gem.uFade.value > 0.01
 
             const grow =
