@@ -1,116 +1,121 @@
 import {useCallback, useRef} from "react"
-import {ArrowDown, ArrowRight} from "lucide-react"
+import {ArrowDown} from "lucide-react"
 import {motion} from "framer-motion"
-import {rise, stage, wipe} from "@/lib/motion"
+import {EASE} from "@/lib/motion"
+import Band from "./band/Band"
+import type {BandHandle} from "./band/Band"
+import Action from "./band/Action"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {scrollToElement} from "@/lib/smoothScroll"
 
+const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
+
+const EXIT_RATE = 1.6
+const EXIT_DRIFT_VH = 6
+
+const step = (duration: number, delay: number) => ({
+    duration: duration / 1000,
+    delay: delay / 1000,
+    ease: EASE,
+})
+
 const Hero = ({ready}: {ready: boolean}) => {
     const sectionRef = useRef<HTMLElement>(null)
-    const contentRef = useRef<HTMLDivElement>(null)
+    const bandRef = useRef<BandHandle>(null)
+    const cueRef = useRef<HTMLButtonElement>(null)
 
     const onProgress = useCallback((raw: number) => {
-        const p = Math.min(Math.max(raw, 0), 1)
-        if (contentRef.current) {
-            contentRef.current.style.transform = `translate3d(0, ${(-p * 18).toFixed(2)}vh, 0)`
-            contentRef.current.style.opacity = String(Math.max(0, 1 - p * 1.6))
-        }
+        const p = clamp01(raw)
+        const weight = Math.max(0, 1 - p * EXIT_RATE)
+
+        bandRef.current?.setWeight(weight, (-p * EXIT_DRIFT_VH * window.innerHeight) / 100)
+
+        if (cueRef.current) cueRef.current.style.opacity = String(weight)
     }, [])
 
     useScrollProgress(sectionRef, onProgress, "exit")
 
-    const show = ready ? "show" : "hidden"
+    const show = ready ? {opacity: 1, y: 0} : {opacity: 0, y: 8}
 
     return (
-        <section ref={sectionRef} id="hero" className="stage-min relative w-full overflow-hidden">
+        <section ref={sectionRef} id="hero" className="stage-min relative w-full">
+            <Band ref={bandRef}>
+                <motion.p
+                    className="text-label uppercase tracking-[0.14em] text-fg-3"
+                    initial={{opacity: 0, y: 8}}
+                    animate={show}
+                    transition={step(380, 200)}
+                >
+                    Informatik · Entwicklung · Schiedsrichter
+                </motion.p>
 
-            <div
-                ref={contentRef}
-                className="stage-min relative z-10 mx-auto flex max-w-[88rem] flex-col justify-center px-6 pt-20 will-change-transform sm:px-8 lg:px-12 lg:pt-14"
-            >
-                <motion.div variants={stage} initial="hidden" animate={show}>
-                    <motion.p
-                        className="mb-7 text-sm font-medium text-white/55"
-                        variants={rise}
+                <motion.h1
+                    className="mt-3 text-name uppercase text-fg"
+                    initial={{opacity: 0, letterSpacing: "0.34em"}}
+                    animate={ready ? {opacity: 1, letterSpacing: "0.22em"} : {opacity: 0}}
+                    transition={step(720, 280)}
+                >
+                    Jan Vogt
+                </motion.h1>
+
+                <motion.p
+                    className="mt-5 max-w-[34ch] text-lead text-fg-2"
+                    initial={{opacity: 0, y: 8}}
+                    animate={show}
+                    transition={step(460, 560)}
+                >
+                    Informatik-Student an der FSU Jena,
+                    <span className="font-medium text-fg"> Werkstudent bei ZEISS</span> und
+                    <span className="font-medium text-fg"> Schiedsrichter</span> im NOFV.
+                </motion.p>
+
+                <motion.div
+                    className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-2"
+                    initial={{opacity: 0, y: 8}}
+                    animate={show}
+                    transition={step(420, 700)}
+                >
+                    <Action
+                        onClick={() => scrollToElement("projects")}
+                        icon={<ArrowDown className="h-3 w-3"/>}
                     >
-                        Informatik · Entwicklung · Schiedsrichter
-                    </motion.p>
+                        Projekte ansehen
+                    </Action>
 
-                    <h1 className="font-black uppercase leading-[0.82] tracking-[-0.045em]">
-                        {["Jan", "Vogt"].map((word, i) => (
-                            <span key={word} className="block overflow-hidden">
-                                <motion.span
-                                    className={`block bg-clip-text text-transparent text-[clamp(4.5rem,15vw,13rem)] squat:text-[clamp(2.5rem,7vw,3.5rem)] ${
-                                        i === 1
-                                            ? "bg-gradient-to-br from-brand via-[#f8cda2] to-brand-deep"
-                                            : "bg-gradient-to-b from-white via-white/95 to-white/55"
-                                    }`}
-                                    variants={wipe}
-                                >
-                                    {word}
-                                </motion.span>
-                            </span>
-                        ))}
-                    </h1>
-
-                    <motion.p
-                        className="mt-8 max-w-md text-lg leading-relaxed text-white/60"
-                        variants={rise}
+                    <Action
+                        onClick={() => scrollToElement("contact")}
+                        icon={<ArrowDown className="h-3 w-3"/>}
                     >
-                        Informatik-Student an der FSU Jena,
-                        <span className="text-white/85"> Werkstudent bei ZEISS</span> und
-                        <span className="text-white/85"> Schiedsrichter</span> im NOFV.
-                    </motion.p>
-
-                    <motion.div
-                        className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
-                        variants={rise}
-                    >
-                        <button
-                            onClick={() => scrollToElement("projects")}
-                            className="action group"
-                        >
-                            Projekte ansehen
-                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5"/>
-                        </button>
-
-                        <button
-                            onClick={() => scrollToElement("contact")}
-                            className="action-quiet rim"
-                        >
-                            Kontakt
-                        </button>
-                    </motion.div>
+                        Kontakt
+                    </Action>
                 </motion.div>
-            </div>
+
+                <motion.p
+                    className="mt-7 max-w-[26rem] text-fine text-fg-3"
+                    initial={{opacity: 0}}
+                    animate={{opacity: ready ? 1 : 0}}
+                    transition={step(380, 880)}
+                >
+                    Diese Seite ist mit KI-Unterstützung entstanden. Ich habe hier neue
+                    Modelle getestet. Konzept, Design und jede Entscheidung sind von mir.
+                </motion.p>
+            </Band>
 
             <motion.button
+                ref={cueRef}
                 onClick={() => scrollToElement("about")}
-                className="absolute bottom-8 left-1/2 z-20 -translate-x-1/2 text-white/50 transition-colors hover:text-white/60"
-                initial={{opacity: 0}}
-                animate={{opacity: ready ? 1 : 0}}
-                transition={{duration: 0.6, delay: ready ? 0.9 : 0}}
                 aria-label="Zum Werdegang scrollen"
-            >
-                <motion.span
-                    className="flex flex-col items-center gap-2"
-                    animate={{y: [0, 7, 0]}}
-                    transition={{duration: 2.2, repeat: Infinity, ease: "easeInOut"}}
-                >
-                    <span className="text-[11px] tracking-[0.02em]">Scroll</span>
-                    <ArrowDown className="h-4 w-4"/>
-                </motion.span>
-            </motion.button>
-
-            <motion.p
-                className="absolute bottom-24 right-6 z-20 max-w-[16rem] text-right text-[11px] leading-relaxed text-white/50 sm:bottom-8 sm:right-8 lg:right-12"
+                className="absolute bottom-5 right-[var(--gutter)] z-20 flex h-11 w-11 items-center justify-center"
                 initial={{opacity: 0}}
                 animate={{opacity: ready ? 1 : 0}}
-                transition={{duration: 0.6, delay: ready ? 1.1 : 0}}
+                transition={step(360, 1100)}
             >
-                Diese Seite ist mit KI-Unterstützung entstanden. Ich habe hier neue
-                Modelle getestet. Konzept, Design und jede Entscheidung sind von mir.
-            </motion.p>
+                <span className="sr-only">Scroll</span>
+                <span
+                    aria-hidden="true"
+                    className="relative block h-[26px] w-px bg-white/15 after:absolute after:inset-x-0 after:top-0 after:block after:h-[7px] after:bg-fg after:content-[''] after:animate-cue"
+                />
+            </motion.button>
         </section>
     )
 }
