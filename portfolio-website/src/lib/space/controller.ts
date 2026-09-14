@@ -34,8 +34,6 @@ export const space = {
 
     setPassageProgress: (progress: number) => current?.setPassageProgress(progress),
 
-    setTextFloor: (floor: number) => current?.setTextFloor(floor),
-
     setTextRail: (top: number, amount: number) => current?.setTextRail(top, amount),
 
     setApproach: (approach: number) => current?.setApproach(approach),

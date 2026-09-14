@@ -81,11 +81,6 @@ const TAU = Math.PI * 2
 
 const HERO_LATERAL = 2.6
 
-const WAYPOINT_LATERAL = 2.4
-const WAYPOINT_RISE = 0.05
-
-const WAYPOINT_DROP = 0.58
-
 const WAYPOINT_CLEARANCE = 0.03
 
 const CAMERA_RISE = 0.55
@@ -328,7 +323,6 @@ export class SpaceScene {
     private aboutScroll = 0
     private fieldScrollTarget = 0
     private fieldScroll = 0
-    private textFloor = 0
     private railTop = 1
     private railTarget = 0
     private rail = 0
@@ -660,15 +654,11 @@ export class SpaceScene {
     }
 
     setTextRail(top: number, amount: number) {
+        const moved = Math.abs(top - this.railTop) > 0.004
         this.railTop = top
         this.railTarget = amount
+        if (moved) this.placeWaypoints()
         this.sync()
-    }
-
-    setTextFloor(floor: number) {
-        if (Math.abs(floor - this.textFloor) < 0.005) return
-        this.textFloor = floor
-        this.placeWaypoints()
     }
 
     setArrivalProgress(progress: number) {
@@ -747,22 +737,24 @@ export class SpaceScene {
             const t = i / Math.max(WAYPOINT_COUNT - 1, 1)
 
             this.waypoints[i].position.set(
-                portrait
-                    ? front.x + offsetX
-                    : front.x - HERO_LATERAL + WAYPOINT_LATERAL + offsetX,
-                portrait
-                    ? eyeY - this.dropFor(PLANETS[i % PLANETS.length], halfView) * halfView + offsetY
-                    : front.y + WAYPOINT_RISE + offsetY,
+                front.x + offsetX,
+                this.liftFor(PLANETS[i % PLANETS.length], eyeY, halfView) + offsetY,
                 lerp(CAMERA_Z_HERO, ABOUT_END_Z, t) - distance,
             )
         }
     }
 
-    private dropFor(spec: PlanetSpec, halfView: number) {
-        const radiusShare = spec.radius / halfView
-        const needed = 2 * (this.textFloor + WAYPOINT_CLEARANCE - 0.5) + radiusShare
+    /**
+     * A planet sits centred in the frame the band leaves clear above it.
+     * `railTop` is where the text begins as a fraction of the viewport, so
+     * half of it is the middle of that clear space — clamped so a planet never
+     * climbs out of shot, and pushed down far enough that its radius fits.
+     */
+    private liftFor(spec: PlanetSpec, eyeY: number, halfView: number) {
+        const share = Math.min(Math.max(this.railTop * 0.5, 0.24), 0.46)
+        const room = Math.max(share, (spec.radius + WAYPOINT_CLEARANCE) / (2 * halfView))
 
-        return Math.min(Math.max(WAYPOINT_DROP, needed), 0.84 + radiusShare)
+        return eyeY + halfView * (1 - 2 * room)
     }
 
     private level() {
