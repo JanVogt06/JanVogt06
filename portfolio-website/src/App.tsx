@@ -13,6 +13,8 @@ import useMediaQuery from '@/lib/useMediaQuery'
 import {hasWebGL2} from '@/lib/space/support'
 import {projects} from '@/lib/projects'
 
+const BOOT_TIMEOUT_MS = 8000
+
 function App() {
     useSmoothScroll()
 
@@ -26,6 +28,14 @@ function App() {
     const [ready, setReady] = useState(false)
 
     const announce = useCallback(() => setReady(true), [])
+
+    // A stalled texture must never leave the page stranded behind the boot
+    // screen: past this point the site is more useful half-built than hidden.
+    useEffect(() => {
+        if (ready) return
+        const timer = window.setTimeout(() => setReady(true), BOOT_TIMEOUT_MS)
+        return () => window.clearTimeout(timer)
+    }, [ready])
 
     // Without a scene there is nothing heavy to wait for, so the only thing
     // worth holding the reveal for is the webfont.
