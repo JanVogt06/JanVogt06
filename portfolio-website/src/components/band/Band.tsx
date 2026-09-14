@@ -93,7 +93,15 @@ const Band = forwardRef<
                 ref={blockRef}
                 className={`soft-scrim etched pointer-events-auto relative mx-auto w-full max-w-[34rem] lg:max-w-[42rem] ${className}`}
             >
-                {children}
+                {/* The scroller is inside the scrim, because the scrim's own
+                    pseudo-element overhangs the block and would otherwise make
+                    every band scrollable by the height of its own shadow. */}
+                <div
+                    data-native-scroll
+                    className="-mb-3 max-h-[calc(100svh-7.5rem)] overflow-y-auto overscroll-contain pb-3"
+                >
+                    {children}
+                </div>
             </div>
         </div>
     )

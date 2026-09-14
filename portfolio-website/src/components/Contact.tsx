@@ -103,12 +103,12 @@ const Contact = () => {
                             </h2>
                         </Slate>
 
-                        <p className="mt-4 max-w-[38ch] text-lead text-fg-2">
+                        <p className="mt-4 max-w-[38ch] text-lead text-fg-2 short:mt-3">
                             Interessiert an einer Zusammenarbeit oder einfach nur ein
                             Gespräch über Technologie?
                         </p>
 
-                        <p className="mt-7 flex items-center gap-2.5 text-label uppercase tracking-[0.14em] text-status">
+                        <p className="mt-7 flex items-center gap-2.5 text-label uppercase tracking-[0.14em] text-status short:mt-5">
                             <span
                                 aria-hidden="true"
                                 className="h-1 w-1 shrink-0 bg-status animate-pulse-soft"
@@ -116,7 +116,7 @@ const Contact = () => {
                             Offen für Gespräche
                         </p>
 
-                        <div className="mt-8">
+                        <div className="mt-8 short:mt-5">
                             <ActionLink
                                 href="mailto:contact@jan-vogt.dev"
                                 icon={<ArrowUpRight className="h-3 w-3"/>}
@@ -130,7 +130,7 @@ const Contact = () => {
                         </p>
                     </div>
 
-                    <div className="mt-9 md:mt-0">
+                    <div className="mt-9 short:mt-6 md:mt-0">
                         <Slate>
                             <span className="text-label uppercase tracking-[0.14em] text-fg-3">
                                 Kanäle
@@ -145,7 +145,7 @@ const Contact = () => {
                     </div>
                 </div>
 
-                <p className="mt-9 max-w-[44rem] text-fine text-fg-3">
+                <p className="mt-9 max-w-[44rem] text-fine text-fg-3 short:mt-5">
                     Planetenkarten:{" "}
                     <a
                         href="https://www.solarsystemscope.com/textures/"
