@@ -2,6 +2,7 @@ import {useCallback, useEffect, useState} from 'react'
 import {MotionConfig} from 'framer-motion'
 import Atmosphere from './components/Atmosphere'
 import Boot from './components/Boot'
+import Tether from './components/Tether'
 import TopBar from './components/TopBar'
 import Hero from './components/Hero'
 import About from './components/About'
@@ -76,6 +77,7 @@ function App() {
                 onReady={announce}
             />
             <div aria-hidden="true" className="scrim-band"/>
+            {scene && <Tether/>}
 
             <TopBar ready={ready}/>
             <Hero ready={ready}/>

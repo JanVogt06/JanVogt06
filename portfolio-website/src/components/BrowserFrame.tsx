@@ -18,15 +18,15 @@ const PreviewCue = ({
             className="absolute inset-0"
             style={{
                 background:
-                    "radial-gradient(closest-side at 50% 50%, rgba(7,8,11,0.85) 0%, rgba(7,8,11,0.6) 45%, transparent 78%)",
+                    "radial-gradient(closest-side at 50% 50%, rgba(5,7,10,0.88) 0%, rgba(5,7,10,0.62) 45%, transparent 78%)",
             }}
         />
         <span className="relative flex flex-col items-center gap-3">
-            <span className="glass flex h-14 w-14 items-center justify-center rounded-full transition-transform group-hover:scale-105">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-hair bg-white/[0.04] transition-transform duration-200 group-hover:scale-105">
                 {children}
             </span>
-            <span className="text-sm text-white">{label}</span>
-            {note && <span className="text-xs text-white/75">{note}</span>}
+            <span className="text-label uppercase tracking-[0.14em] text-fg">{label}</span>
+            {note && <span className="text-fine text-fg-2">{note}</span>}
         </span>
     </>
 )
@@ -59,24 +59,16 @@ const BrowserFrame = ({
     const host = url ? new URL(url).host : "kein Deployment"
 
     return (
-        <div className="surface rim flex h-full flex-col overflow-hidden rounded-xl lg:rounded-2xl">
+        <div className="flex h-full flex-col overflow-hidden rounded-xl border border-hair bg-[#0a0c11]">
 
             <div
-                className="flex shrink-0 items-center gap-3 border-b border-white/[0.06] px-3 py-2.5">
-                <div className="flex shrink-0 gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
-                    <span className="h-2.5 w-2.5 rounded-full bg-white/12"/>
-                </div>
-                <span
-                    className="min-w-0 flex-1 truncate rounded-full bg-white/[0.04] px-3 py-1 font-mono text-[11px] text-white/55">
-                    {host}
-                </span>
+                className="flex shrink-0 items-center gap-3 border-b border-hair px-3 py-2.5">
+                <span className="min-w-0 flex-1 truncate text-data text-fg-3">{host}</span>
                 {active ? (
                     <button
                         onClick={onClose}
                         aria-label="Vorschau schließen"
-                        className="shrink-0 rounded p-1 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
+                        className="shrink-0 rounded p-1 text-fg-3 transition-colors duration-200 hover:bg-white/[0.06] hover:text-fg"
                     >
                         <X className="h-3.5 w-3.5"/>
                     </button>
@@ -86,7 +78,7 @@ const BrowserFrame = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="In neuem Tab öffnen"
-                        className="shrink-0 rounded p-1 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white"
+                        className="shrink-0 rounded p-1 text-fg-3 transition-colors duration-200 hover:bg-white/[0.06] hover:text-fg"
                     >
                         <ArrowUpRight className="h-3.5 w-3.5"/>
                     </a>
@@ -117,10 +109,10 @@ const BrowserFrame = ({
                             />
                         ) : (
                             <div className="flex h-full flex-col items-center justify-center gap-5">
-                                <div className="rounded-3xl bg-brand/10 p-5">
-                                    <Icon className="h-10 w-10 text-brand"/>
+                                <div className="rounded-xl border border-hair p-5">
+                                    <Icon className="h-10 w-10 text-fg-3"/>
                                 </div>
-                                <span className="font-mono text-xs text-white/50">{host}</span>
+                                <span className="text-data text-fg-3">{host}</span>
                             </div>
                         )}
 
@@ -130,7 +122,7 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
                                 <PreviewCue label="Live-Vorschau starten" note={note}>
-                                    <Play className="ml-0.5 h-5 w-5 fill-brand text-brand"/>
+                                    <Play className="ml-0.5 h-5 w-5 fill-signal text-signal"/>
                                 </PreviewCue>
                             </button>
                         )}
@@ -143,7 +135,7 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
                                 <PreviewCue label="In neuem Tab öffnen" note={note}>
-                                    <ArrowUpRight className="h-5 w-5 text-brand"/>
+                                    <ArrowUpRight className="h-5 w-5 text-signal"/>
                                 </PreviewCue>
                             </a>
                         )}

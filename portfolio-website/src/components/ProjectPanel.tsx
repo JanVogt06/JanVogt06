@@ -1,7 +1,8 @@
-import {Github, Globe, Gamepad2, FolderGit2, Satellite, Zap, Receipt, Sword, Waves} from "lucide-react"
+import {FolderGit2, Satellite, Zap, Receipt, Sword, Waves} from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
+import {ActionLink} from "./band/Action"
 import type {Project} from "@/lib/projects"
 import {primaryLinkOf} from "@/lib/projects"
 
@@ -34,70 +35,44 @@ const ProjectPanel = ({
     const primary = primaryLinkOf(project.links)
 
     return (
-        <div className="relative flex h-full w-full flex-col justify-center gap-8 px-6 sm:px-10 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12 lg:px-16">
-
-            <span
-                aria-hidden="true"
-                className="pointer-events-none absolute -left-2 top-2 select-none font-mono text-[7rem] font-bold leading-none text-white/[0.035] sm:text-[10rem] lg:-left-4 lg:top-0 lg:text-[16rem]"
-            >
-                {String(index + 1).padStart(2, "0")}
-            </span>
+        <div className="relative flex h-full w-full flex-col justify-center gap-8 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
 
             <div className="relative lg:col-span-5">
-                <p className="mb-5 flex items-center gap-3 font-mono text-xs tabular-nums text-white/50">
-                    <span className="text-brand">{String(index + 1).padStart(2, "0")}</span>
-                    <span className="h-px w-6 bg-white/15"/>
-                    <span className="text-white/55">/{String(total).padStart(2, "0")}</span>
+                <p className="flex items-center gap-3 text-data tabular-nums text-fg-3">
+                    <span className="text-fg">{String(index + 1).padStart(2, "0")}</span>
+                    <span aria-hidden="true" className="h-px w-6 bg-hair"/>
+                    <span>/{String(total).padStart(2, "0")}</span>
                 </p>
 
-                <h3 className="text-4xl font-semibold leading-[1.05] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
-                    {project.title}
-                </h3>
-                <p className="mt-2 text-lg text-white/55">{project.subtitle}</p>
+                <h3 className="mt-4 text-title text-fg">{project.title}</h3>
+                <p className="mt-1 text-sub text-fg-2">{project.subtitle}</p>
 
-                <p className="mt-6 max-w-xl leading-relaxed text-white/60">
+                <p className="mt-5 max-w-[52ch] text-body text-fg-2">
                     {project.description}
                 </p>
 
-                <ul className="mt-7 flex flex-wrap gap-2">
-                    {project.tech.map((tech) => (
-                        <li
-                            key={tech}
-                            className="rim rounded-full bg-white/[0.05] px-3 py-1.5 font-mono text-[11px] text-white/60"
-                        >
-                            {tech}
-                        </li>
-                    ))}
-                </ul>
+                <p className="mt-5 text-data text-fg-3">{project.tech.join(" · ")}</p>
 
-                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3">
                     {primary && (
-                        <a
+                        <ActionLink
                             href={primary.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="action group"
+                            icon={<ArrowUpRight className="h-3 w-3"/>}
                         >
-                            {primary.label === "Play Now"
-                                ? <Gamepad2 className="h-4 w-4"/>
-                                : <Globe className="h-4 w-4"/>}
                             {primary.label}
-                            <ArrowUpRight
-                                className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
-                        </a>
+                        </ActionLink>
                     )}
                     {project.links.github && (
-                        <a
+                        <ActionLink
                             href={project.links.github}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="group inline-flex items-center gap-2 text-sm text-white/50 transition-colors hover:text-white"
+                            icon={<ArrowUpRight className="h-3 w-3"/>}
                         >
-                            <Github className="h-4 w-4"/>
                             Code
-                            <ArrowUpRight
-                                className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
-                        </a>
+                        </ActionLink>
                     )}
                 </div>
             </div>
