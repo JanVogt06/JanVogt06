@@ -95,7 +95,7 @@ const Atmosphere = ({
                 className="absolute inset-0"
                 style={{
                     background:
-                        "radial-gradient(115% 80% at 50% -10%, #161821 0%, #0c0e14 38%, rgba(8,9,13,0.6) 62%, transparent 82%)",
+                        "radial-gradient(115% 80% at 50% -10%, #12161f 0%, #0a0c12 38%, rgba(5,7,10,0.6) 62%, transparent 82%)",
                 }}
             />
 
@@ -105,7 +105,7 @@ const Atmosphere = ({
                 style={{
                     opacity: 0,
                     background:
-                        "radial-gradient(90% 70% at 85% 15%, rgba(240,168,104,0.055) 0%, transparent 62%), radial-gradient(80% 70% at 10% 85%, rgba(196,112,60,0.05) 0%, transparent 62%)",
+                        "radial-gradient(90% 70% at 85% 15%, rgba(159,216,234,0.04) 0%, transparent 62%), radial-gradient(80% 70% at 10% 85%, rgba(110,143,196,0.05) 0%, transparent 62%)",
                 }}
             />
 
@@ -115,7 +115,7 @@ const Atmosphere = ({
                 style={{
                     opacity: 0,
                     background:
-                        "radial-gradient(100% 80% at 15% 100%, rgba(196,112,60,0.07) 0%, transparent 62%), radial-gradient(70% 60% at 90% 20%, rgba(240,168,104,0.04) 0%, transparent 62%)",
+                        "radial-gradient(100% 80% at 15% 100%, rgba(110,143,196,0.06) 0%, transparent 62%), radial-gradient(70% 60% at 90% 20%, rgba(159,216,234,0.04) 0%, transparent 62%)",
                 }}
             />
 
@@ -141,7 +141,7 @@ const Atmosphere = ({
                 className="absolute inset-0"
                 style={{
                     background:
-                        "radial-gradient(140% 110% at 50% 45%, transparent 70%, rgba(7,8,11,0.6) 100%)",
+                        "radial-gradient(140% 110% at 50% 45%, transparent 70%, rgba(5,7,10,0.62) 100%)",
                 }}
             />
 

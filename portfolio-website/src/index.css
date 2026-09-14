@@ -52,23 +52,31 @@
     --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-    --color-page: #07080b;
-    --color-panel: #0d0e13;
+    --color-page: #05070a;
+    --color-panel: #0b0d12;
 
-    --color-brand: #f0a868;
-    --color-brand-deep: #c4703c;
-    --color-brand-lift: #f7bb84;
+    --color-fg: #eef3fa;
+    --color-fg-2: #b8c2d0;
+    --color-fg-3: #8b95a5;
 
-    --color-ink: #1c1006;
+    --color-hair: rgb(255 255 255 / 0.14);
 
-    --color-status: #5fd39b;
+    --color-signal: #9fd8ea;
 
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --radius-xl: 16px;
-    --radius-2xl: 20px;
-    --radius-3xl: 28px;
+    --color-status: #7fd7c4;
+
+    /* Kept only until the last of the warm-era classes is gone. */
+    --color-brand: var(--color-signal);
+    --color-brand-deep: var(--color-signal);
+    --color-brand-lift: var(--color-fg);
+    --color-ink: #05070a;
+
+    --radius-sm: 2px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --radius-xl: 12px;
+    --radius-2xl: 12px;
+    --radius-3xl: 12px;
 }
 
 @layer base {
@@ -77,7 +85,7 @@
     }
 
     html {
-        scroll-padding-top: 5.5rem;
+        scroll-padding-top: 4rem;
 
         overflow-x: clip;
 
@@ -95,7 +103,7 @@
     }
 
     ::selection {
-        background-color: color-mix(in oklab, var(--color-brand) 32%, transparent);
+        background-color: color-mix(in oklab, var(--color-signal) 26%, transparent);
         color: white;
     }
 
@@ -105,8 +113,11 @@
     }
 
     :focus-visible {
-        outline: 2px solid color-mix(in oklab, var(--color-brand) 60%, transparent);
+        outline: 2px solid var(--color-signal);
         outline-offset: 3px;
+
+        /* A lit crystal directly behind an 11px ring would swallow it. */
+        box-shadow: 0 0 0 4px rgb(5 7 10 / 0.8);
     }
 }
 
