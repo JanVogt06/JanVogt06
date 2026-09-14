@@ -6,7 +6,6 @@ const anchorListeners = new Set<(anchor: Anchor) => void>()
 
 export const attachScene = (scene: SpaceScene | null) => {
     current = scene
-    ;(window as unknown as {__space: unknown}).__space = {scene, space}
 }
 
 export const emitAnchor = (anchor: Anchor) => {

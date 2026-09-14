@@ -211,6 +211,25 @@
             transparent 100%);
     }
 
+    /* Without a scene there is nothing to read over and nothing to compete
+       with, so the fallback is a document with document-sized type rather
+       than the scene layout minus the scene. */
+    [data-register="doc"] {
+        --text-body: 0.9375rem;
+        --text-lead: 1.1875rem;
+        --text-title: 1.5rem;
+    }
+
+    [data-register="doc"] .soft-scrim::before,
+    [data-register="doc"].soft-scrim::before {
+        display: none;
+    }
+
+    [data-register="doc"] .etched,
+    [data-register="doc"].etched {
+        text-shadow: none;
+    }
+
     .stage {
         height: 100vh;
         height: 100svh;
