@@ -28,7 +28,12 @@ const Band = forwardRef<
         const block = blockRef.current
         if (!block || flow) return
         const rect = block.getBoundingClientRect()
-        report(id.current, {weight: weight.current, top: rect.top, height: rect.height})
+        report(id.current, {
+            weight: weight.current,
+            top: rect.top,
+            right: rect.right,
+            height: rect.height,
+        })
     }, [flow])
 
     useEffect(() => {
