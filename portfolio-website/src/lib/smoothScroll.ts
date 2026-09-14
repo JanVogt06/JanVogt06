@@ -23,6 +23,14 @@ const maxScroll = () =>
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), maxScroll())
 
+export const scrollToY = (top: number) => {
+    if (controller?.active) {
+        controller.scrollTo(top)
+        return
+    }
+    window.scrollTo({top: clamp(top), behavior: prefersReducedMotion() ? "auto" : "smooth"})
+}
+
 export const scrollToElement = (id: string) => {
     const el = document.getElementById(id)
     if (!el) return
