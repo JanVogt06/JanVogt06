@@ -65,16 +65,16 @@
 
     --color-status: #7fd7c4;
 
-    --text-name: clamp(1.75rem, 6vw, 2.25rem);
+    --text-name: clamp(1.75rem, 4.4vw, 2.75rem);
     --text-name--line-height: 1;
 
-    --text-title: clamp(1.125rem, 2.2vw, 1.25rem);
+    --text-title: clamp(1.125rem, 1.7vw, 1.5rem);
     --text-title--line-height: 1.2;
 
-    --text-lead: clamp(1rem, 1.6vw, 1.125rem);
+    --text-lead: clamp(1rem, 1.3vw, 1.25rem);
     --text-lead--line-height: 1.5;
 
-    --text-body: clamp(0.8125rem, 1.1vw, 0.875rem);
+    --text-body: clamp(0.8125rem, 0.95vw, 0.9375rem);
     --text-body--line-height: 1.5;
 
     --text-sub: 0.8125rem;

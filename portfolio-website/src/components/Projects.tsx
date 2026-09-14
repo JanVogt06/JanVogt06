@@ -65,7 +65,7 @@ const ProjectBand = ({
 
             <h3 className="mt-4 text-title text-fg">{project.title}</h3>
 
-            <p className="mt-2 max-w-[46ch] text-body text-fg-2">{tagline}</p>
+            <p className="mt-2 max-w-[62ch] text-body text-fg-2">{tagline}</p>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
                 <Action onClick={() => onSelect(index)} icon={<ArrowUpRight className="h-3 w-3"/>}>

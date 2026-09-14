@@ -324,6 +324,7 @@ export class SpaceScene {
     private fieldScrollTarget = 0
     private fieldScroll = 0
     private railTop = 1
+    private railTopTarget = 1
     private railTarget = 0
     private rail = 0
     private hovered: number | null = null
@@ -654,10 +655,8 @@ export class SpaceScene {
     }
 
     setTextRail(top: number, amount: number) {
-        const moved = Math.abs(top - this.railTop) > 0.004
-        this.railTop = top
+        this.railTopTarget = top
         this.railTarget = amount
-        if (moved) this.placeWaypoints()
         this.sync()
     }
 
@@ -871,6 +870,13 @@ export class SpaceScene {
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
         this.rail = lerp(this.rail, this.railTarget, 0.12)
+
+        const railTop = lerp(this.railTop, this.railTopTarget, 0.08)
+        if (Math.abs(railTop - this.railTop) > 0.0004) {
+            this.railTop = railTop
+            this.placeWaypoints()
+        }
+
         this.post.setRail(this.railTop, this.rail)
 
         const step = (Math.PI * 2) / Math.max(count, 1)

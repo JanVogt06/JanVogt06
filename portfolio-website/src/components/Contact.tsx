@@ -92,7 +92,7 @@ const Contact = () => {
                 <div className="stage sticky top-0"/>
             </div>
 
-            <Band ref={bandRef} className="md:max-w-[52rem]">
+            <Band ref={bandRef}>
                 <div className="md:grid md:grid-cols-2 md:gap-x-10">
                     <div>
                         <Slate>
@@ -103,7 +103,7 @@ const Contact = () => {
                             </h2>
                         </Slate>
 
-                        <p className="mt-4 max-w-[38ch] text-lead text-fg-2 short:mt-3">
+                        <p className="mt-4 max-w-[46ch] text-lead text-fg-2 short:mt-3">
                             Interessiert an einer Zusammenarbeit oder einfach nur ein
                             Gespräch über Technologie?
                         </p>

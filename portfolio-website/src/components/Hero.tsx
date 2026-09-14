@@ -39,7 +39,8 @@ const Hero = ({ready}: {ready: boolean}) => {
 
     return (
         <section ref={sectionRef} id="hero" className="stage-min relative w-full">
-            <Band ref={bandRef}>
+            <Band ref={bandRef} className="lg:flex lg:items-end lg:gap-x-16">
+                <div className="min-w-0 lg:flex-1">
                 <motion.p
                     className="text-label uppercase tracking-[0.14em] text-fg-3"
                     initial={{opacity: 0, y: 8}}
@@ -59,7 +60,7 @@ const Hero = ({ready}: {ready: boolean}) => {
                 </motion.h1>
 
                 <motion.p
-                    className="mt-5 max-w-[34ch] text-lead text-fg-2"
+                    className="mt-5 max-w-[52ch] text-lead text-fg-2"
                     initial={{opacity: 0, y: 8}}
                     animate={show}
                     transition={step(460, 560)}
@@ -89,9 +90,10 @@ const Hero = ({ready}: {ready: boolean}) => {
                         Kontakt
                     </Action>
                 </motion.div>
+                </div>
 
                 <motion.p
-                    className="mt-7 max-w-[26rem] text-fine text-fg-3"
+                    className="mt-7 max-w-[46ch] text-fine text-fg-3 lg:mt-0 lg:w-[19rem] lg:shrink-0"
                     initial={{opacity: 0}}
                     animate={{opacity: ready ? 1 : 0}}
                     transition={step(380, 880)}
