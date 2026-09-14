@@ -329,6 +329,9 @@ export class SpaceScene {
     private fieldScrollTarget = 0
     private fieldScroll = 0
     private textFloor = 0
+    private railTop = 1
+    private railTarget = 0
+    private rail = 0
     private hovered: number | null = null
     private hoveredKind: "crystal" | "waypoint" | null = null
     private selected: number | null = null
@@ -656,6 +659,12 @@ export class SpaceScene {
         this.sync()
     }
 
+    setTextRail(top: number, amount: number) {
+        this.railTop = top
+        this.railTarget = amount
+        this.sync()
+    }
+
     setTextFloor(floor: number) {
         if (Math.abs(floor - this.textFloor) < 0.005) return
         this.textFloor = floor
@@ -868,6 +877,9 @@ export class SpaceScene {
         this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, 0.12)
         this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
+
+        this.rail = lerp(this.rail, this.railTarget, 0.12)
+        this.post.setRail(this.railTop, this.rail)
 
         const step = (Math.PI * 2) / Math.max(count, 1)
         const station = this.fieldProgress * Math.max(count - 1, 1)

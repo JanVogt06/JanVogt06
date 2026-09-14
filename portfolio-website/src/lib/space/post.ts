@@ -57,13 +57,22 @@ const compositeFragmentShader = `
     uniform sampler2D uBloom;
     uniform float uStrength;
 
+    uniform float uRailTop;
+    uniform float uRailAmount;
+
     void main() {
         vec4 scene = texture2D(uScene, vUv);
         vec3 bloom = texture2D(uBloom, vUv).rgb * uStrength;
 
         float lift = max(max(bloom.r, bloom.g), bloom.b);
 
-        gl_FragColor = vec4(scene.rgb + bloom, clamp(scene.a + lift, 0.0, 1.0));
+        // The scene dims itself where the text band sits, so legibility is a
+        // property of the render rather than a panel laid over it.
+        float fromTop = 1.0 - vUv.y;
+        float mask = smoothstep(uRailTop - 0.08, uRailTop + 0.10, fromTop);
+        float dim = mix(1.0, 0.45, mask * uRailAmount);
+
+        gl_FragColor = vec4((scene.rgb + bloom) * dim, clamp(scene.a + lift, 0.0, 1.0));
     }
 `
 
@@ -86,6 +95,7 @@ export type Post = {
     setSize: (width: number, height: number, pixelRatio: number) => void
     setStrength: (strength: number) => void
     setThreshold: (threshold: number, knee: number) => void
+    setRail: (top: number, amount: number) => void
     dispose: () => void
 }
 
@@ -137,6 +147,8 @@ export const createPost = (renderer: THREE.WebGLRenderer, samples: number): Post
             uScene: {value: sceneTarget.texture},
             uBloom: {value: bloom[0].texture},
             uStrength: {value: 1},
+            uRailTop: {value: 1},
+            uRailAmount: {value: 0},
         },
         transparent: true,
         depthTest: false,
@@ -183,6 +195,11 @@ export const createPost = (renderer: THREE.WebGLRenderer, samples: number): Post
 
         setStrength: (strength) => {
             composite.uniforms.uStrength.value = strength
+        },
+
+        setRail: (top, amount) => {
+            composite.uniforms.uRailTop.value = top
+            composite.uniforms.uRailAmount.value = amount
         },
 
         setThreshold: (value, knee) => {

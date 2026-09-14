@@ -6,6 +6,7 @@ const anchorListeners = new Set<(anchor: Anchor) => void>()
 
 export const attachScene = (scene: SpaceScene | null) => {
     current = scene
+    ;(window as unknown as {__space: unknown}).__space = {scene, space}
 }
 
 export const emitAnchor = (anchor: Anchor) => {
@@ -34,6 +35,8 @@ export const space = {
     setPassageProgress: (progress: number) => current?.setPassageProgress(progress),
 
     setTextFloor: (floor: number) => current?.setTextFloor(floor),
+
+    setTextRail: (top: number, amount: number) => current?.setTextRail(top, amount),
 
     setApproach: (approach: number) => current?.setApproach(approach),
     setArrivalProgress: (progress: number) => current?.setArrivalProgress(progress),
