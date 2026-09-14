@@ -11,7 +11,7 @@ const sections = [
     {id: "contact", label: "Kontakt"},
 ]
 
-const TopBar = () => {
+const TopBar = ({ready}: {ready: boolean}) => {
     const [active, setActive] = useState<string>("")
 
     useEffect(() => {
@@ -34,8 +34,8 @@ const TopBar = () => {
     return (
         <motion.header
             initial={{y: -64, opacity: 0}}
-            animate={{y: 0, opacity: 1}}
-            transition={{duration: 0.6, ease: EASE, delay: 0.2}}
+            animate={ready ? {y: 0, opacity: 1} : {y: -64, opacity: 0}}
+            transition={{duration: 0.6, ease: EASE}}
             className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-6"
         >
             <div className="glass mx-auto flex h-12 max-w-[64rem] items-center gap-2 rounded-full pl-4 pr-2 sm:gap-3">

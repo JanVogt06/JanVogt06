@@ -15,12 +15,18 @@ const Atmosphere = ({
     scene: sceneEnabled,
     crystalCount,
     onPick,
+    onProgress: onLoadProgress,
+    onReady,
 }: {
     scene: boolean
 
     crystalCount: number
 
     onPick: (pick: Pick) => void
+
+    onProgress: (fraction: number) => void
+
+    onReady: () => void
 }) => {
     const pageRef = useRef<HTMLElement>(document.documentElement)
     const heroRef = useRef<HTMLDivElement>(null)
@@ -36,6 +42,11 @@ const Atmosphere = ({
         selectRef.current = onPick
     }, [onPick])
 
+    const bootRef = useRef({onProgress: onLoadProgress, onReady})
+    useEffect(() => {
+        bootRef.current = {onProgress: onLoadProgress, onReady}
+    }, [onLoadProgress, onReady])
+
     useEffect(() => {
         if (!canvasRef.current || !sceneEnabled) return
 
@@ -45,6 +56,8 @@ const Atmosphere = ({
             onHover: setHovered,
             onSelect: (pick) => selectRef.current(pick),
             onAnchor: emitAnchor,
+            onProgress: (fraction) => bootRef.current.onProgress(fraction),
+            onReady: () => bootRef.current.onReady(),
         })
         sceneRef.current = scene
         attachScene(scene)

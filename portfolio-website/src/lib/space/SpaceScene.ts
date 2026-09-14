@@ -229,6 +229,10 @@ export type SpaceSceneOptions = {
     onSelect: (pick: Pick) => void
 
     onAnchor: (anchor: Anchor) => void
+
+    onProgress?: (fraction: number) => void
+
+    onReady?: () => void
 }
 
 export class SpaceScene {
@@ -237,6 +241,13 @@ export class SpaceScene {
     private readonly onHover: SpaceSceneOptions["onHover"]
     private readonly onSelect: SpaceSceneOptions["onSelect"]
     private readonly onAnchor: SpaceSceneOptions["onAnchor"]
+    private readonly onProgress: SpaceSceneOptions["onProgress"]
+    private readonly onReady: SpaceSceneOptions["onReady"]
+
+    private pendingTextures = 0
+    private settled = 0
+    private built = false
+    private announced = false
 
     private readonly bgScene = new THREE.Scene()
     private readonly bgCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
@@ -324,11 +335,21 @@ export class SpaceScene {
     private selectBlend = 0
     private paused = false
 
-    constructor({container, count, onHover, onSelect, onAnchor}: SpaceSceneOptions) {
+    constructor({
+        container,
+        count,
+        onHover,
+        onSelect,
+        onAnchor,
+        onProgress,
+        onReady,
+    }: SpaceSceneOptions) {
         this.container = container
         this.onHover = onHover
         this.onSelect = onSelect
         this.onAnchor = onAnchor
+        this.onProgress = onProgress
+        this.onReady = onReady
         this.quality = detectQuality()
 
         const width = Math.max(container.clientWidth, 1)
@@ -389,20 +410,27 @@ export class SpaceScene {
         })
         this.scene.add(this.milkyWay.object)
         if (this.quality >= MILKYWAY_MAP_MIN_QUALITY) {
-            new THREE.TextureLoader().load(milkyWayTexture, (texture) => {
-                if (this.disposed) {
-                    texture.dispose()
-                    return
-                }
-                texture.wrapS = THREE.RepeatWrapping
-                texture.wrapT = THREE.ClampToEdgeWrapping
-                texture.generateMipmaps = false
-                texture.minFilter = THREE.LinearFilter
-                texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
-                this.milkyWay.setMap(texture)
-                this.textures.push(texture)
-                this.milkyWayMapLoaded = true
-            })
+            this.pendingTextures++
+            new THREE.TextureLoader().load(
+                milkyWayTexture,
+                (texture) => {
+                    if (this.disposed) {
+                        texture.dispose()
+                        return
+                    }
+                    texture.wrapS = THREE.RepeatWrapping
+                    texture.wrapT = THREE.ClampToEdgeWrapping
+                    texture.generateMipmaps = false
+                    texture.minFilter = THREE.LinearFilter
+                    texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+                    this.milkyWay.setMap(texture)
+                    this.textures.push(texture)
+                    this.milkyWayMapLoaded = true
+                    this.settle()
+                },
+                undefined,
+                () => this.settle(),
+            )
         }
         this.skyStars = createStarfield({
             count: SKY_STARS[level],
@@ -582,6 +610,9 @@ export class SpaceScene {
         window.addEventListener("click", this.handleClick)
         document.addEventListener("visibilitychange", this.sync)
 
+        this.built = true
+        if (this.settled >= this.pendingTextures) this.announce()
+
         this.sync()
     }
 
@@ -651,18 +682,47 @@ export class SpaceScene {
         material: THREE.ShaderMaterial,
         wrapS: THREE.Wrapping = THREE.RepeatWrapping,
     ) {
-        new THREE.TextureLoader().load(url, (texture) => {
-            if (this.disposed) {
-                texture.dispose()
-                return
-            }
-            texture.wrapS = wrapS
-            texture.wrapT = THREE.ClampToEdgeWrapping
-            texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
-            material.uniforms.uMap.value = texture
-            material.uniforms.uHasMap.value = 1
-            this.textures.push(texture)
-        })
+        this.pendingTextures++
+        new THREE.TextureLoader().load(
+            url,
+            (texture) => {
+                if (this.disposed) {
+                    texture.dispose()
+                    return
+                }
+                texture.wrapS = wrapS
+                texture.wrapT = THREE.ClampToEdgeWrapping
+                texture.anisotropy = this.renderer.capabilities.getMaxAnisotropy()
+                material.uniforms.uMap.value = texture
+                material.uniforms.uHasMap.value = 1
+                this.textures.push(texture)
+                this.settle()
+            },
+            undefined,
+            () => this.settle(),
+        )
+    }
+
+    private settle() {
+        this.settled++
+        this.onProgress?.(Math.min(this.settled / Math.max(this.pendingTextures, 1), 1))
+        if (!this.built || this.settled < this.pendingTextures) return
+        this.announce()
+    }
+
+    // Compiling before the reveal keeps the first scrolled frame from stalling
+    // on a shader the camera has only just brought into view.
+    private announce() {
+        if (this.announced || this.disposed) return
+        this.announced = true
+        this.renderer
+            .compileAsync(this.scene, this.camera)
+            .catch(() => undefined)
+            .then(() => {
+                if (this.disposed) return
+                this.render()
+                this.onReady?.()
+            })
     }
 
     private placeWaypoints() {
