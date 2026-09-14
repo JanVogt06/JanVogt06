@@ -71,6 +71,30 @@
     --color-brand-lift: var(--color-fg);
     --color-ink: #05070a;
 
+    --text-name: clamp(1.75rem, 6vw, 2.25rem);
+    --text-name--line-height: 1;
+
+    --text-title: clamp(1.125rem, 2.2vw, 1.25rem);
+    --text-title--line-height: 1.2;
+
+    --text-lead: clamp(1rem, 1.6vw, 1.125rem);
+    --text-lead--line-height: 1.5;
+
+    --text-body: clamp(0.8125rem, 1.1vw, 0.875rem);
+    --text-body--line-height: 1.5;
+
+    --text-sub: 0.8125rem;
+    --text-sub--line-height: 1.45;
+
+    --text-data: 0.75rem;
+    --text-data--line-height: 1.4;
+
+    --text-label: 0.6875rem;
+    --text-label--line-height: 1.35;
+
+    --text-fine: 0.6875rem;
+    --text-fine--line-height: 1.6;
+
     --radius-sm: 2px;
     --radius-md: 6px;
     --radius-lg: 10px;
@@ -82,6 +106,25 @@
 @layer base {
     * {
         border-color: rgb(255 255 255 / 0.08);
+    }
+
+    :root {
+        --gutter: 20px;
+
+        /* Measured by whichever band currently owns the frame. */
+        --band-h: 0px;
+    }
+
+    @media (min-width: 40rem) {
+        :root {
+            --gutter: 32px;
+        }
+    }
+
+    @media (min-width: 64rem) {
+        :root {
+            --gutter: 56px;
+        }
     }
 
     html {
@@ -122,6 +165,60 @@
 }
 
 @layer components {
+    /* Every content line that sits over the canvas. */
+    .etched {
+        text-shadow:
+            0 1px 2px rgb(0 0 0 / 0.55),
+            0 0 14px rgb(5 7 10 / 0.55);
+    }
+
+    /* Sized to the text block it wraps, so a six-row list gets tall cover and
+       a one-line tagline almost none. A blurred gradient rasterises once. */
+    .soft-scrim {
+        position: relative;
+    }
+
+    .soft-scrim::before {
+        content: "";
+        position: absolute;
+        inset: -18px -24px -26px -24px;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(120% 130% at 0% 100%,
+            rgb(5 7 10 / 0.78) 0%,
+            rgb(5 7 10 / 0.52) 48%,
+            rgb(5 7 10 / 0.22) 74%,
+            transparent 100%);
+        filter: blur(10px);
+    }
+
+    .scrim-band {
+        position: fixed;
+        inset-inline: 0;
+        bottom: 0;
+        z-index: 15;
+        pointer-events: none;
+        height: calc(var(--band-h) + 12vh);
+        background: linear-gradient(to top,
+            rgb(5 7 10 / 0.88) 0%,
+            rgb(5 7 10 / 0.70) 34%,
+            rgb(5 7 10 / 0.34) 64%,
+            transparent 100%);
+    }
+
+    .scrim-top {
+        position: fixed;
+        inset-inline: 0;
+        top: 0;
+        z-index: 15;
+        pointer-events: none;
+        height: 12vh;
+        background: linear-gradient(to bottom,
+            rgb(5 7 10 / 0.72) 0%,
+            rgb(5 7 10 / 0.30) 46%,
+            transparent 100%);
+    }
+
     .stage {
         height: 100vh;
         height: 100svh;
@@ -288,6 +385,12 @@
     to   { opacity: 1; }
 }
 
+@keyframes cue {
+    0%   { transform: translateY(0); opacity: 0; }
+    22%  { opacity: 1; }
+    100% { transform: translateY(19px); opacity: 0; }
+}
+
 @keyframes hud-in {
     from { opacity: 0; transform: scale(0.985); }
     to   { opacity: 1; transform: none; }
@@ -301,4 +404,12 @@
     .animate-hud {
         animation-name: overlay-in;
     }
+
+    .animate-cue {
+        animation: none;
+    }
+}
+
+.animate-cue {
+    animation: cue 2.6s linear infinite;
 }
