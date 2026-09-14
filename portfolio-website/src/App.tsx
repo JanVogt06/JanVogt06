@@ -75,6 +75,8 @@ function App() {
                 onProgress={setProgress}
                 onReady={announce}
             />
+            <div aria-hidden="true" className="scrim-band"/>
+
             <TopBar ready={ready}/>
             <Hero ready={ready}/>
             <About scene={scene} station={station} onStation={setStation}/>

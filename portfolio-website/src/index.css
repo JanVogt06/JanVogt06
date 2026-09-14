@@ -385,6 +385,11 @@
     to   { opacity: 1; }
 }
 
+@keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.45; }
+}
+
 @keyframes cue {
     0%   { transform: translateY(0); opacity: 0; }
     22%  { opacity: 1; }
@@ -405,11 +410,16 @@
         animation-name: overlay-in;
     }
 
-    .animate-cue {
+    .animate-cue,
+    .animate-pulse-soft {
         animation: none;
     }
 }
 
 .animate-cue {
     animation: cue 2.6s linear infinite;
+}
+
+.animate-pulse-soft {
+    animation: pulse-soft 2.4s ease-in-out infinite;
 }

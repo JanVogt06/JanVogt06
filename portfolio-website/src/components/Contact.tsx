@@ -1,38 +1,36 @@
 import {useCallback, useRef} from "react"
 import type {CSSProperties} from "react"
-import {Mail, Github, Instagram, MapPin, Send, ArrowUpRight} from "lucide-react"
-import {HudLabel, HudSectionHeader} from "./Hud"
-import Lens from "./Lens"
+import {ArrowUpRight} from "lucide-react"
+import Band from "./band/Band"
+import type {BandHandle} from "./band/Band"
+import {ActionLink} from "./band/Action"
+import Slate from "./band/Slate"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space} from "@/lib/space/controller"
 
-const SCREENS = 2
+const SCREENS = 3
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
 const channels = [
     {
-        icon: Mail,
         label: "E-Mail",
         value: "contact@jan-vogt.dev",
         href: "mailto:contact@jan-vogt.dev",
     },
     {
-        icon: Github,
         label: "GitHub",
         value: "@JanVogt06",
         href: "https://github.com/JanVogt06",
         external: true,
     },
     {
-        icon: Instagram,
         label: "Instagram",
         value: "@jan.vogt06",
         href: "https://instagram.com/jan.vogt06",
         external: true,
     },
     {
-        icon: MapPin,
         label: "Standort",
         value: "Bad Berka, Thüringen",
         href: "https://www.google.com/maps/search/?api=1&query=Bad+Berka+Thüringen",
@@ -40,60 +38,44 @@ const channels = [
     },
 ]
 
-const Channel = ({channel}: {channel: (typeof channels)[number]}) => {
-    const Icon = channel.icon
-    return (
-        <a
-            href={channel.href}
-            target={channel.external ? "_blank" : undefined}
-            rel={channel.external ? "noopener noreferrer" : undefined}
-            className="rim group flex items-center gap-4 rounded-xl bg-white/[0.035] px-4 py-3.5 transition-colors hover:bg-white/[0.075]"
-        >
-            <Icon className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-brand"/>
-            <div className="min-w-0 flex-1">
-                <HudLabel tone="text-white/50">{channel.label}</HudLabel>
-                <p className="mt-1 truncate font-mono text-sm text-white/70 transition-colors group-hover:text-white">
-                    {channel.value}
-                </p>
-            </div>
-            <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-white/35 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brand"/>
-        </a>
-    )
-}
+const Channel = ({channel}: {channel: (typeof channels)[number]}) => (
+    <a
+        href={channel.href}
+        target={channel.external ? "_blank" : undefined}
+        rel={channel.external ? "noopener noreferrer" : undefined}
+        className="group grid min-h-11 grid-cols-[1fr_auto] items-baseline gap-x-4 py-2.5 sm:grid-cols-[5.5rem_1fr_auto]"
+    >
+        <span className="col-start-1 text-label uppercase tracking-[0.14em] text-fg-3">
+            {channel.label}
+        </span>
+        <span className="col-start-1 truncate text-data text-fg-2 transition-colors duration-200 group-hover:text-fg sm:col-start-2">
+            {channel.value}
+        </span>
+        <ArrowUpRight className="col-start-2 row-start-1 h-3 w-3 shrink-0 self-center text-fg-3/70 transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-signal sm:col-start-3"/>
+    </a>
+)
 
 const Contact = () => {
     const sectionRef = useRef<HTMLDivElement>(null)
-    const headerRef = useRef<HTMLDivElement>(null)
-    const panelRef = useRef<HTMLDivElement>(null)
+    const bandRef = useRef<BandHandle>(null)
     const channelsRef = useRef<HTMLDivElement>(null)
 
     const onProgress = useCallback((raw: number) => {
         const progress = clamp01(raw)
         space.setArrivalProgress(progress)
 
-        const header = clamp01(progress / 0.26)
-        const panel = clamp01((progress - 0.14) / 0.34)
-        const channels = clamp01((progress - 0.3) / 0.45)
-
-        if (headerRef.current) {
-            headerRef.current.style.opacity = String(header)
-            headerRef.current.style.transform = `translate3d(0, ${((1 - header) * 5).toFixed(2)}vh, 0)`
-        }
-
-        if (panelRef.current) {
-            panelRef.current.style.opacity = String(panel)
-            panelRef.current.style.transform =
-                `translate3d(0, ${((1 - panel) * 6).toFixed(2)}vh, 0) scale(${(0.955 + panel * 0.045).toFixed(4)})`
-        }
+        const arrived = clamp01(progress / 0.26)
+        bandRef.current?.setWeight(arrived, (1 - arrived) * 16)
 
         if (channelsRef.current) {
-            const kids = channelsRef.current.children
-            for (let i = 0; i < kids.length; i++) {
-                const stagger = i * 0.16
-                const own = clamp01((channels - stagger) / (1 - stagger))
-                const el = kids[i] as HTMLElement
-                el.style.opacity = String(own)
-                el.style.transform = `translate3d(0, ${((1 - own) * 2.5).toFixed(2)}rem, 0)`
+            const rows = channelsRef.current.children
+            const reveal = clamp01((progress - 0.22) / 0.42)
+            for (let i = 0; i < rows.length; i++) {
+                const stagger = i * 0.12
+                const own = clamp01((reveal - stagger) / (1 - stagger))
+                const row = rows[i] as HTMLElement
+                row.style.opacity = String(own)
+                row.style.transform = `translate3d(0, ${((1 - own) * 1).toFixed(2)}rem, 0)`
             }
         }
     }, [])
@@ -107,80 +89,84 @@ const Contact = () => {
                 className="track"
                 style={{"--screens": SCREENS} as CSSProperties}
             >
-                <div className="stage sticky top-0 flex flex-col justify-center overflow-hidden pt-20 lg:pt-14">
-                    <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
+                <div className="stage sticky top-0"/>
+            </div>
 
-                        <div ref={headerRef} className="mb-10 will-change-transform short:mb-6 md:mb-14">
-                            <HudSectionHeader
-                                id="03"
-                                title="Sag"
-                                accent="Hallo"
-                                lead="Interessiert an einer Zusammenarbeit oder einfach nur ein Gespräch über Technologie?"
+            <Band ref={bandRef} className="md:max-w-[52rem]">
+                <div className="md:grid md:grid-cols-2 md:gap-x-10">
+                    <div>
+                        <Slate>
+                            <h2 className="text-label uppercase tracking-[0.14em] text-fg-3">
+                                <span className="mr-3 text-data">03</span>
+                                <span className="text-fg-2">Sag </span>
+                                <span className="text-fg">Hallo</span>
+                            </h2>
+                        </Slate>
+
+                        <p className="mt-4 max-w-[38ch] text-lead text-fg-2">
+                            Interessiert an einer Zusammenarbeit oder einfach nur ein
+                            Gespräch über Technologie?
+                        </p>
+
+                        <p className="mt-7 flex items-center gap-2.5 text-label uppercase tracking-[0.14em] text-status">
+                            <span
+                                aria-hidden="true"
+                                className="h-1 w-1 shrink-0 bg-status animate-pulse-soft"
                             />
+                            Offen für Gespräche
+                        </p>
+
+                        <div className="mt-8">
+                            <ActionLink
+                                href="mailto:contact@jan-vogt.dev"
+                                icon={<ArrowUpRight className="h-3 w-3"/>}
+                            >
+                                Nachricht schreiben
+                            </ActionLink>
                         </div>
 
-                        <div ref={panelRef} className="will-change-transform">
-                            <div className="glass rounded-3xl p-5 short:p-4 sm:p-8">
-                                <Lens/>
-                                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/[0.06] pb-4">
-                                    <span className="relative flex h-1.5 w-1.5">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-status opacity-70"/>
-                                        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-status"/>
-                                    </span>
-                                    <span className="text-xs font-medium text-status">
-                                        Offen für Gespräche
-                                    </span>
-                                </div>
-
-                                <HudLabel className="mt-6">Kanäle</HudLabel>
-
-                                <div ref={channelsRef} className="mt-3 grid gap-3 sm:grid-cols-2">
-                                    {channels.map((channel) => (
-                                        <Channel key={channel.label} channel={channel}/>
-                                    ))}
-                                </div>
-
-                                <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-                                    <a
-                                        href="mailto:contact@jan-vogt.dev"
-                                        className="action group"
-                                    >
-                                        <Send className="h-4 w-4"/>
-                                        Nachricht schreiben
-                                        <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/>
-                                    </a>
-
-                                    <p className="text-xs text-white/50">
-                                        Antwort meist innerhalb eines Tages
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p className="mt-10 max-w-3xl text-[11px] leading-relaxed text-white/50 short:mt-6">
-                            Planetenkarten:{" "}
-                            <a
-                                href="https://www.solarsystemscope.com/textures/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
-                            >
-                                Solar System Scope
-                            </a>{" "}
-                            (CC BY 4.0). Milchstraße:{" "}
-                            <a
-                                href="https://svs.gsfc.nasa.gov/4851/"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="underline decoration-white/15 underline-offset-2 transition-colors hover:text-white/50"
-                            >
-                                NASA/Goddard Space Flight Center Scientific Visualization Studio
-                            </a>
-                            , Gaia DR2: ESA/Gaia/DPAC.
+                        <p className="mt-2 text-fine text-fg-3">
+                            Antwort meist innerhalb eines Tages
                         </p>
                     </div>
+
+                    <div className="mt-9 md:mt-0">
+                        <Slate>
+                            <span className="text-label uppercase tracking-[0.14em] text-fg-3">
+                                Kanäle
+                            </span>
+                        </Slate>
+
+                        <div ref={channelsRef} className="mt-1">
+                            {channels.map((channel) => (
+                                <Channel key={channel.label} channel={channel}/>
+                            ))}
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <p className="mt-9 max-w-[44rem] text-fine text-fg-3">
+                    Planetenkarten:{" "}
+                    <a
+                        href="https://www.solarsystemscope.com/textures/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-white/20 underline-offset-[3px] transition-colors duration-200 hover:text-fg-2 hover:decoration-signal"
+                    >
+                        Solar System Scope
+                    </a>{" "}
+                    (CC BY 4.0). Milchstraße:{" "}
+                    <a
+                        href="https://svs.gsfc.nasa.gov/4851/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline decoration-white/20 underline-offset-[3px] transition-colors duration-200 hover:text-fg-2 hover:decoration-signal"
+                    >
+                        NASA/Goddard Space Flight Center Scientific Visualization Studio
+                    </a>
+                    , Gaia DR2: ESA/Gaia/DPAC.
+                </p>
+            </Band>
         </section>
     )
 }
