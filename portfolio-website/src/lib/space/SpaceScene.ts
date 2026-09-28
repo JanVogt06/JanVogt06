@@ -1289,10 +1289,14 @@ export class SpaceScene {
         this.onSelect(pick)
     }
 
+    // Text and overlays are not windows onto the scene: a tap on a band's
+    // copy or inside a dialog must never pick the object behind it.
     private isOverInteractive(target: EventTarget | null) {
         return (
             target instanceof Element &&
-            !!target.closest("a, button, input, textarea, select, iframe, [role='button']")
+            !!target.closest(
+                "a, button, input, textarea, select, iframe, [role='button'], [role='dialog'], header, [data-band]",
+            )
         )
     }
 
