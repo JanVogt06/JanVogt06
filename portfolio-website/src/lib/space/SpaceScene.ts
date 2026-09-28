@@ -67,9 +67,30 @@ const FIELD_DISTANCE = 11
 const FOCUS_DISTANCE = 6.4
 
 const PORTRAIT_FIELD_PULLBACK = 1.45
-const PORTRAIT_FIELD_LIFT = 0.6
 
 const SQUAT_HEIGHT = 520
+const SQUAT_BLEND = 120
+
+// Portrait-ness ramps over this aspect range instead of flipping at 1, so a
+// resize or a split view never jumps the camera: phones and portrait tablets
+// sit at or below NARROW_FULL, landscape at or above NARROW_FROM.
+const NARROW_FULL = 0.85
+const NARROW_FROM = 1.15
+
+// The galaxy disc is about twice as wide as a phone's frustum from the hero
+// position, so on a portrait screen the camera backs off until
+// distance * aspect = HERO_FIT, never closer than HERO_MIN_DISTANCE, and
+// pitches so the core sits HERO_CORE_Y (NDC) above centre.
+const HERO_FIT = 50
+const HERO_MIN_DISTANCE = 90
+const HERO_CORE_Y = 0.4
+
+const FINALE_HOLD = 0.8
+
+const CHROME_TOP = 56
+
+// A gem hangs below its girdle, so its optical centre is a little lower.
+const CRYSTAL_OPTICAL_DROP = 0.035
 
 const IDLE_SWAY = 0.12
 const IDLE_SWAY_SPEED = 0.1
@@ -319,6 +340,12 @@ export class SpaceScene {
     private passageProgress = 0
     private arrivalTarget = 0
     private arrival = 0
+    private heroTarget = 0
+    private heroProgress = 0
+    private heroReach: number
+    private readonly arrivalBias: number
+    private readonly journeyAim = new THREE.Vector3()
+    private readonly heroAim = new THREE.Vector3()
     private aboutScrollTarget = 0
     private aboutScroll = 0
     private fieldScrollTarget = 0
@@ -384,12 +411,18 @@ export class SpaceScene {
         this.bgScene.add(new THREE.Mesh(this.bgGeometry, this.bgMaterial))
 
         this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, CAMERA_FAR)
+        this.heroReach = Math.max(HERO_FIT / this.camera.aspect, HERO_MIN_DISTANCE)
         this.tiltGroup.rotation.x = RING_TILT
         this.tiltGroup.position.z = RING_Z
         this.tiltGroup.add(this.spinGroup)
         this.scene.add(this.tiltGroup)
 
         this.journeyEnd = this.frontPoint().z + HERO_DISTANCE
+
+        // ARRIVAL_YAW was tuned from the landscape eye (x = -HERO_LATERAL). Keep
+        // its offset from "straight at the galaxy" and re-aim from any eye.
+        this.arrivalBias =
+            ARRIVAL_YAW - Math.atan2(GALAXY_X + HERO_LATERAL, this.journeyEnd - GALAXY_Z)
 
 
         this.galaxy = createGalaxy(
@@ -660,6 +693,13 @@ export class SpaceScene {
         this.sync()
     }
 
+    setHeroProgress(progress: number) {
+        this.heroTarget = progress
+        // A page restored mid-scroll should not dolly out under the boot screen.
+        if (!this.announced) this.heroProgress = progress
+        this.sync()
+    }
+
     setArrivalProgress(progress: number) {
         this.arrivalTarget = progress
         this.sync()
@@ -725,8 +765,11 @@ export class SpaceScene {
 
     private placeWaypoints() {
         const front = this.frontPoint()
-        const portrait = this.camera.aspect < 1
-        const distance = portrait ? WAYPOINT_VIEW_DISTANCE_PORTRAIT : WAYPOINT_VIEW_DISTANCE
+        const distance = lerp(
+            WAYPOINT_VIEW_DISTANCE,
+            WAYPOINT_VIEW_DISTANCE_PORTRAIT,
+            this.narrowness(),
+        )
         const eyeY = front.y + CAMERA_RISE * (1 - distance / LOOK_AHEAD)
         const halfView = distance * Math.tan((this.camera.fov * Math.PI) / 360)
 
@@ -750,10 +793,38 @@ export class SpaceScene {
      * climbs out of shot, and pushed down far enough that its radius fits.
      */
     private liftFor(spec: PlanetSpec, eyeY: number, halfView: number) {
-        const share = Math.min(Math.max(this.railTop * 0.5, 0.24), 0.46)
+        const share = this.clearCentre()
         const room = Math.max(share, (spec.radius + WAYPOINT_CLEARANCE) / (2 * halfView))
 
         return eyeY + halfView * (1 - 2 * room)
+    }
+
+    private narrowness() {
+        return smooth((NARROW_FROM - this.camera.aspect) / (NARROW_FROM - NARROW_FULL))
+    }
+
+    private squatness() {
+        return smooth((SQUAT_HEIGHT + SQUAT_BLEND / 2 - this.container.clientHeight) / SQUAT_BLEND)
+    }
+
+    /** Middle of the frame between the top bar and the band, from the top. */
+    private clearCentre() {
+        const chrome = CHROME_TOP / Math.max(this.container.clientHeight, 1)
+        return Math.min(Math.max((chrome + this.railTop) * 0.5, 0.24), 0.46)
+    }
+
+    /** A look target that puts the galaxy core on the vertical centre line,
+     *  `ndcY` above centre. */
+    private aimAtGalaxy(eye: THREE.Vector3, ndcY: number, out: THREE.Vector3) {
+        const to = out.subVectors(this.galaxy.object.position, eye)
+        const heading = Math.atan2(to.x, -to.z)
+        const tanHalf = Math.tan((this.camera.fov * Math.PI) / 360)
+        const pitch = Math.atan2(to.y, Math.hypot(to.x, to.z)) - Math.atan(ndcY * tanHalf)
+        return out.set(
+            eye.x + Math.sin(heading) * Math.cos(pitch) * LOOK_AHEAD,
+            eye.y + Math.sin(pitch) * LOOK_AHEAD,
+            eye.z - Math.cos(heading) * Math.cos(pitch) * LOOK_AHEAD,
+        )
     }
 
     private level() {
@@ -865,6 +936,13 @@ export class SpaceScene {
         this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
         this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
         this.arrival = lerp(this.arrival, this.arrivalTarget, 0.055)
+        this.heroProgress = lerp(this.heroProgress, this.heroTarget, 0.1)
+        // Smoothed, so a mobile toolbar collapse never jumps the dolly.
+        this.heroReach = lerp(
+            this.heroReach,
+            Math.max(HERO_FIT / this.camera.aspect, HERO_MIN_DISTANCE),
+            0.06,
+        )
         this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, 0.12)
         this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
         this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
@@ -889,38 +967,67 @@ export class SpaceScene {
         const offCentre = Math.abs(station - nearest)
         const centred = clamp01(1 - offCentre * 2.4)
 
-        const portrait = this.camera.aspect < 1
-
-        const tight = portrait || this.container.clientHeight <= SQUAT_HEIGHT
-        const pull = tight ? PORTRAIT_FIELD_PULLBACK : 1
+        const narrow = this.narrowness()
+        const pull = lerp(1, PORTRAIT_FIELD_PULLBACK, Math.max(narrow, this.squatness()))
 
         const base = lerp(HERO_DISTANCE, FIELD_DISTANCE * pull, this.enter)
         const distance = lerp(base, FOCUS_DISTANCE * pull, centred * this.enter)
 
         const finalDistance = lerp(distance, FOCUS_DISTANCE * pull * 0.82, this.selectBlend)
 
-        const lateral = (portrait ? 0 : HERO_LATERAL) * (1 - this.enter)
+        const lateral = HERO_LATERAL * (1 - narrow) * (1 - this.enter)
 
-        const framing = portrait ? -PORTRAIT_FIELD_LIFT * this.enter : 0
+        // liftFor() solved for the camera: the front crystal lands in the
+        // clear space above the band at whatever distance the dolly is at.
+        const tanHalf = Math.tan((this.camera.fov * Math.PI) / 360)
+        const aimY = this.clearCentre() - CRYSTAL_OPTICAL_DROP
+        const fieldFraming =
+            -CAMERA_RISE * (1 - finalDistance / LOOK_AHEAD) -
+            finalDistance * tanHalf * (1 - 2 * aimY)
+        const framing = fieldFraming * this.enter
 
-        const travelZ = lerp(
-            lerp(CAMERA_Z_HERO, ABOUT_END_Z, this.aboutProgress),
-            this.journeyEnd,
-            this.passageProgress,
-        )
+        // The portrait hero is backed off and turned to the galaxy, and lets go
+        // of both over the hero's exit, which turns that scroll into a dolly-in.
+        const hold = (1 - smooth(this.heroProgress)) * narrow
+        const heroBack = Math.max(0, this.heroReach - (CAMERA_Z_HERO - GALAXY_Z)) * hold
+
+        const travelZ =
+            heroBack +
+            lerp(
+                lerp(CAMERA_Z_HERO, ABOUT_END_Z, this.aboutProgress),
+                this.journeyEnd,
+                this.passageProgress,
+            )
         const z = lerp(travelZ, front.z + finalDistance, this.enter)
 
         const settled = smooth(this.arrival)
-        const yaw = settled * ARRIVAL_YAW + Math.sin(time * IDLE_SWAY_SPEED) * ARRIVAL_SWAY * settled
         const eyeX = front.x - lateral
+        const arrivalYaw =
+            Math.atan2(GALAXY_X - eyeX, this.journeyEnd - GALAXY_Z) + this.arrivalBias
+        const yaw = settled * arrivalYaw + Math.sin(time * IDLE_SWAY_SPEED) * ARRIVAL_SWAY * settled
         const eyeY = front.y + CAMERA_RISE + framing + settled * ARRIVAL_RISE
 
         this.camera.position.set(eyeX, eyeY, z)
-        this.camera.lookAt(
+        this.journeyAim.set(
             eyeX + Math.sin(yaw) * LOOK_AHEAD,
             front.y + framing + settled * ARRIVAL_RISE,
             z - Math.cos(yaw) * LOOK_AHEAD,
         )
+        if (hold > 0.0005) {
+            this.aimAtGalaxy(this.camera.position, HERO_CORE_Y, this.heroAim)
+            this.journeyAim.lerp(this.heroAim, hold)
+        }
+
+        // At the finale a portrait frame has its lower half under the contact
+        // band, so the camera lifts the core into the clear space above it
+        // while keeping most of the arrival's sway.
+        const finale = settled * narrow
+        if (finale > 0.0005) {
+            // Centred in the clear space above the band, as the crystals are.
+            this.aimAtGalaxy(this.camera.position, 1 - 2 * this.clearCentre(), this.heroAim)
+            this.journeyAim.lerp(this.heroAim, finale * FINALE_HOLD)
+        }
+        this.camera.lookAt(this.journeyAim)
 
         const reveal = smooth(
             (this.enter - CRYSTAL_REVEAL_START) / (CRYSTAL_REVEAL_END - CRYSTAL_REVEAL_START),

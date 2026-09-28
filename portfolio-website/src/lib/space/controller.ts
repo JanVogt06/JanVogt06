@@ -36,6 +36,7 @@ export const space = {
     setTextRail: (top: number, amount: number) => current?.setTextRail(top, amount),
 
     setApproach: (approach: number) => current?.setApproach(approach),
+    setHeroProgress: (progress: number) => current?.setHeroProgress(progress),
     setArrivalProgress: (progress: number) => current?.setArrivalProgress(progress),
     setPaused: (paused: boolean) => current?.setPaused(paused),
     setSelected: (index: number | null) => current?.setSelected(index),

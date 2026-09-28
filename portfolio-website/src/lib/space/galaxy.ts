@@ -42,7 +42,7 @@ const vertexShader = `
         vec4 view = modelViewMatrix * vec4(spun, 1.0);
         float dist = -view.z;
 
-        vFade = aBright * smoothstep(0.8, 5.0, dist) * (1.0 - smoothstep(90.0, 160.0, dist));
+        vFade = aBright * smoothstep(0.8, 5.0, dist) * (1.0 - smoothstep(130.0, 200.0, dist));
 
         gl_Position = projectionMatrix * view;
 
