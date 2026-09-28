@@ -129,6 +129,12 @@
         }
     }
 
+    @media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+        html:has(.snap-stop) {
+            scroll-snap-type: y mandatory;
+        }
+    }
+
     html {
         scroll-padding-top: 4rem;
 
@@ -249,9 +255,21 @@
         height: calc(var(--screens) * 100svh);
     }
 
-    .anchor-end {
-        scroll-margin-top: -100vh;
-        scroll-margin-top: -100svh;
+    /* Snapping is left to touch screens: there the smooth scroller is off
+       and a flick otherwise tends to strand a band halfway through its
+       dissolve. The margin cancels the html scroll padding, so a stop lands
+       exactly at the pin progress it was placed at. */
+    .snap-stop {
+        scroll-snap-align: start;
+        scroll-margin-top: -4rem;
+    }
+
+    /* Pulls a track up by the screen its predecessor spends releasing, so
+       one section's progress reaches 1 exactly where the next one's is 0 and
+       the page never scrolls through a screen where nothing moves. */
+    .track-join {
+        margin-top: -100vh;
+        margin-top: -100svh;
     }
 
 }
