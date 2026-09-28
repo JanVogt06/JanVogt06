@@ -201,6 +201,7 @@
         z-index: 15;
         pointer-events: none;
         height: calc(var(--band-h) + 12vh);
+        transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         background: linear-gradient(to top,
             rgb(5 7 10 / 0.88) 0%,
             rgb(5 7 10 / 0.70) 34%,

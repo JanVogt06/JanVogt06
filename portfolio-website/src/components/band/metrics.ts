@@ -20,6 +20,8 @@ let landing: {x: number; y: number} | null = null
 
 const SLATE_CENTRE = 9
 
+let lastTop = 1
+
 export const landingPoint = () => landing
 
 const flush = () => {
@@ -38,10 +40,11 @@ const flush = () => {
 
     landing = held ? {x: held.right, y: held.top + SLATE_CENTRE} : null
 
-    space.setTextRail(
-        held ? Math.min(Math.max(held.top / window.innerHeight, 0), 1) : 1,
-        held ? held.weight : 0,
-    )
+    // The rail stays where the last band left it and only its strength lets
+    // go, so planets do not sink between stations and the dimmed edge does
+    // not sweep the frame on every handover.
+    if (held) lastTop = Math.min(Math.max(held.top / window.innerHeight, 0), 1)
+    space.setTextRail(lastTop, held ? 1 : 0)
 }
 
 export const report = (id: symbol, metrics: BandMetrics) => {
