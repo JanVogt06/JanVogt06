@@ -10,7 +10,6 @@ import Action, {ActionLink} from "./band/Action"
 import Slate from "./band/Slate"
 import {fadeUp} from "@/lib/motion"
 import {projects} from "@/lib/projects"
-import {useTagline} from "@/lib/github"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space} from "@/lib/space/controller"
 import {stationPosition, trackScreens} from "@/lib/stations"
@@ -34,7 +33,6 @@ const ProjectBand = ({
     onJump: (index: number) => void
 }) => {
     const project = projects[index]
-    const tagline = useTagline(project)
 
     return (
         <>
@@ -65,7 +63,7 @@ const ProjectBand = ({
 
             <h3 className="mt-4 text-title text-fg">{project.title}</h3>
 
-            <p className="mt-2 max-w-[62ch] text-body text-fg-2">{tagline}</p>
+            <p className="mt-2 max-w-[62ch] text-body text-fg-2">{project.tagline}</p>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-7 gap-y-3">
                 <Action onClick={() => onSelect(index)} icon={<ArrowUpRight className="h-3 w-3"/>}>
