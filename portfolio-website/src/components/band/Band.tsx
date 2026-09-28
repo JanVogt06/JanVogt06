@@ -1,6 +1,7 @@
-import {forwardRef, useCallback, useEffect, useImperativeHandle, useRef} from "react"
+import {forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState} from "react"
 import type {ReactNode} from "react"
 import {release, report} from "./metrics"
+import {ARRIVES, LEAVES, PresenceContext, createPresence} from "@/lib/presence"
 
 export type BandHandle = {
     setWeight: (weight: number, drift?: number) => void
@@ -14,15 +15,46 @@ const OWNS_FRAME = 0.5
  * The only place DOM text lives while the scene is running: one bottom
  * anchored region per section, driven by its section's scroll progress.
  * Without a scene it falls back to a plain block in document flow.
+ *
+ * A band never scrolls: a scroller inside a fixed layer swallows the page's
+ * touch scroll. Its content is sized to fit, and clipped if it ever does not.
  */
 const Band = forwardRef<
     BandHandle,
-    {flow?: boolean; className?: string; children: ReactNode}
->(({flow = false, className = "", children}, ref) => {
+    {flow?: boolean; armed?: boolean; className?: string; children: ReactNode}
+>(({flow = false, armed = true, className = "", children}, ref) => {
     const rootRef = useRef<HTMLDivElement>(null)
     const blockRef = useRef<HTMLDivElement>(null)
     const weight = useRef(0)
     const id = useRef<symbol>(Symbol("band"))
+    const [{presence, set: setShown}] = useState(createPresence)
+
+    const armedRef = useRef(armed)
+    const inViewRef = useRef(false)
+    useEffect(() => {
+        armedRef.current = armed
+        if (!armed) setShown(false)
+        else if (flow ? inViewRef.current : weight.current >= ARRIVES) setShown(true)
+    }, [armed, flow, setShown])
+
+    // Without a scene there is no weight to follow; a block simply arrives
+    // the first time it scrolls into view.
+    useEffect(() => {
+        const block = blockRef.current
+        if (!flow || !block) return
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (!entry.isIntersecting) return
+                inViewRef.current = true
+                if (!armedRef.current) return
+                setShown(true)
+                observer.disconnect()
+            },
+            {threshold: 0.2},
+        )
+        observer.observe(block)
+        return () => observer.disconnect()
+    }, [flow, setShown])
 
     const measure = useCallback(() => {
         const block = blockRef.current
@@ -43,11 +75,9 @@ const Band = forwardRef<
         const own = id.current
         const observer = new ResizeObserver(measure)
         observer.observe(block)
-        window.addEventListener("resize", measure)
 
         return () => {
             observer.disconnect()
-            window.removeEventListener("resize", measure)
             release(own)
         }
     }, [flow, measure])
@@ -63,6 +93,8 @@ const Band = forwardRef<
                 root.style.opacity = String(next)
                 root.style.transform = `translate3d(0, ${drift.toFixed(1)}px, 0)`
                 root.style.visibility = shown ? "visible" : "hidden"
+                // A hidden band gives its compositor layer back.
+                root.style.willChange = shown ? "transform, opacity" : "auto"
                 root.setAttribute("aria-hidden", shown ? "false" : "true")
 
                 // Metrics only change hands when a band takes or gives up the
@@ -70,42 +102,50 @@ const Band = forwardRef<
                 const handover = weight.current >= OWNS_FRAME !== (next >= OWNS_FRAME)
                 weight.current = next
                 if (handover) measure()
+
+                if (next >= ARRIVES && armedRef.current) setShown(true)
+                else if (next < LEAVES) setShown(false)
             },
         }),
-        [flow, measure],
+        [flow, measure, setShown],
     )
 
     if (flow) {
         return (
-            <div data-register="doc" className={className}>
-                {children}
-            </div>
+            <PresenceContext.Provider value={presence}>
+                <div ref={blockRef} data-register="doc" className={className}>
+                    {children}
+                </div>
+            </PresenceContext.Provider>
         )
     }
 
     return (
-        <div
-            ref={rootRef}
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-20 px-[var(--gutter)] pb-[calc(env(safe-area-inset-bottom)+1.25rem)] will-change-transform"
-            style={{opacity: 0, visibility: "hidden"}}
-        >
+        <PresenceContext.Provider value={presence}>
+            {/* The layer is the small viewport, anchored to the top: a mobile
+                toolbar sliding away then leaves the text where it was rather
+                than dragging it down the screen. */}
             <div
-                ref={blockRef}
-                className="soft-scrim etched pointer-events-auto relative mx-auto w-full max-w-[34rem] md:max-w-[44rem] lg:max-w-[56rem] xl:max-w-[64rem]"
+                ref={rootRef}
+                className="pointer-events-none fixed inset-x-0 top-0 z-20 flex h-svh flex-col justify-end px-[var(--gutter)] pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))]"
+                style={{opacity: 0, visibility: "hidden"}}
             >
-                {/* The scroller is inside the scrim, because the scrim's own
-                    pseudo-element overhangs the block and would otherwise make
-                    every band scrollable by the height of its own shadow. It
-                    also carries the section's own layout, being the element
-                    that actually holds the children. */}
                 <div
-                    data-native-scroll
-                    className={`-mb-3 max-h-[calc(100svh-7.5rem)] overflow-y-auto overscroll-contain pb-3 ${className}`}
+                    ref={blockRef}
+                    data-band
+                    className="soft-scrim etched pointer-events-auto relative mr-auto w-full max-w-[34rem] md:max-w-[44rem] lg:max-w-[56rem] xl:max-w-[64rem]"
                 >
-                    {children}
+                    {/* The clip reaches past the content on every side, most
+                        at the bottom, where a quiet action's hit box and focus
+                        ring overhang it. */}
+                    <div
+                        className={`-mx-2 -mb-5 -mt-2 max-h-[calc(100svh-4.75rem)] overflow-clip px-2 pb-5 pt-2 ${className}`}
+                    >
+                        {children}
+                    </div>
                 </div>
             </div>
-        </div>
+        </PresenceContext.Provider>
     )
 })
 
