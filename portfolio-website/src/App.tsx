@@ -79,7 +79,7 @@ function App() {
             <div aria-hidden="true" className="scrim-band"/>
             {scene && <Tether/>}
 
-            <TopBar ready={ready}/>
+            <TopBar ready={ready} scene={scene}/>
             <Hero ready={ready} scene={scene}/>
             <About scene={scene} station={station} onStation={setStation}/>
             <Passage scene={scene}/>
