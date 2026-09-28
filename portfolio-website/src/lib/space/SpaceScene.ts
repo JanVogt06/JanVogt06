@@ -1152,13 +1152,16 @@ export class SpaceScene {
                     ? 1
                     : this.hoveredKind === "waypoint" && this.hovered === i
                       ? 0.7
-                      : 0.14
+                      : 0.06
             const fade = lerp(
                 material.uniforms.uFade.value,
                 own * this.aboutActive * waypointsLive * (1 - this.enter),
                 this.ease(0.08),
             )
             material.uniforms.uFade.value = fade
+            // A planet faded to nothing would still cut its disc out of the
+            // stars drawn after it.
+            material.depthWrite = fade > 0.004
         }
 
         for (const ring of this.ringMeshes) {
