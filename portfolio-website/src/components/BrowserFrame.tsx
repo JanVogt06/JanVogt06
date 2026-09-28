@@ -1,4 +1,5 @@
 import type {ReactNode} from "react"
+import useMediaQuery from "@/lib/useMediaQuery"
 import type {LucideIcon} from "lucide-react"
 import {ArrowUpRight, Play, X} from "lucide-react"
 
@@ -58,6 +59,11 @@ const BrowserFrame = ({
 }) => {
     const host = url ? new URL(url).host : "kein Deployment"
 
+    // A live build inside a phone-sized frame is heavy and cramped; there the
+    // preview hands off to a tab of its own.
+    const coarse = useMediaQuery("(pointer: coarse)")
+    const inline = embeddable && !coarse
+
     return (
         <div className="flex h-full flex-col overflow-hidden rounded-xl border border-hair bg-[#0a0c11]">
 
@@ -68,7 +74,7 @@ const BrowserFrame = ({
                     <button
                         onClick={onClose}
                         aria-label="Vorschau schließen"
-                        className="shrink-0 rounded p-1 text-fg-3 transition-colors duration-200 hover:bg-white/[0.06] hover:text-fg"
+                        className="-my-2 -mr-2.5 flex h-11 w-11 shrink-0 items-center justify-center text-fg-3 transition-colors duration-200 hover:text-fg"
                     >
                         <X className="h-3.5 w-3.5"/>
                     </button>
@@ -78,7 +84,7 @@ const BrowserFrame = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="In neuem Tab öffnen"
-                        className="shrink-0 rounded p-1 text-fg-3 transition-colors duration-200 hover:bg-white/[0.06] hover:text-fg"
+                        className="-my-2 -mr-2.5 flex h-11 w-11 shrink-0 items-center justify-center text-fg-3 transition-colors duration-200 hover:text-fg"
                     >
                         <ArrowUpRight className="h-3.5 w-3.5"/>
                     </a>
@@ -116,7 +122,7 @@ const BrowserFrame = ({
                             </div>
                         )}
 
-                        {url && embeddable && (
+                        {url && inline && (
                             <button
                                 onClick={onActivate}
                                 className="group absolute inset-0 flex flex-col items-center justify-center"
@@ -127,7 +133,7 @@ const BrowserFrame = ({
                             </button>
                         )}
 
-                        {url && !embeddable && (
+                        {url && !inline && (
                             <a
                                 href={url}
                                 target="_blank"

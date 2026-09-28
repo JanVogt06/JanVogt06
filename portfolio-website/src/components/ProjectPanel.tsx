@@ -38,28 +38,30 @@ const ProjectPanel = ({
         <div className="relative flex h-full w-full flex-col justify-center gap-8 lg:grid lg:grid-cols-12 lg:items-center lg:gap-12">
 
             <div className="relative lg:col-span-5">
-                <p className="flex items-center gap-3 text-data tabular-nums text-fg-3">
-                    <span className="text-fg">{String(index + 1).padStart(2, "0")}</span>
-                    <span aria-hidden="true" className="h-px w-6 bg-hair"/>
-                    <span>/{String(total).padStart(2, "0")}</span>
+                <p className="flex items-baseline gap-3 font-mono text-label uppercase tracking-[0.08em] text-fg-3">
+                    <span className="tabular-nums text-fg">
+                        {String(index + 1).padStart(2, "0")}
+                        <span className="text-fg-3"> / {String(total).padStart(2, "0")}</span>
+                    </span>
+                    <span className="truncate">{project.subtitle}</span>
                 </p>
 
-                <h3 className="mt-4 text-title text-fg">{project.title}</h3>
-                <p className="mt-1 text-sub text-fg-2">{project.subtitle}</p>
+                <h3 className="mt-4 text-heading text-fg">{project.title}</h3>
 
                 <p className="mt-5 max-w-[52ch] text-body text-fg-2">
                     {project.description}
                 </p>
 
-                <p className="mt-5 text-data text-fg-3">{project.tech.join(" · ")}</p>
+                <p className="mt-5 font-mono text-data text-fg-3">{project.tech.join(" · ")}</p>
 
-                <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-3">
+                <div className="mt-7 flex flex-wrap items-center gap-3">
                     {primary && (
                         <ActionLink
                             href={primary.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            icon={<ArrowUpRight className="h-3 w-3"/>}
+                            tone="primary"
+                            icon={<ArrowUpRight className="h-3.5 w-3.5"/>}
                         >
                             {primary.label}
                         </ActionLink>
@@ -69,7 +71,8 @@ const ProjectPanel = ({
                             href={project.links.github}
                             target="_blank"
                             rel="noopener noreferrer"
-                            icon={<ArrowUpRight className="h-3 w-3"/>}
+                            tone="secondary"
+                            icon={<ArrowUpRight className="h-3.5 w-3.5"/>}
                         >
                             Code
                         </ActionLink>
