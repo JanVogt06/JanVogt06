@@ -362,6 +362,8 @@ export class SpaceScene {
     private readonly heroAim = new THREE.Vector3()
     private lastPage = 0
     private velocity = 0
+    private frameWidth = 0
+    private frameHeightPx = 0
     private lastTime = 0
     private dt = 1 / 60
     private readonly response =
@@ -723,6 +725,12 @@ export class SpaceScene {
     setArrivalProgress(progress: number) {
         this.arrivalTarget = progress
         this.sync()
+    }
+
+    /** Height of the frame the scene draws into, which is what fractions
+     *  of the screen handed to it are measured against. */
+    frameHeight() {
+        return this.container.clientHeight || window.innerHeight
     }
 
     setPaused(paused: boolean) {
@@ -1292,6 +1300,14 @@ export class SpaceScene {
         const width = this.container.clientWidth
         const height = this.container.clientHeight
         if (width === 0 || height === 0) return
+        // The window and the observer both report every resize, and a
+        // reallocated render target is a visible hitch; skip the repeat.
+        if (width === this.frameWidth && height === this.frameHeightPx) {
+            this.canvasRect = this.renderer.domElement.getBoundingClientRect()
+            return
+        }
+        this.frameWidth = width
+        this.frameHeightPx = height
         this.renderer.setSize(width, height)
         this.renderer.setPixelRatio(this.pixelRatio())
         this.post.setSize(width, height, this.renderer.getPixelRatio())

@@ -21,6 +21,7 @@ export const subscribeAnchor = (listener: (anchor: Anchor) => void) => {
 
 export const space = {
     hasScene: () => current !== null,
+    frameHeight: () => current?.frameHeight() ?? window.innerHeight,
     setFieldProgress: (progress: number) => current?.setFieldProgress(progress),
 
     setAboutProgress: (progress: number) => current?.setAboutProgress(progress),

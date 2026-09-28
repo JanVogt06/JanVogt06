@@ -86,7 +86,9 @@ const Atmosphere = ({
     useScrollProgress(pageRef, onProgress)
 
     return (
-        <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        // Sized to the large viewport so a mobile toolbar sliding in or out
+        // never resizes the scene: the frame simply extends behind it.
+        <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-lvh overflow-hidden">
 
             <div className="absolute inset-0 bg-page"/>
 
