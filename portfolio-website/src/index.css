@@ -65,9 +65,6 @@
 
     --color-status: #7fd7c4;
 
-    --text-name: clamp(1.75rem, 4.4vw, 2.75rem);
-    --text-name--line-height: 1;
-
     --text-display: clamp(3rem, 1.5rem + 7vw, 6.5rem);
     --text-display--line-height: 0.88;
     --text-display--letter-spacing: -0.04em;

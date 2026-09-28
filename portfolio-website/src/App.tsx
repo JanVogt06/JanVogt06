@@ -80,7 +80,7 @@ function App() {
             {scene && <Tether/>}
 
             <TopBar ready={ready}/>
-            <Hero ready={ready}/>
+            <Hero ready={ready} scene={scene}/>
             <About scene={scene} station={station} onStation={setStation}/>
             <Passage scene={scene}/>
             <Projects crystals={scene} selected={selected} onSelect={setSelected}/>

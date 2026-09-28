@@ -5,119 +5,119 @@ import {EASE} from "@/lib/motion"
 import Band from "./band/Band"
 import type {BandHandle} from "./band/Band"
 import Action from "./band/Action"
+import Scramble from "./type/Scramble"
+import Rise from "./type/Rise"
 import useScrollProgress from "@/lib/useScrollProgress"
-import {scrollToElement} from "@/lib/smoothScroll"
+import {scrollToChapter} from "@/lib/smoothScroll"
+import {space} from "@/lib/space/controller"
+import {bump, clamp01} from "@/lib/band"
+import Interlude from "./Interlude"
+import type {InterludeHandle} from "./Interlude"
+import Stops, {ChapterCue} from "./Stops"
 
-const clamp01 = (value: number) => Math.min(Math.max(value, 0), 1)
-
-const EXIT_RATE = 1.6
+// The hero lets go almost at once so the first chapter title can take the
+// frame while the camera dollies in towards the first planet.
+const EXIT_DELAY = 0.08
+const EXIT_RATE = 2.6
 const EXIT_DRIFT_VH = 6
 
-const step = (duration: number, delay: number) => ({
-    duration: duration / 1000,
-    delay: delay / 1000,
-    ease: EASE,
-})
+const TITLE: [number, number, number, number] = [0.24, 0.36, 0.76, 0.88]
 
-const Hero = ({ready}: {ready: boolean}) => {
+const Hero = ({ready, scene}: {ready: boolean; scene: boolean}) => {
     const sectionRef = useRef<HTMLElement>(null)
     const bandRef = useRef<BandHandle>(null)
-    const cueRef = useRef<HTMLButtonElement>(null)
+    const cueRef = useRef<HTMLDivElement>(null)
+    const titleRef = useRef<InterludeHandle>(null)
 
     const onProgress = useCallback((raw: number) => {
         const p = clamp01(raw)
-        const weight = Math.max(0, 1 - p * EXIT_RATE)
+        const weight = 1 - clamp01((p - EXIT_DELAY) * EXIT_RATE)
 
         bandRef.current?.setWeight(weight, (-p * EXIT_DRIFT_VH * window.innerHeight) / 100)
+        titleRef.current?.setWeight(bump(p, ...TITLE), (0.56 - p) * 0.05 * window.innerHeight)
+        space.setHeroProgress(p)
 
-        if (cueRef.current) cueRef.current.style.opacity = String(weight)
+        if (cueRef.current) cueRef.current.style.opacity = String(Math.max(0, 1 - p * 4))
     }, [])
 
     useScrollProgress(sectionRef, onProgress, "exit")
 
-    const show = ready ? {opacity: 1, y: 0} : {opacity: 0, y: 8}
-
     return (
-        <section ref={sectionRef} id="hero" className="stage-min relative w-full">
-            <Band ref={bandRef} className="lg:flex lg:items-end lg:gap-x-16">
-                <div className="min-w-0 lg:flex-1">
-                <motion.p
-                    className="text-label uppercase tracking-[0.14em] text-fg-3"
-                    initial={{opacity: 0, y: 8}}
-                    animate={show}
-                    transition={step(380, 200)}
-                >
-                    Informatik · Entwicklung · Schiedsrichter
-                </motion.p>
+        <section
+            ref={sectionRef}
+            id="hero"
+            className={
+                scene
+                    ? "stage-min relative w-full"
+                    : "stage-min relative flex w-full flex-col justify-end px-[var(--gutter)] pb-16 pt-24"
+            }
+        >
+            <ChapterCue chapter="hero"/>
+            {scene && (
+                <>
+                    <Stops at={[0, 0.56]} travel={1} entry={0}/>
+                    <ChapterCue chapter="about" at={0.3 + 0.5}/>
+                    <Interlude
+                        ref={titleRef}
+                        index="01"
+                        title="Über mich"
+                        note="Drei Stationen · Mars bis Saturn"
+                    />
+                </>
+            )}
+            <Band
+                ref={bandRef}
+                armed={ready}
+                flow={!scene}
+                className={scene ? "" : "mx-auto w-full max-w-[72rem]"}
+            >
+                <p className="font-mono text-label uppercase tracking-[0.08em] text-fg-3">
+                    <Scramble text="50°55′ N · 11°35′ E — Jena" delay={150}/>
+                </p>
 
-                <motion.h1
-                    className="mt-3 text-name uppercase text-fg"
-                    initial={{opacity: 0, letterSpacing: "0.34em"}}
-                    animate={ready ? {opacity: 1, letterSpacing: "0.22em"} : {opacity: 0}}
-                    transition={step(720, 280)}
-                >
-                    Jan Vogt
-                </motion.h1>
+                <h1 className="mt-4 text-display font-normal text-fg">
+                    <Rise delay={120} duration={1100}>Jan Vogt</Rise>
+                </h1>
 
-                <motion.p
-                    className="mt-5 max-w-[52ch] text-lead text-fg-2"
-                    initial={{opacity: 0, y: 8}}
-                    animate={show}
-                    transition={step(460, 560)}
-                >
-                    Informatik-Student an der FSU Jena,
-                    <span className="font-medium text-fg"> Werkstudent bei ZEISS</span> und
-                    <span className="font-medium text-fg"> Schiedsrichter</span> im NOFV.
-                </motion.p>
+                <div className="mt-6 flex flex-col gap-6 lg:mt-7">
+                    <Rise mode="fade" delay={380} as="div">
+                        <p className="max-w-[40ch] text-lead text-fg-2">
+                            Informatik-Student an der FSU Jena,{" "}
+                            <span className="whitespace-nowrap text-fg">Werkstudent bei ZEISS</span> und{" "}
+                            <span className="text-fg">Schiedsrichter</span> im NOFV.
+                        </p>
+                    </Rise>
 
-                <motion.div
-                    className="mt-7 flex flex-wrap items-center gap-x-8 gap-y-2"
-                    initial={{opacity: 0, y: 8}}
-                    animate={show}
-                    transition={step(420, 700)}
-                >
-                    <Action
-                        onClick={() => scrollToElement("projects")}
-                        icon={<ArrowDown className="h-3 w-3"/>}
-                    >
-                        Projekte ansehen
-                    </Action>
-
-                    <Action
-                        onClick={() => scrollToElement("contact")}
-                        icon={<ArrowDown className="h-3 w-3"/>}
-                    >
-                        Kontakt
-                    </Action>
-                </motion.div>
+                    <Rise mode="fade" delay={520} as="div">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <Action
+                                tone="primary"
+                                onClick={() => scrollToChapter("projects")}
+                                icon={<ArrowDown className="h-3.5 w-3.5"/>}
+                            >
+                                Projekte ansehen
+                            </Action>
+                            <Action tone="secondary" onClick={() => scrollToChapter("contact")}>
+                                Kontakt
+                            </Action>
+                        </div>
+                    </Rise>
                 </div>
-
-                <motion.p
-                    className="mt-7 max-w-[46ch] text-fine text-fg-3 lg:mt-0 lg:w-[19rem] lg:shrink-0"
-                    initial={{opacity: 0}}
-                    animate={{opacity: ready ? 1 : 0}}
-                    transition={step(380, 880)}
-                >
-                    Diese Seite ist mit KI-Unterstützung entstanden. Ich habe hier neue
-                    Modelle getestet. Konzept, Design und jede Entscheidung sind von mir.
-                </motion.p>
             </Band>
 
-            <motion.button
+            <motion.div
                 ref={cueRef}
-                onClick={() => scrollToElement("about")}
-                aria-label="Zum Werdegang scrollen"
-                className="absolute bottom-5 right-[var(--gutter)] z-20 flex h-11 w-11 items-center justify-center"
+                aria-hidden="true"
+                className="pointer-events-none fixed right-[var(--gutter)] top-1/2 z-20 hidden -translate-y-1/2 flex-col items-center gap-3 md:flex"
                 initial={{opacity: 0}}
                 animate={{opacity: ready ? 1 : 0}}
-                transition={step(360, 1100)}
+                transition={{duration: 0.4, delay: 1.1, ease: EASE}}
             >
-                <span className="sr-only">Scroll</span>
-                <span
-                    aria-hidden="true"
-                    className="relative block h-[26px] w-px bg-white/15 after:absolute after:inset-x-0 after:top-0 after:block after:h-[7px] after:bg-fg after:content-[''] after:animate-cue"
-                />
-            </motion.button>
+                <span className="font-mono text-label uppercase tracking-[0.08em] text-fg-3 [writing-mode:vertical-rl]">
+                    Scrollen
+                </span>
+                <span className="relative block h-10 w-px bg-white/15 after:absolute after:inset-x-0 after:top-0 after:block after:h-[9px] after:bg-fg after:content-[''] after:animate-cue"/>
+            </motion.div>
         </section>
     )
 }
