@@ -56,7 +56,9 @@ const Tether = () => {
             const elbow = x0 + Math.sign(dx || 1) * RUN
 
             line.setAttribute("points", `${x0},${y0} ${elbow},${y0} ${landing.x},${landing.y}`)
-            line.style.strokeDashoffset = String(1 - strength)
+            // The camera never quite stops, so a resting stop reports a
+            // little under full strength; the line is fully drawn by then.
+            line.style.strokeDashoffset = String(1 - Math.min(1, strength / 0.9))
             line.style.opacity = String(Math.min(1, strength * 1.6) * 0.6)
             line.style.visibility = "visible"
 
