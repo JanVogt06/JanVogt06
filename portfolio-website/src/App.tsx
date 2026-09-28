@@ -14,7 +14,10 @@ import useMediaQuery from '@/lib/useMediaQuery'
 import {hasWebGL2} from '@/lib/space/support'
 import {projects} from '@/lib/projects'
 
-const BOOT_TIMEOUT_MS = 8000
+// A stalled texture must not hold a phone on a black screen for long; past
+// this the page is more useful half-built than hidden.
+const BOOT_TIMEOUT_MS =
+    typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 5000 : 8000
 
 function App() {
     useSmoothScroll()
@@ -30,8 +33,6 @@ function App() {
 
     const announce = useCallback(() => setReady(true), [])
 
-    // A stalled texture must never leave the page stranded behind the boot
-    // screen: past this point the site is more useful half-built than hidden.
     useEffect(() => {
         if (ready) return
         const timer = window.setTimeout(() => setReady(true), BOOT_TIMEOUT_MS)
@@ -76,7 +77,7 @@ function App() {
                 onProgress={setProgress}
                 onReady={announce}
             />
-            <div aria-hidden="true" className="scrim-band"/>
+            {scene && <div aria-hidden="true" className="scrim-band"/>}
             {scene && <Tether/>}
 
             <TopBar ready={ready} scene={scene}/>
