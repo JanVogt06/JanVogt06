@@ -13,10 +13,33 @@ type Entry = {
 const entries = new Set<Entry>()
 let frame = 0
 
+// Tracks are sized in svh, so travel has to be measured in svh too: against
+// innerHeight, a mobile toolbar sliding away shortens every track's travel
+// and jumps every section's progress by a few percent.
+let probe: HTMLDivElement | null = null
+
+export const smallViewport = () => {
+    if (!probe) {
+        probe = document.createElement("div")
+        probe.setAttribute("aria-hidden", "true")
+        Object.assign(probe.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "0",
+            height: "100svh",
+            visibility: "hidden",
+            pointerEvents: "none",
+        })
+        document.body.appendChild(probe)
+    }
+    return probe.offsetHeight || window.innerHeight
+}
+
 const flush = () => {
     frame = 0
 
-    const viewport = window.innerHeight
+    const viewport = smallViewport()
     const measured: Array<{entry: Entry; progress: number}> = []
     entries.forEach((entry) => {
         const travel = entry.mode === "exit" ? entry.el.offsetHeight : entry.el.offsetHeight - viewport
