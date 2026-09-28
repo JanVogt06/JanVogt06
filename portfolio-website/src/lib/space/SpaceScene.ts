@@ -50,6 +50,20 @@ const NEAR_RADIUS = 150
 
 const CAMERA_FAR = 1600
 
+const CAMERA_FOV = 46
+
+// Travel should feel like travel: the lens widens a touch with scroll speed
+// and settles back once the page is still. Gain maps a hard flick, in page
+// progress per second, to 1.
+const FOV_BREATHE = 2.5
+const VELOCITY_GAIN = 2.7
+
+// Every smoothing rate is written as the share closed per frame at 60 Hz and
+// scaled to the real frame time, so a 120 Hz phone does not run twice as
+// fast. Touch scrolling has no smoothing of its own, so the scene answers it
+// a little quicker and stays with the text.
+const TOUCH_RESPONSE = 1.5
+
 const NEAR_CENTER_Z = -33
 
 export const WAYPOINT_COUNT = 3
@@ -346,6 +360,12 @@ export class SpaceScene {
     private readonly arrivalBias: number
     private readonly journeyAim = new THREE.Vector3()
     private readonly heroAim = new THREE.Vector3()
+    private lastPage = 0
+    private velocity = 0
+    private lastTime = 0
+    private dt = 1 / 60
+    private readonly response =
+        window.matchMedia("(pointer: coarse)").matches ? TOUCH_RESPONSE : 1
     private aboutScrollTarget = 0
     private aboutScroll = 0
     private fieldScrollTarget = 0
@@ -410,7 +430,7 @@ export class SpaceScene {
         })
         this.bgScene.add(new THREE.Mesh(this.bgGeometry, this.bgMaterial))
 
-        this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, CAMERA_FAR)
+        this.camera = new THREE.PerspectiveCamera(CAMERA_FOV, width / height, 0.1, CAMERA_FAR)
         this.heroReach = Math.max(HERO_FIT / this.camera.aspect, HERO_MIN_DISTANCE)
         this.tiltGroup.rotation.x = RING_TILT
         this.tiltGroup.position.z = RING_Z
@@ -771,7 +791,9 @@ export class SpaceScene {
             this.narrowness(),
         )
         const eyeY = front.y + CAMERA_RISE * (1 - distance / LOOK_AHEAD)
-        const halfView = distance * Math.tan((this.camera.fov * Math.PI) / 360)
+        // Laid out for the lens at rest, not whatever the scroll speed has
+        // widened it to at the moment of placing.
+        const halfView = distance * Math.tan((CAMERA_FOV * Math.PI) / 360)
 
         for (let i = 0; i < this.waypoints.length; i++) {
             const offsetX = (hash(i * 3.1) - 0.5) * WAYPOINT_SCATTER
@@ -842,6 +864,10 @@ export class SpaceScene {
         if (shouldRun === this.running) return
         this.running = shouldRun
         if (shouldRun) {
+            // A resumed loop starts from now: the pause is not a frame to
+            // integrate, nor a scroll to measure the speed of.
+            this.lastTime = this.clock.getElapsedTime()
+            this.lastPage = this.pageProgress
             this.frames = 0
             this.warmup = WARMUP_FRAMES
             this.frame = requestAnimationFrame(this.loop)
@@ -919,8 +945,14 @@ export class SpaceScene {
         )
     }
 
+    private ease(rate: number) {
+        return 1 - Math.pow(1 - rate, this.dt * 60 * this.response)
+    }
+
     private update() {
         const time = this.clock.getElapsedTime()
+        this.dt = Math.min(Math.max(time - this.lastTime, 0), 0.1) || 1 / 60
+        this.lastTime = time
         const count = this.crystals.length
 
         this.bgMaterial.uniforms.uTime.value = time
@@ -930,26 +962,35 @@ export class SpaceScene {
             clamp01(this.pageProgress),
         )
 
-        this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, 0.1)
-        this.enter = lerp(this.enter, this.approachTarget, 0.09)
-        this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, 0.1)
-        this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, 0.09)
-        this.passageProgress = lerp(this.passageProgress, this.passageTarget, 0.1)
-        this.arrival = lerp(this.arrival, this.arrivalTarget, 0.055)
-        this.heroProgress = lerp(this.heroProgress, this.heroTarget, 0.1)
+        this.fieldProgress = lerp(this.fieldProgress, this.fieldTarget, this.ease(0.1))
+        this.enter = lerp(this.enter, this.approachTarget, this.ease(0.09))
+        this.aboutProgress = lerp(this.aboutProgress, this.aboutTarget, this.ease(0.1))
+        this.aboutActive = lerp(this.aboutActive, this.aboutActiveTarget, this.ease(0.09))
+        this.passageProgress = lerp(this.passageProgress, this.passageTarget, this.ease(0.1))
+        this.arrival = lerp(this.arrival, this.arrivalTarget, this.ease(0.055))
+        this.heroProgress = lerp(this.heroProgress, this.heroTarget, this.ease(0.1))
         // Smoothed, so a mobile toolbar collapse never jumps the dolly.
         this.heroReach = lerp(
             this.heroReach,
             Math.max(HERO_FIT / this.camera.aspect, HERO_MIN_DISTANCE),
-            0.06,
+            this.ease(0.06),
         )
-        this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, 0.12)
-        this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, 0.12)
-        this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, 0.09)
 
-        this.rail = lerp(this.rail, this.railTarget, 0.12)
+        const speed = Math.abs(this.pageProgress - this.lastPage) / this.dt
+        this.lastPage = this.pageProgress
+        this.velocity = lerp(this.velocity, Math.min(speed * VELOCITY_GAIN, 1), this.ease(0.06))
+        const fov = CAMERA_FOV + FOV_BREATHE * smooth(this.velocity)
+        if (Math.abs(fov - this.camera.fov) > 0.005) {
+            this.camera.fov = fov
+            this.camera.updateProjectionMatrix()
+        }
+        this.aboutScroll = lerp(this.aboutScroll, this.aboutScrollTarget, this.ease(0.12))
+        this.fieldScroll = lerp(this.fieldScroll, this.fieldScrollTarget, this.ease(0.12))
+        this.selectBlend = lerp(this.selectBlend, this.selected === null ? 0 : 1, this.ease(0.09))
 
-        const railTop = lerp(this.railTop, this.railTopTarget, 0.08)
+        this.rail = lerp(this.rail, this.railTarget, this.ease(0.12))
+
+        const railTop = lerp(this.railTop, this.railTopTarget, this.ease(0.08))
         if (Math.abs(railTop - this.railTop) > 0.0004) {
             this.railTop = railTop
             this.placeWaypoints()
@@ -1061,9 +1102,9 @@ export class SpaceScene {
             gem.uTime.value = time
             gem.uCoreDir.value.copy(this.coreView)
             gem.uPoleDir.value.copy(this.poleView)
-            gem.uHighlight.value = lerp(gem.uHighlight.value, lit, 0.12)
-            gem.uFade.value = lerp(gem.uFade.value, (isNearest ? 1 : 0.45) * reveal, 0.08)
-            gem.uGain.value = lerp(gem.uGain.value, isNearest ? 2 + lit * 0.8 : 1.15, 0.1)
+            gem.uHighlight.value = lerp(gem.uHighlight.value, lit, this.ease(0.12))
+            gem.uFade.value = lerp(gem.uFade.value, (isNearest ? 1 : 0.45) * reveal, this.ease(0.08))
+            gem.uGain.value = lerp(gem.uGain.value, isNearest ? 2 + lit * 0.8 : 1.15, this.ease(0.1))
             mesh.visible = gem.uFade.value > 0.01
 
             const grow =
@@ -1075,7 +1116,7 @@ export class SpaceScene {
         this.skyStars.points.position.copy(this.camera.position)
         this.milkyWay.object.position.copy(this.camera.position)
         if (this.milkyWayMapLoaded && this.milkyWayMapMix < 1) {
-            this.milkyWayMapMix = Math.min(1, this.milkyWayMapMix + MILKYWAY_MAP_FADE)
+            this.milkyWayMapMix = Math.min(1, this.milkyWayMapMix + MILKYWAY_MAP_FADE * this.dt * 60)
             this.milkyWay.setMapMix(this.milkyWayMapMix)
         }
         this.skyStars.setTime(time)
@@ -1107,7 +1148,7 @@ export class SpaceScene {
             const fade = lerp(
                 material.uniforms.uFade.value,
                 own * this.aboutActive * waypointsLive * (1 - this.enter),
-                0.08,
+                this.ease(0.08),
             )
             material.uniforms.uFade.value = fade
         }
