@@ -84,7 +84,7 @@ function App() {
             <About scene={scene} station={station} onStation={setStation}/>
             <Passage scene={scene}/>
             <Projects crystals={scene} selected={selected} onSelect={setSelected}/>
-            <Contact/>
+            <Contact scene={scene}/>
             <Boot progress={progress} ready={ready}/>
         </MotionConfig>
     )
