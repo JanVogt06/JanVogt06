@@ -107,8 +107,10 @@
         border-color: rgb(255 255 255 / 0.08);
     }
 
+    /* The gutter clears a landscape notch or island on its own, since the
+       page draws edge to edge with viewport-fit=cover. */
     :root {
-        --gutter: 20px;
+        --gutter: max(20px, env(safe-area-inset-left), env(safe-area-inset-right));
 
         /* Measured by whichever band currently owns the frame. */
         --band-h: 0px;
@@ -116,13 +118,13 @@
 
     @media (min-width: 40rem) {
         :root {
-            --gutter: 32px;
+            --gutter: max(32px, env(safe-area-inset-left), env(safe-area-inset-right));
         }
     }
 
     @media (min-width: 64rem) {
         :root {
-            --gutter: 56px;
+            --gutter: max(56px, env(safe-area-inset-left), env(safe-area-inset-right));
         }
     }
 
@@ -134,6 +136,10 @@
 
     html {
         scroll-padding-top: 4rem;
+
+        /* Locking the page for a dialog must not change its width where
+           scrollbars take up room, or the scene would resize behind it. */
+        scrollbar-gutter: stable;
 
         overflow-x: clip;
 
@@ -218,7 +224,7 @@
         top: 0;
         z-index: 15;
         pointer-events: none;
-        height: 12vh;
+        height: max(12vh, 88px);
         background: linear-gradient(to bottom,
             rgb(5 7 10 / 0.72) 0%,
             rgb(5 7 10 / 0.30) 46%,
