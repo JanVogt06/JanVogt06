@@ -154,16 +154,22 @@ export const useSmoothScroll = () => {
         let target = window.scrollY
         let current = target
         let frame = 0
+        let last = 0
 
-        const tick = () => {
+        // LERP is the share closed per frame at 60 Hz, scaled to the real
+        // frame time so the glide feels the same on any display.
+        const tick = (now: number) => {
+            const dt = last ? Math.min((now - last) / 1000, 0.1) : 1 / 60
+            last = now
             const distance = target - current
             if (Math.abs(distance) < EPSILON) {
                 current = target
                 window.scrollTo(0, current)
                 frame = 0
+                last = 0
                 return
             }
-            current += distance * LERP
+            current += distance * (1 - Math.pow(1 - LERP, dt * 60))
             window.scrollTo(0, current)
             frame = requestAnimationFrame(tick)
         }
@@ -174,6 +180,9 @@ export const useSmoothScroll = () => {
 
         const onWheel = (event: WheelEvent) => {
             if (event.ctrlKey) return
+            // A locked page (boot screen, open dialog) must not move under
+            // the wheel: overflow:hidden does not stop a scripted scroll.
+            if (document.documentElement.style.overflow === "hidden") return
             if (ownsWheel(event.target, event.deltaY)) return
             event.preventDefault()
             target = clamp(target + deltaToPixels(event))
@@ -199,6 +208,7 @@ export const useSmoothScroll = () => {
             jump: (top) => {
                 if (frame) cancelAnimationFrame(frame)
                 frame = 0
+                last = 0
                 current = target = clamp(top)
                 window.scrollTo(0, current)
             },
