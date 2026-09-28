@@ -1,18 +1,22 @@
-import {useCallback, useEffect, useRef} from "react"
+import {useCallback, useId, useRef} from "react"
 import type {CSSProperties} from "react"
 import {ImageIcon, X} from "lucide-react"
 import Band from "./band/Band"
 import type {BandHandle} from "./band/Band"
 import Action from "./band/Action"
 import Slate from "./band/Slate"
+import Scramble from "./type/Scramble"
+import Rise from "./type/Rise"
 import {Row, Rows} from "./band/Rows"
 import station01Image from "../data/images/station_01_mein_weg.webp"
 import station02Image from "../data/images/station_02_neben_dem_studium.webp"
 import station03Image from "../data/images/station_03_meine_auszeichnungen.webp"
 import useScrollProgress from "@/lib/useScrollProgress"
 import {space} from "@/lib/space/controller"
-import {stationPosition, trackScreens} from "@/lib/stations"
+import {stationPosition, stationProgress, trackScreens, trackTravel} from "@/lib/stations"
+import Stops, {ChapterCue} from "./Stops"
 import {bandWeight} from "@/lib/band"
+import useDialog from "@/lib/useDialog"
 
 const timeline = [
     {when: "seit 02/2026", what: "Werkstudent Softwareentwicklung", where: "Carl Zeiss Meditec AG"},
@@ -46,7 +50,11 @@ type Chapter = {
     alt: string
     entries: Entry[]
 
-    /** Lists with no second line pair up once there is room for two columns. */
+    /** The planet the camera holds on, and its mean distance from the Sun. */
+    planet: string
+    distance: string
+
+    /** One-line lists, which sit closer together and pair up in two columns. */
     paired?: boolean
 }
 
@@ -59,6 +67,8 @@ const chapters: Chapter[] = [
         image: station01Image,
         alt: "Jan Vogt beim Skifahren",
         entries: timeline,
+        planet: "Mars",
+        distance: "1,52 AE",
     },
     {
         id: "engagement",
@@ -68,6 +78,8 @@ const chapters: Chapter[] = [
         image: station02Image,
         alt: "Jan Vogt als Schiedsrichter",
         entries: engagement,
+        planet: "Jupiter",
+        distance: "5,20 AE",
     },
     {
         id: "auszeichnungen",
@@ -75,38 +87,34 @@ const chapters: Chapter[] = [
         title: "Meine",
         accent: "Auszeichnungen",
         image: station03Image,
-        alt: "Jan Vogt",
+        alt: "Jan Vogt mit Urkunden auf der Bühne einer Preisverleihung",
         entries: awards,
+        planet: "Saturn",
+        distance: "9,58 AE",
         paired: true,
     },
 ]
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1)
 
-const APPROACH = 0.14
+const APPROACH = 0.08
+
+const STOPS = chapters.map((_, i) => stationProgress(i, chapters.length))
 
 const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}) => {
+    const rootRef = useRef<HTMLDivElement>(null)
     const closeRef = useRef<HTMLButtonElement>(null)
+    const titleId = useId()
 
-    useEffect(() => {
-        closeRef.current?.focus()
-    }, [])
-
-    useEffect(() => {
-        const onKey = (event: KeyboardEvent) => {
-            if (event.key === "Escape") onClose()
-        }
-        window.addEventListener("keydown", onKey)
-        return () => window.removeEventListener("keydown", onKey)
-    }, [onClose])
+    useDialog(rootRef, onClose, closeRef)
 
     return (
         <div
-            data-native-scroll
+            ref={rootRef}
             role="dialog"
             aria-modal="true"
-            aria-label={chapter.alt}
-            className="animate-hud fixed inset-0 z-40 overflow-hidden bg-page/92 backdrop-blur-[14px]"
+            aria-labelledby={titleId}
+            className="animate-hud fixed inset-0 z-[60] overflow-hidden bg-page"
         >
             <button
                 aria-hidden="true"
@@ -115,39 +123,34 @@ const StationView = ({chapter, onClose}: {chapter: Chapter; onClose: () => void}
                 className="absolute inset-0 cursor-default"
             />
 
-            <div className="relative mx-auto flex h-full w-full max-w-[64rem] flex-col px-[var(--gutter)] pb-5 pt-16">
-                <div className="flex shrink-0 items-center justify-between gap-6 border-b border-hair pb-4">
-                    <div className="min-w-0">
-                        <p className="text-label uppercase tracking-[0.14em] text-fg-3">
-                            {chapter.label}
-                        </p>
-                        <h2 className="mt-2 truncate text-title text-fg">
-                            {chapter.title} {chapter.accent}
-                        </h2>
-                    </div>
+            <div className="pointer-events-none relative mx-auto flex h-full w-full max-w-[64rem] flex-col px-[var(--gutter)] pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] pt-[env(safe-area-inset-top)]">
+                <div className="pointer-events-auto flex h-14 shrink-0 items-center justify-between gap-6">
+                    <p className="min-w-0 truncate font-mono text-label uppercase tracking-[0.08em] text-fg-3">
+                        {chapter.label} · {chapter.planet}
+                    </p>
 
-                    <div className="flex shrink-0 items-center gap-4">
-                        <kbd className="hidden text-label uppercase tracking-[0.14em] text-fg-3 sm:inline">
-                            Esc
-                        </kbd>
-                        <button
-                            ref={closeRef}
-                            onClick={onClose}
-                            aria-label="Aufnahme schließen"
-                            className="flex h-11 w-11 items-center justify-center rounded-full text-fg-2 transition-colors duration-200 hover:bg-white/[0.08] hover:text-fg"
-                        >
-                            <X className="h-4 w-4"/>
-                        </button>
-                    </div>
+                    <button
+                        ref={closeRef}
+                        onClick={onClose}
+                        aria-label="Foto schließen"
+                        className="-mr-3 flex h-11 shrink-0 items-center gap-2.5 px-3 font-mono text-label uppercase tracking-[0.08em] text-fg transition-colors duration-200 hover:text-signal"
+                    >
+                        <span className="hidden sm:inline">Esc</span>
+                        <X className="h-4 w-4"/>
+                    </button>
                 </div>
 
-                <div className="mt-5 min-h-0 flex-1">
+                <figure className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
                     <img
                         src={chapter.image}
                         alt={chapter.alt}
-                        className="h-full w-full rounded-xl object-contain object-center"
+                        className="pointer-events-auto min-h-0 max-w-full flex-initial rounded-xl object-contain"
                     />
-                </div>
+                    <figcaption id={titleId} className="shrink-0 text-center">
+                        <span className="font-light text-fg-3">{chapter.title}</span>{" "}
+                        <span className="text-fg">{chapter.accent}</span>
+                    </figcaption>
+                </figure>
             </div>
         </div>
     )
@@ -162,33 +165,44 @@ const ChapterBody = ({
 }) => (
     <>
         <Slate>
-            <p className="shrink-0 text-label uppercase tracking-[0.14em] text-fg-3">
-                {chapter.label} <span className="text-fg-3/70">/ 0{chapters.length}</span>
-            </p>
+            <span className="flex shrink-0 items-baseline gap-3">
+                <Scramble text={`${chapter.label} / 0${chapters.length}`}/>
+                <Scramble
+                    text={`${chapter.planet} · ${chapter.distance}`}
+                    delay={120}
+                    className="text-fg-2"
+                />
+            </span>
         </Slate>
 
-        <h2 className="mt-3 text-title">
-            <span className="font-light text-fg-2">{chapter.title}</span>{" "}
-            <span className="text-fg">{chapter.accent}</span>
+        <h2 className="mt-4 text-heading short:mt-3 squat:mt-2">
+            <Rise delay={80}>
+                <span className="font-light text-fg-3">{chapter.title}</span>{" "}
+                <span className="text-fg">{chapter.accent}</span>
+            </Rise>
         </h2>
 
-        <div className={chapter.paired ? "sm:grid sm:grid-cols-2 sm:gap-x-8" : undefined}>
-            <Rows>
-                {chapter.entries.map((entry) => (
-                    <Row key={entry.what} {...entry} />
+        <div data-dense={chapter.paired ? "" : undefined}>
+            <Rows dense={chapter.paired}>
+                {chapter.entries.map((entry, i) => (
+                    <Row key={entry.what} order={i} {...entry} />
                 ))}
             </Rows>
         </div>
 
         {onOpenImage && (
-            <div className="mt-7 short:mt-5">
-                <Action onClick={onOpenImage} icon={<ImageIcon className="h-3 w-3"/>}>
-                    Aufnahme
-                </Action>
-                <span className="ml-3 hidden text-sub text-fg-3 sm:inline">
-                    oder Planet anklicken
-                </span>
-            </div>
+            <Rise mode="fade" delay={420} as="div" className="mt-6 short:mt-4 squat:mt-2">
+                <div className="flex items-center gap-4">
+                    <Action onClick={onOpenImage} icon={<ImageIcon className="h-3 w-3"/>}>
+                        Foto ansehen
+                    </Action>
+                    <span className="hidden text-sub text-fg-3 sm:inline">
+                        oder Planet{" "}
+                        <span className="pointer-coarse:hidden">anklicken</span>
+                        <span className="hidden pointer-coarse:inline">antippen</span>
+                    </span>
+                </div>
+            </Rise>
         )}
     </>
 )
@@ -231,9 +245,11 @@ const AboutJourney = ({
         <>
             <div
                 ref={sectionRef}
-                className="track"
+                className="track relative"
                 style={{"--screens": trackScreens(chapters.length)} as CSSProperties}
-            />
+            >
+                <Stops at={STOPS} travel={trackTravel(chapters.length)} entry={0}/>
+            </div>
 
             {chapters.map((chapter, i) => (
                 <Band
@@ -254,14 +270,17 @@ const AboutJourney = ({
 }
 
 const AboutStack = () => (
-    <div className="mx-auto max-w-[72rem] space-y-20 px-[var(--gutter)] py-20 md:py-28">
+    <div className="mx-auto max-w-[72rem] space-y-24 px-[var(--gutter)] py-24 md:space-y-32 md:py-32">
         {chapters.map((chapter) => (
-            <Band key={chapter.id} flow>
-                <ChapterBody chapter={chapter}/>
+            <Band key={chapter.id} flow className="md:grid md:grid-cols-12 md:items-center md:gap-12">
+                <div className="md:col-span-6">
+                    <ChapterBody chapter={chapter}/>
+                </div>
                 <img
                     src={chapter.image}
                     alt={chapter.alt}
-                    className="mt-10 max-h-[50vh] w-full rounded-xl object-contain object-center"
+                    loading="lazy"
+                    className="mt-10 max-h-[60vh] w-full rounded-xl object-cover object-center md:col-span-6 md:mt-0"
                 />
             </Band>
         ))}
@@ -279,6 +298,7 @@ const About = ({
     onStation: (index: number | null) => void
 }) => (
     <section id="about" className="relative">
+        {!scene && <ChapterCue chapter="about"/>}
         {scene ? <AboutJourney station={station} onStation={onStation}/> : <AboutStack/>}
     </section>
 )
