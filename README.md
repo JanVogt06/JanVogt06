@@ -47,19 +47,20 @@ Finite-Volumen-Solver zur Simulation von Tsunami-Wellenausbreitung auf Basis der
 
 Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen. Das System scrapt Spielansetzungen aus DFBnet und generiert Word-Dokumente für die Spesenabrechnung – vollautomatisch und mehrbenutzerfähig.
 
-### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak-SatelliteVisualization)
-**Technologien:** Unity, C#, Cesium
+### 🛰️ [SatTrak – 3D Satellitenvisualisierung](https://github.com/JanVogt06/SatTrak_Satellite-Visualization)
+**Technologien:** Unity, C#, Cesium · **Live:** [sattrek.jan-vogt.dev](https://sattrek.jan-vogt.dev)
 
-Echtzeit-Visualisierung von über 12.000 Satelliten auf einem 3D-Globus mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische sowie zukünftige Positionen.
+Echtzeit-Visualisierung von über 12.000 Satelliten auf einem 3D-Globus mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische sowie zukünftige Positionen. Läuft als Unity-WebGL-Build direkt im Browser.
 
 ### ⚡ [SolarFlow – Intelligentes Energie-Management](https://github.com/JanVogt06/SolarFlow-SmartEnergyManagement)
 **Technologien:** Python, SQLite, FastAPI, Fronius API
 
 Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius Wechselrichtern. Maximiert den Eigenverbrauch durch intelligente, prioritätsbasierte Steuerung von Verbrauchern bei Solarüberschuss.
 
-### 📦 Weitere Tools
+### 📦 Weitere Projekte
 - **[PicHunter](https://github.com/JanVogt06/PicHunter)** – Automatisierter Bild-Download mit Duplikaterkennung
-- Weitere Projekte in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
+- **[Cryptborne](https://github.com/JY-Studios/cryptborne)** – 3D-Dungeon-Crawler in Unity mit prozedural generierten Leveln
+- Alles Weitere in meinen [Repositories](https://github.com/JanVogt06?tab=repositories)
 
 ## 📚 Weitere Engagements
 - ⚽ Schiedsrichter – Oberliga NOFV & U19-Bundesliga, Assistent in der Regionalliga
