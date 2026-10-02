@@ -202,12 +202,12 @@
     .seascape {
         background:
             linear-gradient(to bottom,
-                #5f6874 0%,
-                #8d959f 34%,
-                #b9bfc6 49.6%,
-                #6d747d 50%,
-                #2c333b 64%,
-                #12171d 100%);
+                #4b5a73 0%,
+                #b9897a 30%,
+                #f0a868 49.6%,
+                #8a5a46 50%,
+                #2a2a30 66%,
+                #0d0f12 100%);
         background-attachment: fixed;
     }
 }

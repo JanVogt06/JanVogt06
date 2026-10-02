@@ -62,8 +62,10 @@ const Credits = ({onClose}: {onClose: () => void}) => {
                         getestet. Konzept, Design und jede Entscheidung sind von mir.
                     </p>
                     <p>
-                        Meer, Himmel und Licht werden live im Browser berechnet: Die Wellen folgen
-                        der Dispersionsrelation für tiefes Wasser, der Ton ist gefiltertes Rauschen.
+                        Meer, Himmel und Licht werden live im Browser berechnet: Der Himmel aus der
+                        Streuung des Lichts in der Atmosphäre, die Wellen aus einem Ozeanspektrum,
+                        jede mit der Geschwindigkeit, die ihr tiefes Wasser gibt. Der Ton ist
+                        gefiltertes Rauschen.
                     </p>
                     <p>Schrift: Geist und Geist Mono von Vercel (SIL Open Font License).</p>
                 </div>

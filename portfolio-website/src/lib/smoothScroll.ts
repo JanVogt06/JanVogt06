@@ -33,7 +33,7 @@ export const scrollToY = (top: number) => {
 }
 
 // Past this many screens a smooth scroll would strobe every shot on the way,
-// so the page blinks to fog, jumps, and lets the camera settle into view.
+// so the page blinks to dark, jumps, and lets the camera settle into view.
 const WARP_SCREENS = 2.5
 const VEIL_IN_MS = 200
 const VEIL_OUT_MS = 480
@@ -63,7 +63,7 @@ export const warpToY = (top: number) => {
             inset: "0",
             zIndex: "90",
             pointerEvents: "none",
-            background: "#9aa1aa",
+            background: "#0d0f12",
             opacity: "0",
         })
         document.body.appendChild(veil)

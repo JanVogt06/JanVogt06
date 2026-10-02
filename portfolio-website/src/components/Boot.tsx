@@ -16,8 +16,8 @@ const Meter = ({fraction, tick}: {fraction: number; tick: number}) => {
     return <>{cells}</>
 }
 
-/** Fog, in the colour the first frame opens on, so the scene seems to come
- *  out of it rather than to replace a loading screen. */
+/** The dark before first light: the page opens on a sunrise, so it seems
+ *  to come up out of the night rather than to replace a loading screen. */
 const Boot = ({progress, ready}: {progress: number; ready: boolean}) => {
     const [gone, setGone] = useState(false)
     const [tick, setTick] = useState(0)
@@ -44,7 +44,7 @@ const Boot = ({progress, ready}: {progress: number; ready: boolean}) => {
             role="status"
             aria-live="polite"
             aria-label={ready ? "Seite geladen" : `Seite lädt, ${percent} Prozent`}
-            className="fixed inset-0 z-100 flex items-center justify-center bg-[#9aa1aa] transition-opacity ease-[cubic-bezier(0.65,0,0.35,1)]"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-[#0d0f12] transition-opacity ease-[cubic-bezier(0.65,0,0.35,1)]"
             style={{opacity: ready ? 0 : 1, transitionDuration: `${FADE_MS}ms`, pointerEvents: ready ? "none" : "auto"}}
         >
             <p aria-hidden="true" className="font-mono text-[0.8125rem] tracking-[0.3em] text-white">
