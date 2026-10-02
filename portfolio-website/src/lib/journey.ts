@@ -1,4 +1,24 @@
-import {smallViewport} from "./useScrollProgress"
+// Stops are placed in svh, so scrolling has to be measured in svh too:
+// against innerHeight, a mobile toolbar sliding away would shift every shot.
+let probe: HTMLDivElement | null = null
+
+const smallViewport = () => {
+    if (!probe) {
+        probe = document.createElement("div")
+        probe.setAttribute("aria-hidden", "true")
+        Object.assign(probe.style, {
+            position: "fixed",
+            top: "0",
+            left: "0",
+            width: "0",
+            height: "100svh",
+            visibility: "hidden",
+            pointerEvents: "none",
+        })
+        document.body.appendChild(probe)
+    }
+    return probe.offsetHeight || window.innerHeight
+}
 
 /**
  * The page is one camera move along a row of panels standing in the sea.
