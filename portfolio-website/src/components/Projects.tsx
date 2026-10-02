@@ -1,12 +1,12 @@
-import type {ReactNode} from "react"
-import {ArrowLeft, ArrowRight} from "lucide-react"
+import {useEffect, useRef, useState} from "react"
+import {ArrowDown} from "lucide-react"
 import Shot from "./Shot"
 import Rise from "./type/Rise"
 import Cta, {CtaLink} from "./ui/Cta"
 import {Eyebrow} from "./About"
 import {projects, primaryLinkOf} from "@/lib/projects"
 import type {Project} from "@/lib/projects"
-import {SHOT, scrollYForShot} from "@/lib/journey"
+import {SHOT, journey, presence, scrollYForShot} from "@/lib/journey"
 import {screenshotFor} from "@/lib/screenshots"
 import {scrollToY} from "@/lib/smoothScroll"
 
@@ -16,17 +16,119 @@ export const REPOSITORIES = "https://github.com/JanVogt06?tab=repositories"
 
 const pad = (n: number) => String(n).padStart(2, "0")
 
-const Step = ({label, disabled, onClick, children}: {label: string; disabled: boolean; onClick: () => void; children: ReactNode}) => (
-    <button
-        onClick={onClick}
-        disabled={disabled}
-        aria-label={label}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-hair text-fg transition-colors duration-300 hover:border-fg/60 disabled:opacity-30 disabled:hover:border-hair"
-    >
-        {children}
-    </button>
+const jump = (to: number) => scrollToY(scrollYForShot(SHOT.projects[Math.min(Math.max(to, 0), total - 1)]))
+
+/** The shot that opens the work, looking down the row of screens. */
+const Opening = () => (
+    <Shot at={SHOT.work} flow={false}>
+        <div className="mt-auto w-full">
+            <p className="label text-fg-2">Kapitel 02</p>
+            <h2 className="mt-4 text-display font-medium text-fg">
+                <Rise delay={80} duration={1200}>Projekte</Rise>
+            </h2>
+            <div className="mt-6 flex flex-col gap-6 md:mt-8 md:flex-row md:items-end md:justify-between">
+                <p className="max-w-[38ch] text-lead text-fg-2">
+                    <Rise mode="fade" delay={320}>
+                        Fünf Dinge, die ich gebaut habe: von der Tsunami-Simulation im Browser bis zum
+                        Dungeon-Crawler.
+                    </Rise>
+                </p>
+                <Rise mode="fade" delay={460} as="div">
+                    <Cta onClick={() => jump(0)} icon={<ArrowDown className="h-3.5 w-3.5"/>}>
+                        Zum ersten Projekt
+                    </Cta>
+                </Rise>
+            </div>
+        </div>
+    </Shot>
 )
 
+/**
+ * The list of the work, held on the right edge for as long as the camera is
+ * among the screens. It stays put while the copy below changes, so moving
+ * from one project to the next reads as browsing a catalogue.
+ */
+const Index = () => {
+    const rootRef = useRef<HTMLElement>(null)
+    const [active, setActive] = useState(0)
+
+    useEffect(
+        () =>
+            journey.subscribe((shot) => {
+                const root = rootRef.current
+                if (!root) return
+                const first = SHOT.projects[0]
+                const last = SHOT.projects[total - 1]
+                const weight = shot < first ? presence(shot, first) : shot > last ? presence(shot, last) : 1
+                root.style.opacity = String(weight)
+                root.style.visibility = weight > 0.02 ? "visible" : "hidden"
+                setActive(Math.min(Math.max(Math.round(shot - first), 0), total - 1))
+            }),
+        [],
+    )
+
+    return (
+        <nav
+            ref={rootRef}
+            aria-label="Projekte"
+            data-overlay
+            className="ink fixed right-[var(--gutter)] top-1/2 z-20 hidden -translate-y-1/2 lg:block"
+            style={{opacity: 0, visibility: "hidden"}}
+        >
+            <ol className="flex flex-col items-end">
+                {projects.map((project, j) => {
+                    const current = j === active
+                    return (
+                        <li key={project.slug}>
+                            <button
+                                onClick={() => jump(j)}
+                                aria-current={current ? "true" : undefined}
+                                className={`label group flex h-10 items-center gap-3 transition-colors duration-300 ${
+                                    current ? "text-fg" : "text-fg-3 hover:text-fg"
+                                }`}
+                            >
+                                <span>{project.title}</span>
+                                <span className="tabular-nums opacity-70">{pad(j + 1)}</span>
+                                <span
+                                    aria-hidden="true"
+                                    className={`h-px transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                                        current ? "w-8 bg-fg" : "w-3 bg-fg/40 group-hover:w-5"
+                                    }`}
+                                />
+                            </button>
+                        </li>
+                    )
+                })}
+            </ol>
+        </nav>
+    )
+}
+
+const Actions = ({project, flow, onOpen}: {project: Project; flow: boolean; onOpen: () => void}) => {
+    const primary = primaryLinkOf(project.links)
+    return (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            {!flow && (
+                <Cta tone="solid" onClick={onOpen}>
+                    Projekt ansehen
+                </Cta>
+            )}
+            {primary && (
+                <CtaLink href={primary.href} external tone={flow ? "solid" : "line"}>
+                    {primary.label}
+                </CtaLink>
+            )}
+            {project.links.github && (
+                <CtaLink href={project.links.github} external>
+                    Code
+                </CtaLink>
+            )}
+        </div>
+    )
+}
+
+/** The screen holds the middle of the frame, so the copy lies beneath it
+ *  in two columns: what it is on the left, what it does on the right. */
 const ProjectCopy = ({
     project,
     index,
@@ -37,64 +139,38 @@ const ProjectCopy = ({
     index: number
     flow: boolean
     onOpen: () => void
-}) => {
-    const primary = primaryLinkOf(project.links)
-    const jump = (to: number) => scrollToY(scrollYForShot(SHOT.projects[to]))
-
-    return (
-        <div className="mt-auto flex w-full items-end justify-between gap-10">
-            <div className="w-full max-w-[34rem]">
-                <Eyebrow index="02" label="Projekte" count={`${pad(index + 1)} / ${pad(total)}`}/>
-
-                <h2 className="mt-4 text-heading font-medium text-fg">
-                    <Rise delay={60}>{project.title}</Rise>
-                </h2>
-
-                <Rise mode="fade" delay={180} as="div">
-                    <p className="mt-3 text-lead text-fg">{project.subtitle}</p>
-                    <p className="mt-3 line-clamp-3 max-w-[48ch] text-body text-fg-2 short:line-clamp-2 squat:hidden">
-                        {project.description}
-                    </p>
-                    <p className="mt-4 font-mono text-data text-fg-3 short:mt-3">{project.tech.join("  ·  ")}</p>
-                </Rise>
-
-                <Rise mode="fade" delay={300} as="div">
-                    <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-1 short:mt-4">
-                        {!flow && (
-                            <Cta tone="solid" onClick={onOpen}>
-                                Projekt ansehen
-                            </Cta>
-                        )}
-                        {primary && (
-                            <CtaLink href={primary.href} external tone={flow ? "solid" : "line"}>
-                                {primary.label}
-                            </CtaLink>
-                        )}
-                        {project.links.github && (
-                            <CtaLink href={project.links.github} external>
-                                Code
-                            </CtaLink>
-                        )}
-                    </div>
-                </Rise>
-            </div>
-
-            {!flow && (
-                <div className="hidden shrink-0 items-center gap-2 lg:flex">
-                    <Step label="Vorheriges Projekt" disabled={index === 0} onClick={() => jump(index - 1)}>
-                        <ArrowLeft className="h-4 w-4"/>
-                    </Step>
-                    <Step label="Nächstes Projekt" disabled={index === total - 1} onClick={() => jump(index + 1)}>
-                        <ArrowRight className="h-4 w-4"/>
-                    </Step>
-                </div>
-            )}
+}) => (
+    <div className="mt-auto grid w-full gap-x-12 gap-y-4 lg:grid-cols-12 lg:items-end lg:pr-56 xl:pr-64">
+        <div className="lg:col-span-6">
+            <Eyebrow index="02" label="Projekte" count={`${pad(index + 1)} / ${pad(total)}`}/>
+            <h2 className="mt-4 text-heading font-medium text-fg short:mt-3">
+                <Rise delay={60}>{project.title}</Rise>
+            </h2>
+            <Rise mode="fade" delay={160} as="div">
+                <p className="mt-3 text-lead text-fg">{project.subtitle}</p>
+            </Rise>
+            <Rise mode="fade" delay={320} as="div" className="mt-6 hidden lg:block short:mt-4">
+                <Actions project={project} flow={flow} onOpen={onOpen}/>
+            </Rise>
         </div>
-    )
-}
+
+        <Rise mode="fade" delay={240} as="div" className="lg:col-span-6 lg:pb-1.5">
+            <p className="line-clamp-3 max-w-[52ch] text-body text-fg-2 lg:line-clamp-4 short:line-clamp-2 squat:hidden">
+                {project.description}
+            </p>
+            <p className="mt-3 font-mono text-data text-fg-3">{project.tech.join("  ·  ")}</p>
+        </Rise>
+
+        <Rise mode="fade" delay={320} as="div" className="mt-2 lg:hidden">
+            <Actions project={project} flow={flow} onOpen={onOpen}/>
+        </Rise>
+    </div>
+)
 
 const Projects = ({flow, onOpen}: {flow: boolean; onOpen: (index: number) => void}) => (
     <>
+        {!flow && <Opening/>}
+        {!flow && <Index/>}
         {projects.map((project, i) => (
             <Shot
                 key={project.slug}
@@ -105,7 +181,7 @@ const Projects = ({flow, onOpen}: {flow: boolean; onOpen: (index: number) => voi
                         src={screenshotFor(project.slug)}
                         alt={`Screenshot von ${project.title}`}
                         loading="lazy"
-                        className="w-full border border-hair object-cover"
+                        className="w-full rounded-[10px] border border-hair object-cover"
                     />
                 }
             >
