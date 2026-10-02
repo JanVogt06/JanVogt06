@@ -76,15 +76,16 @@ const catmull = (p0: number, p1: number, p2: number, p3: number, t: number) => {
     return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3)
 }
 
-/** Where panel `i` stands: a loose row receding to the right, so the next
- *  panel always hides behind the one in focus rather than behind the copy,
+/** Where panel `i` stands: a loose row receding to the left, so the camera
+ *  slips past each panel's left edge on its way to the next and the panel
+ *  leaves the frame to the right, behind it rather than through the copy,
  *  with a longer stretch of open water where the photos give way to work. */
 const placement = (i: number) => {
     const gap = i >= SHOT.photos.length ? 16 : 0
     return {
-        x: 1.8 + i * 2.6 + Math.sin(i * 1.1) * 0.6 + gap * 0.2,
-        z: -34 - i * 12 - gap,
-        yaw: -0.16 + Math.sin(i * 1.7) * 0.06,
+        x: 2.4 - i * 6 + Math.sin(i * 1.1) * 0.5 - gap * 0.3,
+        z: -34 - i * 14 - gap,
+        yaw: 0.1 + Math.sin(i * 1.7) * 0.05,
     }
 }
 
@@ -478,7 +479,7 @@ export class SeaScene {
         // it once passed, so a tall frame never looks past it at an edge.
         this.panels.forEach((panel, i) => {
             const ahead = i + 1 - this.shot
-            const veil = ahead >= 0 ? 0.94 * smooth01((ahead - 0.3) / 0.75) : smooth01((-ahead - 0.2) / 0.4)
+            const veil = ahead >= 0 ? smooth01((ahead - 0.3) / 0.7) : smooth01((-ahead - 0.04) / 0.26)
             panel.material.uniforms.uFocus.value = presence(this.shot, i + 1)
             panel.material.uniforms.uLight.value = l.panel
             panel.material.uniforms.uVeil.value = veil
