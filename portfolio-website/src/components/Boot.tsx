@@ -1,8 +1,8 @@
 import {useEffect, useState} from "react"
 
-const FADE_MS = 700
+const FADE_MS = 1100
 
-const CELLS = 12
+const CELLS = 10
 const GLYPHS = "-=+"
 const TICK_MS = 110
 
@@ -16,6 +16,8 @@ const Meter = ({fraction, tick}: {fraction: number; tick: number}) => {
     return <>{cells}</>
 }
 
+/** Fog, in the colour the first frame opens on, so the scene seems to come
+ *  out of it rather than to replace a loading screen. */
 const Boot = ({progress, ready}: {progress: number; ready: boolean}) => {
     const [gone, setGone] = useState(false)
     const [tick, setTick] = useState(0)
@@ -41,21 +43,11 @@ const Boot = ({progress, ready}: {progress: number; ready: boolean}) => {
         <div
             role="status"
             aria-live="polite"
-            aria-label={ready ? "Szene geladen" : `Szene lädt, ${percent} Prozent`}
-            className="fixed inset-0 z-100 flex flex-col items-center justify-center bg-page transition-opacity ease-out"
-            style={{
-                opacity: ready ? 0 : 1,
-                transitionDuration: `${FADE_MS}ms`,
-                pointerEvents: ready ? "none" : "auto",
-            }}
+            aria-label={ready ? "Seite geladen" : `Seite lädt, ${percent} Prozent`}
+            className="fixed inset-0 z-100 flex items-center justify-center bg-[#9aa1aa] transition-opacity ease-[cubic-bezier(0.65,0,0.35,1)]"
+            style={{opacity: ready ? 0 : 1, transitionDuration: `${FADE_MS}ms`, pointerEvents: ready ? "none" : "auto"}}
         >
-            <p aria-hidden="true" className="font-mono text-label uppercase tracking-[0.12em] text-fg-3">
-                Jan Vogt
-            </p>
-            <p
-                aria-hidden="true"
-                className="mt-4 font-mono text-[0.8125rem] tracking-[0.3em] text-signal [text-shadow:0_0_6px_rgb(159_216_234/0.55)]"
-            >
+            <p aria-hidden="true" className="font-mono text-[0.8125rem] tracking-[0.3em] text-white">
                 <Meter fraction={fraction} tick={tick}/>
             </p>
         </div>
