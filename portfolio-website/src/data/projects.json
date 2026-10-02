@@ -33,8 +33,10 @@
       "Cesium"
     ],
     "links": {
-      "github": "https://github.com/JanVogt06/SatTrak_Satellite-Visualization"
-    }
+      "github": "https://github.com/JanVogt06/SatTrak_Satellite-Visualization",
+      "website": "https://sattrek.jan-vogt.dev/"
+    },
+    "previewNote": "Unity-Build, lädt einen Moment"
   },
   {
     "slug": "solarflow",
