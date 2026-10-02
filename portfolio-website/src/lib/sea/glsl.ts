@@ -237,6 +237,7 @@ export const panelFragment = /* glsl */ `
     uniform float uLight;
     uniform float uAspect;
     uniform vec3 uBlank;
+    uniform float uVeil;
 
     varying vec2 vUv;
     varying vec3 vWorld;
@@ -257,7 +258,7 @@ export const panelFragment = /* glsl */ `
         c = mix(c, uHorizon, 0.06 + 0.06 * (1.0 - uFocus));
 
         float dist = length(cameraPosition - vWorld);
-        c = mix(c, horizonColor(vWorld - cameraPosition), fogAmount(dist));
+        c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
         gl_FragColor = vec4(c, 1.0);
     }
 `
@@ -268,13 +269,14 @@ export const solidFragment = /* glsl */ `
     ${SKY}
 
     uniform vec3 uColor;
+    uniform float uVeil;
 
     varying vec2 vUv;
     varying vec3 vWorld;
 
     void main() {
         float dist = length(cameraPosition - vWorld);
-        vec3 c = mix(uColor, horizonColor(vWorld - cameraPosition), fogAmount(dist));
+        vec3 c = mix(uColor, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
         gl_FragColor = vec4(c, 1.0);
     }
 `

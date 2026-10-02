@@ -45,6 +45,10 @@ const CAMERA_LAG = 0.55
 
 const TAU = Math.PI * 2
 
+const smooth01 = (t: number) => {
+    const c = Math.min(Math.max(t, 0), 1)
+    return c * c * (3 - 2 * c)
+}
 const damp = (current: number, target: number, lag: number, dt: number) =>
     current + (target - current) * (1 - Math.exp(-dt / lag))
 
@@ -296,6 +300,7 @@ export class SeaScene {
                 uLight: {value: 1},
                 uAspect: {value: spec.aspect},
                 uBlank: {value: new THREE.Color("#2a3038")},
+                uVeil: {value: 1},
             },
         })
         const geometry = new THREE.PlaneGeometry(width, height)
@@ -305,7 +310,7 @@ export class SeaScene {
         const frameMaterial = new THREE.ShaderMaterial({
             vertexShader: panelVertex,
             fragmentShader: solidFragment,
-            uniforms: {...this.shared, uColor: {value: this.light.frame}},
+            uniforms: {...this.shared, uColor: {value: this.light.frame}, uVeil: material.uniforms.uVeil},
         })
         const frameGeometry = new THREE.BoxGeometry(width + FRAME, height + FRAME, 0.05)
         const frame = new THREE.Mesh(frameGeometry, frameMaterial)
@@ -453,10 +458,13 @@ export class SeaScene {
         water.uGlitter.value = l.glitter
         ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
 
+        // A panel stays in the fog until the camera is nearly on it, so the
+        // next one never stands behind the one in focus.
         this.panels.forEach((panel, i) => {
-            const focus = presence(this.shot, i + 1)
-            panel.material.uniforms.uFocus.value = focus
+            const ahead = i + 1 - this.shot
+            panel.material.uniforms.uFocus.value = presence(this.shot, i + 1)
             panel.material.uniforms.uLight.value = l.panel
+            panel.material.uniforms.uVeil.value = 0.94 * smooth01((ahead - 0.3) / 0.75)
         })
     }
 

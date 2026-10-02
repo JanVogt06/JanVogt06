@@ -11,7 +11,7 @@ import useDialog from "@/lib/useDialog"
 const total = stations.length
 
 export const Eyebrow = ({index, label, count}: {index: string; label: string; count?: string}) => (
-    <p className="label flex items-baseline gap-3 text-fg-3">
+    <p className="label flex items-baseline gap-3 text-fg-2">
         <span className="text-fg">{index}</span>
         <span>{label}</span>
         {count && (
