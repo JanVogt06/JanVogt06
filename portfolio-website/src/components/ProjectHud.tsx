@@ -77,7 +77,7 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                             </div>
                         </div>
 
-                        <div className="relative aspect-[16/10] lg:col-span-8 lg:aspect-auto lg:h-full lg:min-h-0">
+                        <div className="relative w-full lg:col-span-8 lg:max-w-[calc((100svh-9rem)*1.6)] lg:self-center lg:justify-self-end">
                             <BrowserFrame
                                 url={primary?.href}
                                 embeddable={project.embed !== false}

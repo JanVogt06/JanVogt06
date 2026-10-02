@@ -65,7 +65,7 @@ const BrowserFrame = ({
     const inline = embeddable && !coarse
 
     return (
-        <div className="flex h-full flex-col overflow-hidden rounded-[4px] border border-hair bg-[#080b0f]">
+        <div className="flex flex-col overflow-hidden rounded-[4px] border border-hair bg-[#080b0f]">
 
             <div
                 className="flex shrink-0 items-center gap-3 border-b border-hair px-3 py-2.5">
@@ -91,7 +91,9 @@ const BrowserFrame = ({
                 ) : null}
             </div>
 
-            <div className="relative min-h-0 flex-1 bg-black/40">
+            {/* The picture keeps the 16:10 the screenshots are taken in, so a
+                wide frame never crops them at the sides. */}
+            <div className="relative aspect-[16/10] w-full bg-black/40">
                 {active && url ? (
                     <iframe
                         src={url}
