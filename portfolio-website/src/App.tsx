@@ -23,8 +23,12 @@ const BOOT_TIMEOUT_MS =
     typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches ? 5000 : 8000
 
 const PANELS = [
-    ...stations.map((station) => ({image: station.image, aspect: station.aspect})),
-    ...projects.map((project) => ({image: screenshotFor(project.slug) ?? "", aspect: SCREENSHOT_ASPECT})),
+    ...stations.map((station) => ({image: station.image, aspect: station.aspect, kind: "print" as const})),
+    ...projects.map((project) => ({
+        image: screenshotFor(project.slug) ?? "",
+        aspect: SCREENSHOT_ASPECT,
+        kind: "screen" as const,
+    })),
 ]
 
 function App() {

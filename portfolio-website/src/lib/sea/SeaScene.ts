@@ -18,9 +18,10 @@ import {DETAIL_SIZE, createOcean} from "./ocean"
 import type {Ocean} from "./ocean"
 import {createPost} from "./post"
 import type {Post} from "./post"
-import {SHOT, SHOT_COUNT, presence} from "@/lib/journey"
+import {SHOT, SHOT_COUNT, panelShot, presence} from "@/lib/journey"
 
-export type PanelSpec = {image: string; aspect: number}
+/** A photo is a print the daylight falls on; a project is a screen. */
+export type PanelSpec = {image: string; aspect: number; kind: "print" | "screen"}
 
 export type SeaSceneOptions = {
     container: HTMLElement
@@ -77,6 +78,7 @@ const damp = (current: number, target: number, lag: number, dt: number) =>
 type Shot = {position: THREE.Vector3; yaw: number; pitch: number}
 
 type Panel = {
+    kind: PanelSpec["kind"]
     group: THREE.Group
     image: THREE.Mesh
     material: THREE.ShaderMaterial
@@ -419,7 +421,7 @@ export class SeaScene {
         this.scene.add(group)
 
         this.disposables.push(material, geometry, frameMaterial, frameGeometry)
-        this.panels.push({group, image, material, center, yaw, width, height})
+        this.panels.push({kind: spec.kind, group, image, material, center, yaw, width, height})
 
         this.pending++
         new THREE.TextureLoader().load(
@@ -476,13 +478,18 @@ export class SeaScene {
             pitch: -0.025,
         })
 
-        this.panels.forEach((panel) => {
-            const share = portrait ? 0.8 : aspect < 1.3 ? 0.5 : 0.42
-            const across = portrait ? 0 : 0.34
-            const up = portrait ? 0.5 : 0.04
+        this.panels.forEach((panel, i) => {
+            if (i === SHOT.photos.length) shots.push(this.overlook(portrait))
+
+            // A photo stands beside its copy; a screen is the subject, so it
+            // takes the middle of the frame and the copy goes underneath.
+            const screen = panel.kind === "screen"
+            const share = portrait ? 0.8 : screen ? (aspect < 1.3 ? 0.56 : 0.44) : aspect < 1.3 ? 0.5 : 0.42
+            const across = portrait || screen ? 0 : 0.34
+            const up = portrait ? 0.5 : screen ? 0.17 : 0.04
 
             const fitWidth = panel.width / (2 * tanH * share)
-            const fitHeight = panel.height / (2 * tanV * (portrait ? 0.24 : 0.6))
+            const fitHeight = panel.height / (2 * tanV * (portrait ? 0.24 : screen ? 0.46 : 0.6))
             const distance = Math.max(fitWidth, fitHeight)
 
             const normal = new THREE.Vector3(Math.sin(panel.yaw), 0, Math.cos(panel.yaw))
@@ -518,6 +525,26 @@ export class SeaScene {
 
         while (shots.length < SHOT_COUNT) shots.push(shots[shots.length - 1])
         this.shots = shots
+    }
+
+    /** The shot that opens the work: from in front of the row and off to
+     *  its side, the camera sees every screen at once, the first close on the
+     *  right and the rest staggering away into the haze. */
+    private overlook(portrait: boolean): Shot {
+        const first = this.panels[SHOT.photos.length]
+        const last = this.panels[this.panels.length - 1]
+        const third = this.panels[Math.min(SHOT.photos.length + 2, this.panels.length - 1)]
+        if (!first || !last || !third) return {position: new THREE.Vector3(0, EYE, 0), yaw: 0, pitch: 0}
+        const along = new THREE.Vector3(last.center.x - first.center.x, 0, last.center.z - first.center.z).normalize()
+        const front = new THREE.Vector3(along.z, 0, -along.x)
+        const position = first.center
+            .clone()
+            .addScaledVector(along, portrait ? -20 : -12)
+            .addScaledVector(front, portrait ? 6 : 8)
+        position.y = 2.2
+        const target = first.center.clone().lerp(third.center, 0.5)
+        const yaw = Math.atan2(-(target.x - position.x), -(target.z - position.z))
+        return {position, yaw, pitch: -0.05}
     }
 
     private placeCamera(shot: number) {
@@ -586,10 +613,13 @@ export class SeaScene {
         // A panel stays in the fog until the camera is nearly on it, so the
         // next one never stands behind the one in focus, and goes back into
         // it once passed, so a tall frame never looks past it at an edge.
+        // From the overlook every screen is meant to be seen, if dimly.
+        const overlook = smooth01(1 - Math.abs(this.shot - SHOT.work) / 0.9)
         this.panels.forEach((panel, i) => {
-            const ahead = i + 1 - this.shot
-            const veil = ahead >= 0 ? smooth01((ahead - 0.3) / 0.7) : smooth01((-ahead - 0.04) / 0.26)
-            panel.material.uniforms.uFocus.value = presence(this.shot, i + 1)
+            const ahead = panelShot(i) - this.shot
+            let veil = ahead >= 0 ? smooth01((ahead - 0.3) / 0.7) : smooth01((-ahead - 0.04) / 0.26)
+            if (panel.kind === "screen") veil = Math.min(veil, 1 - 0.9 * overlook)
+            panel.material.uniforms.uFocus.value = presence(this.shot, panelShot(i))
             panel.material.uniforms.uVeil.value = veil
             panel.group.visible = veil < 0.995
         })
@@ -693,7 +723,7 @@ export class SeaScene {
         const hit = this.raycaster.intersectObjects(this.panels.map((p) => p.image), false)[0]
         if (!hit) return -1
         const index = hit.object.userData.panel as number
-        return presence(this.shot, index + 1) > 0.6 ? index : -1
+        return presence(this.shot, panelShot(index)) > 0.6 ? index : -1
     }
 
     // Only the panel the camera rests on answers, and never through the copy

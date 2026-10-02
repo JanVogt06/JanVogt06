@@ -3,7 +3,7 @@ import {SHOT, STOP_SCREENS, TOTAL_SCREENS} from "@/lib/journey"
 const ANCHORS: Record<number, string> = {
     [SHOT.hero]: "top",
     [SHOT.photos[0]]: "about",
-    [SHOT.projects[0]]: "projects",
+    [SHOT.work]: "projects",
     [SHOT.contact]: "contact",
 }
 

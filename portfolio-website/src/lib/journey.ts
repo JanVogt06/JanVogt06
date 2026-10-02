@@ -23,20 +23,26 @@ const smallViewport = () => {
 /**
  * The page is one camera move along a row of panels standing in the sea.
  * Every stop is a shot the camera rests on: the opening view, three photos,
- * five projects and the night sky at the end.
+ * a look down the row of screens that opens the work, five projects and the
+ * night sky at the end.
  */
 export const SHOT = {
     hero: 0,
     photos: [1, 2, 3],
-    projects: [4, 5, 6, 7, 8],
-    contact: 9,
+    work: 4,
+    projects: [5, 6, 7, 8, 9],
+    contact: 10,
 } as const
 
-export const SHOT_COUNT = 10
+export const SHOT_COUNT = 11
 
-/** Screens of scrolling between one shot and the next. The two long ones are
- *  where the day turns: into the afternoon, and into the night. */
-const GAPS = [1.5, 1.05, 1.05, 1.7, 1.05, 1.05, 1.05, 1.05, 1.5]
+/** The shot that has panel `i` in focus: the photos first, then the work. */
+export const panelShot = (i: number) =>
+    i < SHOT.photos.length ? SHOT.photos[i] : SHOT.projects[i - SHOT.photos.length]
+
+/** Screens of scrolling between one shot and the next. The long ones are
+ *  where the chapters turn, and the day with them. */
+const GAPS = [1.5, 1.05, 1.05, 1.35, 1.3, 1.05, 1.05, 1.05, 1.05, 1.5]
 
 export const STOP_SCREENS = GAPS.reduce<number[]>((acc, gap) => [...acc, acc[acc.length - 1] + gap], [0])
 
@@ -46,13 +52,13 @@ export type Chapter = "hero" | "about" | "projects" | "contact"
 
 export const chapters: Array<{id: Exclude<Chapter, "hero">; index: string; label: string; shot: number}> = [
     {id: "about", index: "01", label: "Über mich", shot: SHOT.photos[0]},
-    {id: "projects", index: "02", label: "Projekte", shot: SHOT.projects[0]},
+    {id: "projects", index: "02", label: "Projekte", shot: SHOT.work},
     {id: "contact", index: "03", label: "Kontakt", shot: SHOT.contact},
 ]
 
 export const chapterAt = (shot: number): Chapter => {
     if (shot < SHOT.photos[0] - 0.5) return "hero"
-    if (shot < SHOT.projects[0] - 0.5) return "about"
+    if (shot < SHOT.work - 0.5) return "about"
     if (shot < SHOT.contact - 0.5) return "projects"
     return "contact"
 }
