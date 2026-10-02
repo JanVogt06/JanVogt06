@@ -1,7 +1,7 @@
 import {useEffect, useRef} from "react"
 import type {RefObject} from "react"
 import {useIsPresent} from "framer-motion"
-import {space} from "@/lib/space/controller"
+import {sea} from "@/lib/sea/controller"
 
 const FOCUSABLE =
     "a[href], button:not([disabled]), input, select, textarea, iframe, [tabindex]:not([tabindex='-1'])"
@@ -58,7 +58,7 @@ export const useDialog = (
         open++
         if (open === 1) {
             html.style.overflow = "hidden"
-            space.setPaused(true)
+            sea.setPaused(true)
         }
 
         ;(initialRef?.current ?? root)?.focus({preventScroll: true})
@@ -95,7 +95,7 @@ export const useDialog = (
             open--
             if (open === 0) {
                 html.style.overflow = ""
-                space.setPaused(false)
+                sea.setPaused(false)
             }
             if (opener?.isConnected) opener.focus({preventScroll: true})
         }

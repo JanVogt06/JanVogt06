@@ -32,26 +32,8 @@ export const scrollToY = (top: number) => {
     window.scrollTo({top: clamp(top), behavior: prefersReducedMotion() ? "auto" : "smooth"})
 }
 
-export const scrollToElement = (id: string) => {
-    const el = document.getElementById(id)
-    if (!el) return
-
-    if (controller?.active) {
-        const padding = parseFloat(
-            getComputedStyle(document.documentElement).scrollPaddingTop || "0",
-        )
-        const margin = parseFloat(getComputedStyle(el).scrollMarginTop || "0")
-        controller.scrollTo(
-            el.getBoundingClientRect().top + window.scrollY - (padding || 0) - (margin || 0),
-        )
-        return
-    }
-
-    el.scrollIntoView({behavior: prefersReducedMotion() ? "auto" : "smooth"})
-}
-
-// Past this many screens a smooth scroll would strobe every band on the way,
-// so the page blinks to black, jumps, and lets the camera settle into view.
+// Past this many screens a smooth scroll would strobe every shot on the way,
+// so the page blinks to fog, jumps, and lets the camera settle into view.
 const WARP_SCREENS = 2.5
 const VEIL_IN_MS = 200
 const VEIL_OUT_MS = 480
@@ -81,7 +63,7 @@ export const warpToY = (top: number) => {
             inset: "0",
             zIndex: "90",
             pointerEvents: "none",
-            background: "var(--color-page)",
+            background: "#9aa1aa",
             opacity: "0",
         })
         document.body.appendChild(veil)
@@ -98,25 +80,11 @@ export const warpToY = (top: number) => {
     }, VEIL_IN_MS)
 }
 
-/**
- * Lands on a chapter where its content is fully in frame: the stop marked as
- * its entry if the scene placed one, else its first resting stop, else the
- * section itself (the document layout without a scene).
- */
+/** Lands on a chapter: on its first resting stop over the scene, at the top
+ *  of its block in the document. */
 export const scrollToChapter = (id: string) => {
-    const section = document.getElementById(id)
-    if (!section) return
-
-    const stop =
-        section.querySelector<HTMLElement>("[data-entry]") ??
-        section.querySelector<HTMLElement>(".snap-stop")
-
-    if (!stop) {
-        scrollToElement(id)
-        return
-    }
-
-    warpToY(stop.getBoundingClientRect().top + window.scrollY)
+    const el = id === "top" ? null : document.getElementById(id)
+    if (el || id === "top") warpToY(el ? el.getBoundingClientRect().top + window.scrollY : 0)
 }
 
 const ownsWheel = (node: EventTarget | null, deltaY: number) => {
