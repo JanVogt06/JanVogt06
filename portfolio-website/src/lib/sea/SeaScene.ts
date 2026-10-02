@@ -382,12 +382,12 @@ export class SeaScene {
         })
 
         this.panels.forEach((panel) => {
-            const share = portrait ? 0.86 : aspect < 1.3 ? 0.5 : 0.42
+            const share = portrait ? 0.8 : aspect < 1.3 ? 0.5 : 0.42
             const across = portrait ? 0 : 0.34
-            const up = portrait ? 0.34 : 0.04
+            const up = portrait ? 0.5 : 0.04
 
             const fitWidth = panel.width / (2 * tanH * share)
-            const fitHeight = panel.height / (2 * tanV * (portrait ? 0.34 : 0.6))
+            const fitHeight = panel.height / (2 * tanV * (portrait ? 0.24 : 0.6))
             const distance = Math.max(fitWidth, fitHeight)
 
             const normal = new THREE.Vector3(Math.sin(panel.yaw), 0, Math.cos(panel.yaw))
@@ -409,8 +409,8 @@ export class SeaScene {
         const end = lastPanel ? lastPanel.center.z : -100
         shots.push({
             position: new THREE.Vector3(portrait ? 1.2 : -1, 2.4, end - 34),
-            yaw: portrait ? -0.12 : -0.04,
-            pitch: portrait ? 0.12 : 0.06,
+            yaw: portrait ? -0.24 : -0.04,
+            pitch: portrait ? 0.1 : 0.06,
         })
 
         while (shots.length < SHOT_COUNT) shots.push(shots[shots.length - 1])
@@ -459,12 +459,15 @@ export class SeaScene {
         ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
 
         // A panel stays in the fog until the camera is nearly on it, so the
-        // next one never stands behind the one in focus.
+        // next one never stands behind the one in focus, and goes back into
+        // it once passed, so a tall frame never looks past it at an edge.
         this.panels.forEach((panel, i) => {
             const ahead = i + 1 - this.shot
+            const veil = ahead >= 0 ? 0.94 * smooth01((ahead - 0.3) / 0.75) : smooth01((-ahead - 0.2) / 0.4)
             panel.material.uniforms.uFocus.value = presence(this.shot, i + 1)
             panel.material.uniforms.uLight.value = l.panel
-            panel.material.uniforms.uVeil.value = 0.94 * smooth01((ahead - 0.3) / 0.75)
+            panel.material.uniforms.uVeil.value = veil
+            panel.group.visible = veil < 0.995
         })
     }
 

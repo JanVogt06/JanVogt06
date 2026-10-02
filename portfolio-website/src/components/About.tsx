@@ -37,7 +37,7 @@ const Row = ({entry, order, dense}: {entry: Entry; order: number; dense: boolean
                 </span>
             )}
             <span className="min-w-0">
-                <span className="block text-body text-fg">{entry.what}</span>
+                <span className={`block text-fg ${dense ? "text-sub sm:text-body" : "text-body"}`}>{entry.what}</span>
                 {entry.where && <span className="mt-0.5 block text-sub text-fg-2">{entry.where}</span>}
             </span>
         </Rise>
@@ -54,7 +54,7 @@ const StationCopy = ({station, index, onOpen}: {station: Station; index: number;
                 <Rise delay={60}>{station.title}</Rise>
             </h2>
 
-            <ul className={`mt-6 border-t border-hair short:mt-4 ${dense ? "sm:grid sm:grid-cols-2 sm:gap-x-8 sm:border-t-0" : ""}`}>
+            <ul className={`mt-6 short:mt-4 ${dense ? "grid grid-cols-2 gap-x-5 sm:gap-x-8" : "border-t border-hair"}`}>
                 {station.entries.map((entry, i) => (
                     <Row key={entry.what} entry={entry} order={i} dense={dense}/>
                 ))}
