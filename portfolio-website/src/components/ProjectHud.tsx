@@ -1,23 +1,14 @@
 import {useId, useRef, useState} from "react"
-import {ArrowUpRight, X} from "lucide-react"
-import {
-    FolderGit2, Satellite, Zap, Receipt, Sword, Waves,
-} from "lucide-react"
+import {X} from "lucide-react"
+import {FolderGit2, Satellite, Zap, Receipt, Sword, Waves} from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
-import {ActionLink} from "./band/Action"
+import {CtaLink} from "./ui/Cta"
 import {projects, primaryLinkOf} from "@/lib/projects"
+import {screenshotFor} from "@/lib/screenshots"
 import useDialog from "@/lib/useDialog"
 
 const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
-
-const screenshots = import.meta.glob<string>(
-    "../data/images/screenshots/*.{png,jpg,jpeg,webp}",
-    {eager: true, import: "default"},
-)
-
-const screenshotFor = (slug: string) =>
-    Object.entries(screenshots).find(([path]) => path.includes(`/${slug}.`))?.[1]
 
 const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
     const project = projects[index]
@@ -37,14 +28,12 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="animate-hud fixed inset-0 z-[60] bg-page"
+            className="animate-hud fixed inset-0 z-[60] bg-page/95 backdrop-blur-sm"
         >
-            <div className="mx-auto flex h-full w-full max-w-[84rem] flex-col px-[var(--gutter)] pt-[env(safe-area-inset-top)]">
-                <div className="flex h-14 shrink-0 items-center justify-between gap-6">
-                    <p className="min-w-0 truncate font-mono text-label uppercase tracking-[0.08em] text-fg-3">
-                        <span className="tabular-nums text-fg">
-                            Projekt {String(index + 1).padStart(2, "0")}
-                        </span>
+            <div className="mx-auto flex h-full w-full max-w-[88rem] flex-col px-[var(--gutter)] pt-[env(safe-area-inset-top)]">
+                <div className="flex h-16 shrink-0 items-center justify-between gap-6">
+                    <p className="label min-w-0 truncate text-fg-3">
+                        <span className="tabular-nums text-fg">Projekt {String(index + 1).padStart(2, "0")}</span>
                         <span> / {String(projects.length).padStart(2, "0")}</span>
                     </p>
 
@@ -52,9 +41,9 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                         ref={closeRef}
                         onClick={onClose}
                         aria-label="Projekt schließen"
-                        className="-mr-3 flex h-11 shrink-0 items-center gap-2.5 px-3 font-mono text-label uppercase tracking-[0.08em] text-fg transition-colors duration-200 hover:text-signal"
+                        className="label -mr-3 flex h-11 shrink-0 items-center gap-2.5 px-3 text-fg transition-opacity duration-200 hover:opacity-70"
                     >
-                        <span className="hidden sm:inline">Esc</span>
+                        <span className="hidden sm:inline">Schließen</span>
                         <X className="h-4 w-4"/>
                     </button>
                 </div>
@@ -65,48 +54,30 @@ const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
                     data-native-scroll
                     className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] lg:overflow-visible"
                 >
-                    <div className="grid gap-8 pt-2 lg:h-full lg:grid-cols-12 lg:gap-12">
-                        <div className="lg:col-span-5 lg:flex lg:flex-col lg:justify-end">
-                            <p className="font-mono text-label uppercase tracking-[0.08em] text-fg-3">
-                                {project.subtitle}
-                            </p>
-                            <h2 id={titleId} className="mt-3 text-heading text-fg">
+                    <div className="grid gap-8 pt-2 lg:h-full lg:grid-cols-12 lg:gap-14">
+                        <div className="lg:col-span-4 lg:flex lg:flex-col lg:justify-end lg:pb-2">
+                            <h2 id={titleId} className="text-heading font-medium text-fg">
                                 {project.title}
                             </h2>
+                            <p className="mt-3 text-lead text-fg">{project.subtitle}</p>
+                            <p className="mt-5 max-w-[52ch] text-body text-fg-2">{project.description}</p>
+                            <p className="mt-5 font-mono text-data text-fg-3">{project.tech.join("  ·  ")}</p>
 
-                            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-1">
                                 {primary && (
-                                    <ActionLink
-                                        href={primary.href}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        tone="primary"
-                                        icon={<ArrowUpRight className="h-3.5 w-3.5"/>}
-                                    >
+                                    <CtaLink href={primary.href} external tone="solid">
                                         {primary.label}
-                                    </ActionLink>
+                                    </CtaLink>
                                 )}
                                 {project.links.github && (
-                                    <ActionLink
-                                        href={project.links.github}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        tone="secondary"
-                                        icon={<ArrowUpRight className="h-3.5 w-3.5"/>}
-                                    >
-                                        Code
-                                    </ActionLink>
+                                    <CtaLink href={project.links.github} external>
+                                        Code auf GitHub
+                                    </CtaLink>
                                 )}
                             </div>
-
-                            <p className="mt-6 max-w-[52ch] text-body text-fg-2">{project.description}</p>
-
-                            <p className="mt-5 font-mono text-data text-fg-3">
-                                {project.tech.join(" · ")}
-                            </p>
                         </div>
 
-                        <div className="relative aspect-[16/10] lg:col-span-7 lg:aspect-auto lg:h-full lg:min-h-0">
+                        <div className="relative aspect-[16/10] lg:col-span-8 lg:aspect-auto lg:h-full lg:min-h-0">
                             <BrowserFrame
                                 url={primary?.href}
                                 embeddable={project.embed !== false}

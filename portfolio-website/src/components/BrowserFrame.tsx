@@ -23,10 +23,10 @@ const PreviewCue = ({
             }}
         />
         <span className="relative flex flex-col items-center gap-3">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full border border-hair bg-white/[0.04] transition-transform duration-200 group-hover:scale-105">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-fg text-page transition-transform duration-300 group-hover:scale-105">
                 {children}
             </span>
-            <span className="text-label uppercase tracking-[0.14em] text-fg">{label}</span>
+            <span className="label text-fg">{label}</span>
             {note && <span className="text-fine text-fg-2">{note}</span>}
         </span>
     </>
@@ -65,11 +65,11 @@ const BrowserFrame = ({
     const inline = embeddable && !coarse
 
     return (
-        <div className="flex h-full flex-col overflow-hidden rounded-xl border border-hair bg-[#0a0c11]">
+        <div className="flex h-full flex-col overflow-hidden rounded-[4px] border border-hair bg-[#080b0f]">
 
             <div
                 className="flex shrink-0 items-center gap-3 border-b border-hair px-3 py-2.5">
-                <span className="min-w-0 flex-1 truncate text-data text-fg-3">{host}</span>
+                <span className="min-w-0 flex-1 truncate font-mono text-data text-fg-3">{host}</span>
                 {active ? (
                     <button
                         onClick={onClose}
@@ -115,7 +115,7 @@ const BrowserFrame = ({
                             />
                         ) : (
                             <div className="flex h-full flex-col items-center justify-center gap-5">
-                                <div className="rounded-xl border border-hair p-5">
+                                <div className="rounded-full border border-hair p-5">
                                     <Icon className="h-10 w-10 text-fg-3"/>
                                 </div>
                                 <span className="text-data text-fg-3">{host}</span>
@@ -128,7 +128,7 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
                                 <PreviewCue label="Live-Vorschau starten" note={note}>
-                                    <Play className="ml-0.5 h-5 w-5 fill-signal text-signal"/>
+                                    <Play className="ml-0.5 h-5 w-5 fill-current"/>
                                 </PreviewCue>
                             </button>
                         )}
@@ -141,7 +141,7 @@ const BrowserFrame = ({
                                 className="group absolute inset-0 flex flex-col items-center justify-center"
                             >
                                 <PreviewCue label="In neuem Tab öffnen" note={note}>
-                                    <ArrowUpRight className="h-5 w-5 text-signal"/>
+                                    <ArrowUpRight className="h-5 w-5"/>
                                 </PreviewCue>
                             </a>
                         )}
