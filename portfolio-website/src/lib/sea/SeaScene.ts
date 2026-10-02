@@ -154,7 +154,7 @@ export class SeaScene {
         this.camera = new THREE.PerspectiveCamera(FOV, width / height, 0.1, 2400)
         this.camera.rotation.order = "YXZ"
 
-        this.post = createPost(this.renderer, this.coarse ? 0 : 4)
+        this.post = createPost(this.renderer, 4)
         this.post.setSize(width, height, this.renderer.getPixelRatio())
 
         this.shared = {
@@ -547,9 +547,11 @@ export class SeaScene {
         this.post.render(this.scene, this.camera, this.time)
     }
 
-    /** Steps the resolution down while frames run long, and never back up:
-     *  a phone that struggled once will struggle again. */
+    /** Steps the resolution down while frames run long on a desktop, and
+     *  never back up. A phone keeps its full resolution: its screen is small
+     *  enough that every lost pixel shows. */
     private adapt(now: number) {
+        if (this.coarse) return
         if (this.samples === 0) this.sampleStart = now
         this.samples++
         if (this.samples < 90) return
