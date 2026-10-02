@@ -7,20 +7,6 @@ import {scrollToChapter} from "@/lib/smoothScroll"
 
 const Hero = ({flow}: {flow: boolean}) => (
     <Shot at={SHOT.hero} flow={flow}>
-        {/* The statement stays small and set right, in the dark of the sky
-            above the haze on the horizon. */}
-        <div className="absolute right-[var(--gutter)] top-24 hidden max-w-[22rem] text-right md:block">
-            <p className="label text-fg-2">
-                <Rise mode="fade" delay={500}>Portfolio · 2026</Rise>
-            </p>
-            <p className="mt-3 font-mono text-data leading-relaxed text-fg">
-                <Rise mode="fade" delay={640}>
-                    Ich baue Software zwischen Mathematik, Physik und Web, vom Tsunami-Solver bis zur
-                    Spesenabrechnung.
-                </Rise>
-            </p>
-        </div>
-
         {/* Sits in the row of the corner chrome, between the sound and the
             clock, so it never crowds the copy above it. */}
         <div
