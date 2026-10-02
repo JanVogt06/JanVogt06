@@ -2,7 +2,10 @@ import * as THREE from "three"
 import {Reflector} from "three/examples/jsm/objects/Reflector.js"
 import {
     lutFragment,
-    panelFragment,
+    bezelFragment,
+    glowFragment,
+    printFragment,
+    screenFragment,
     passVertex,
     panelVertex,
     skyFragment,
@@ -35,7 +38,16 @@ const FOV = 38
 const EYE = 1.55
 const PANEL_WIDTH = 3.2
 const PANEL_LIFT = -0.03
-const FRAME = 0.045
+const MOUNT = 0.09
+const BEZEL = 0.07
+
+/** Screens hover clear of the water; prints stand in it. */
+const SCREEN_LIFT = 0.55
+
+// Seconds a screen takes to switch on once the camera arrives, and to go
+// dark again once it leaves.
+const SWITCH_ON = 1.1
+const SWITCH_OFF = 0.45
 
 /** Where the horizon sits on a wide screen while a panel is in focus, in
  *  normalised device units above the centre of the frame. */
@@ -54,7 +66,7 @@ const LUT_HEIGHT = 96
 // colour of the light that comes through the back of a wave.
 const SEA = new THREE.Color(0.004, 0.012, 0.018)
 const SCATTER = new THREE.Color(0.02, 0.11, 0.09)
-const FRAME_COLOR = new THREE.Color(0.05, 0.055, 0.06)
+const PAPER = new THREE.Color(0.8, 0.79, 0.76)
 
 // Seconds for the camera to close most of the gap to where the scroll wants
 // it; long enough to feel like a boat, short enough to follow a flick.
@@ -86,6 +98,8 @@ type Panel = {
     yaw: number
     width: number
     height: number
+    /** How far a screen has switched on, 0 to 1. */
+    on: number
 }
 
 /** A square grid whose cells grow away from the middle: a few centimetres
@@ -387,41 +401,95 @@ export class SeaScene {
         const height = width / spec.aspect
         const {x, z, yaw} = placement(i)
 
+        const screen = spec.kind === "screen"
+        const shared = {
+            ...this.shared,
+            uMap: {value: null},
+            uHasMap: {value: 0},
+            uFocus: {value: 0},
+            uBlank: {value: new THREE.Color("#20252c")},
+            uVeil: {value: 1},
+        }
+        const size = new THREE.Vector2(width, height)
         const material = new THREE.ShaderMaterial({
             vertexShader: panelVertex,
-            fragmentShader: panelFragment,
-            uniforms: {
-                ...this.shared,
-                uMap: {value: null},
-                uHasMap: {value: 0},
-                uFocus: {value: 0},
-                uAspect: {value: spec.aspect},
-                uBlank: {value: new THREE.Color("#2a3038")},
-                uVeil: {value: 1},
-            },
+            fragmentShader: screen ? screenFragment : printFragment,
+            uniforms: screen ? {...shared, uOn: {value: 0}, uSize: {value: size}, uRadius: {value: 0.05}} : shared,
         })
         const geometry = new THREE.PlaneGeometry(width, height)
         const image = new THREE.Mesh(geometry, material)
         image.userData.panel = i
-
-        const frameMaterial = new THREE.ShaderMaterial({
-            vertexShader: panelVertex,
-            fragmentShader: solidFragment,
-            uniforms: {...this.shared, uColor: {value: FRAME_COLOR}, uVeil: material.uniforms.uVeil},
-        })
-        const frameGeometry = new THREE.BoxGeometry(width + FRAME, height + FRAME, 0.05)
-        const frame = new THREE.Mesh(frameGeometry, frameMaterial)
-        frame.position.z = -0.032
+        image.position.z = 0.002
 
         const group = new THREE.Group()
-        group.add(image, frame)
-        const center = new THREE.Vector3(x, PANEL_LIFT + height / 2, z)
+        group.add(image)
+        this.disposables.push(material, geometry)
+
+        const part = (shape: THREE.BufferGeometry, mat: THREE.ShaderMaterial, depth: number) => {
+            const mesh = new THREE.Mesh(shape, mat)
+            mesh.position.z = depth
+            group.add(mesh)
+            this.disposables.push(shape, mat)
+            return mesh
+        }
+
+        let base: number
+        if (screen) {
+            const bezel = new THREE.Vector2(width + BEZEL * 2, height + BEZEL * 2)
+            part(
+                new THREE.PlaneGeometry(bezel.x, bezel.y),
+                new THREE.ShaderMaterial({
+                    vertexShader: panelVertex,
+                    fragmentShader: bezelFragment,
+                    uniforms: {...this.shared, uSize: {value: bezel}, uRadius: {value: 0.1}, uVeil: shared.uVeil},
+                    side: THREE.DoubleSide,
+                }),
+                -0.012,
+            )
+            const spread = new THREE.Vector2(width * 1.8, height * 2.1)
+            part(
+                new THREE.PlaneGeometry(spread.x, spread.y),
+                new THREE.ShaderMaterial({
+                    vertexShader: panelVertex,
+                    fragmentShader: glowFragment,
+                    uniforms: {
+                        ...this.shared,
+                        uMap: shared.uMap,
+                        uOn: material.uniforms.uOn,
+                        uFocus: shared.uFocus,
+                        uSize: {value: size},
+                        uSpread: {value: spread},
+                        uVeil: shared.uVeil,
+                    },
+                    transparent: true,
+                    depthWrite: false,
+                    blending: THREE.CustomBlending,
+                    blendSrc: THREE.OneFactor,
+                    blendDst: THREE.OneFactor,
+                    blendSrcAlpha: THREE.ZeroFactor,
+                    blendDstAlpha: THREE.OneFactor,
+                }),
+                -0.03,
+            )
+            base = SCREEN_LIFT + bezel.y / 2
+        } else {
+            part(
+                new THREE.BoxGeometry(width + MOUNT * 2, height + MOUNT * 2, 0.03),
+                new THREE.ShaderMaterial({
+                    vertexShader: panelVertex,
+                    fragmentShader: solidFragment,
+                    uniforms: {...this.shared, uColor: {value: PAPER}, uVeil: shared.uVeil},
+                }),
+                -0.016,
+            )
+            base = PANEL_LIFT + height / 2 + MOUNT
+        }
+
+        const center = new THREE.Vector3(x, base, z)
         group.position.copy(center)
         group.rotation.y = yaw
         this.scene.add(group)
-
-        this.disposables.push(material, geometry, frameMaterial, frameGeometry)
-        this.panels.push({kind: spec.kind, group, image, material, center, yaw, width, height})
+        this.panels.push({kind: spec.kind, group, image, material, center, yaw, width, height, on: 0})
 
         this.pending++
         new THREE.TextureLoader().load(
@@ -656,8 +724,15 @@ export class SeaScene {
         this.placeCamera(this.shot)
 
         this.panels.forEach((panel, i) => {
-            panel.group.position.y = panel.center.y + Math.sin(this.time * 0.6 + i * 1.7) * 0.025
+            const hover = panel.kind === "screen" ? 0.05 : 0.025
+            panel.group.position.y = panel.center.y + Math.sin(this.time * 0.6 + i * 1.7) * hover
             panel.group.rotation.z = Math.sin(this.time * 0.42 + i) * 0.004
+            if (panel.kind !== "screen") return
+            // The whole row comes on as the camera reaches the overlook and
+            // stays on through the work; the one in focus burns brightest.
+            const wanted = this.shot > SHOT.work - 0.35 && this.shot < SHOT.projects[SHOT.projects.length - 1] + 0.5
+            panel.on = wanted ? Math.min(panel.on + dt / SWITCH_ON, 1) : Math.max(panel.on - dt / SWITCH_OFF, 0)
+            panel.material.uniforms.uOn.value = panel.on
         })
 
         this.render()

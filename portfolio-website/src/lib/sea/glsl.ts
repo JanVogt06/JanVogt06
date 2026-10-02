@@ -30,6 +30,18 @@ export const SKY = /* glsl */ `
         return 1.0 - exp(-dist * uFogDensity);
     }
 
+    // Light on a matte surface facing n, the sky counted generously so a
+    // print the sun is behind still reads.
+    vec3 lit(vec3 n) {
+        return (uAmbient * 2.4 + uSunLight * max(dot(n, uSunDir), 0.0) * 1.1
+            + uMoonLight * max(dot(n, uMoonDir), 0.0)) / PI;
+    }
+
+    float roundBox(vec2 p, vec2 extent, float r) {
+        vec2 q = abs(p) - extent + r;
+        return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+    }
+
     float hash12(vec2 p) {
         vec3 p3 = fract(vec3(p.xyx) * 0.1031);
         p3 += dot(p3, p3.yzx + 33.33);
@@ -342,9 +354,9 @@ export const panelVertex = /* glsl */ `
     }
 `
 
-// A panel is a screen: it keeps its own brightness whatever the light, so it
-// is scaled against the exposure and reads the same at noon and at night.
-export const panelFragment = /* glsl */ `
+// A photo is a print: the daylight falls on it, warm in the morning, and it
+// only takes its colour when the camera comes to it.
+export const printFragment = /* glsl */ `
     precision highp float;
 
     ${SKY}
@@ -352,7 +364,6 @@ export const panelFragment = /* glsl */ `
     uniform sampler2D uMap;
     uniform float uHasMap;
     uniform float uFocus;
-    uniform float uAspect;
     uniform vec3 uBlank;
     uniform float uVeil;
 
@@ -362,18 +373,121 @@ export const panelFragment = /* glsl */ `
 
     void main() {
         vec3 c = uHasMap > 0.5 ? texture2D(uMap, vUv).rgb : uBlank;
-
         float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
-        c = mix(vec3(luma), c, mix(0.1, 1.0, uFocus));
-        c *= 0.95 * uInvExposure * mix(0.6, 1.0, uFocus);
-
-        vec2 edge = min(vUv, 1.0 - vUv) * vec2(uAspect, 1.0);
-        float rim = 1.0 - smoothstep(0.0, 0.006, min(edge.x, edge.y));
-        c = mix(c, vec3(0.7) * uInvExposure, rim * 0.12);
+        c = mix(vec3(luma), c, mix(0.12, 1.0, uFocus));
+        c *= lit(normalize(vNormal)) * mix(0.8, 1.0, uFocus);
 
         float dist = length(cameraPosition - vWorld);
         c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
         gl_FragColor = vec4(c, 0.0);
+    }
+`
+
+// A project is a screen: dark glass that mirrors the sky until the camera
+// arrives, then it switches on from the top and holds its own brightness
+// whatever the light, read against the exposure.
+export const screenFragment = /* glsl */ `
+    precision highp float;
+
+    ${SKY}
+
+    uniform sampler2D uMap;
+    uniform float uHasMap;
+    uniform float uFocus;
+    uniform float uOn;
+    uniform vec2 uSize;
+    uniform float uRadius;
+    uniform vec3 uBlank;
+    uniform float uVeil;
+
+    varying vec2 vUv;
+    varying vec3 vWorld;
+    varying vec3 vNormal;
+
+    void main() {
+        vec2 local = (vUv - 0.5) * uSize;
+        if (roundBox(local, uSize * 0.5, uRadius) > 0.0) discard;
+
+        vec3 img = uHasMap > 0.5 ? texture2D(uMap, vUv).rgb : uBlank;
+        float luma = dot(img, vec3(0.2126, 0.7152, 0.0722));
+
+        float depth = 1.0 - vUv.y;
+        float front = uOn * 1.15;
+        float shown = 1.0 - smoothstep(front - 0.1, front, depth);
+        float line = exp(-pow((depth - front + 0.04) * 28.0, 2.0)) * step(0.001, uOn) * step(uOn, 0.999);
+
+        vec3 standby = vec3(luma) * 0.07;
+        vec3 picture = mix(vec3(luma), img, mix(0.55, 1.0, uFocus)) * mix(0.4, 1.0, uFocus);
+        vec3 c = (mix(standby, picture, shown) + vec3(0.65, 0.8, 1.0) * line * 0.7) * 1.1 * uInvExposure;
+
+        vec3 n = normalize(vNormal);
+        vec3 v = normalize(cameraPosition - vWorld);
+        float f = 0.03 + 0.97 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+        c += skyLut(reflect(-v, n)) * min(f, 0.3) * 0.3;
+
+        float dist = length(cameraPosition - vWorld);
+        c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
+        gl_FragColor = vec4(c, 0.0);
+    }
+`
+
+export const bezelFragment = /* glsl */ `
+    precision highp float;
+
+    ${SKY}
+
+    uniform vec2 uSize;
+    uniform float uRadius;
+    uniform float uVeil;
+
+    varying vec2 vUv;
+    varying vec3 vWorld;
+    varying vec3 vNormal;
+
+    void main() {
+        vec2 local = (vUv - 0.5) * uSize;
+        if (roundBox(local, uSize * 0.5, uRadius) > 0.0) discard;
+
+        vec3 v = normalize(cameraPosition - vWorld);
+        vec3 n = normalize(vNormal);
+        n = dot(n, v) < 0.0 ? -n : n;
+        float f = 0.04 + 0.96 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+        vec3 c = vec3(0.02) * lit(n) + skyLut(reflect(-v, n)) * f;
+
+        float dist = length(cameraPosition - vWorld);
+        c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
+        gl_FragColor = vec4(c, 0.0);
+    }
+`
+
+/** The light a switched-on screen throws around itself, in the colour of
+ *  what it shows. It is added on top and leaves the sky mask alone. */
+export const glowFragment = /* glsl */ `
+    precision highp float;
+
+    ${SKY}
+
+    uniform sampler2D uMap;
+    uniform float uOn;
+    uniform float uFocus;
+    uniform vec2 uSize;
+    uniform vec2 uSpread;
+    uniform float uVeil;
+
+    varying vec2 vUv;
+    varying vec3 vWorld;
+    varying vec3 vNormal;
+
+    void main() {
+        vec2 local = (vUv - 0.5) * uSpread;
+        float d = roundBox(local, uSize * 0.5, 0.06);
+        float g = exp(-max(d, 0.0) * 2.4) * smoothstep(0.0, 0.03, d);
+        vec3 tint = textureLod(uMap, vec2(0.5), 9.0).rgb;
+        tint = mix(vec3(dot(tint, vec3(0.333))), tint, 0.7) + 0.06;
+
+        float dist = length(cameraPosition - vWorld);
+        float seen = (1.0 - fogAmount(dist)) * (1.0 - uVeil);
+        gl_FragColor = vec4(tint * g * uOn * mix(0.25, 1.0, uFocus) * seen * 0.5 * uInvExposure, 1.0);
     }
 `
 
@@ -390,9 +504,7 @@ export const solidFragment = /* glsl */ `
     varying vec3 vNormal;
 
     void main() {
-        vec3 n = normalize(vNormal);
-        vec3 light = uAmbient + uSunLight * max(dot(n, uSunDir), 0.0) + uMoonLight * max(dot(n, uMoonDir), 0.0);
-        vec3 c = uColor * light / PI;
+        vec3 c = uColor * lit(normalize(vNormal));
         float dist = length(cameraPosition - vWorld);
         c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
         gl_FragColor = vec4(c, 0.0);
