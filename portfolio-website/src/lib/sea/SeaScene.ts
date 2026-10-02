@@ -1,0 +1,583 @@
+import * as THREE from "three"
+import {Reflector} from "three/examples/jsm/objects/Reflector.js"
+import {
+    panelFragment,
+    panelVertex,
+    skyFragment,
+    skyVertex,
+    solidFragment,
+    starFragment,
+    starVertex,
+    waterFragment,
+    waterVertex,
+} from "./glsl"
+import {createLight, lightAt} from "./light"
+import type {Light} from "./light"
+import {createPost} from "./post"
+import type {Post} from "./post"
+import {SHOT, SHOT_COUNT, presence} from "@/lib/journey"
+
+export type PanelSpec = {image: string; aspect: number}
+
+export type SeaSceneOptions = {
+    container: HTMLElement
+    panels: PanelSpec[]
+    onSelect: (panel: number) => void
+    onProgress: (fraction: number) => void
+    onReady: () => void
+}
+
+const FOV = 38
+const EYE = 1.55
+const PANEL_WIDTH = 3.2
+const PANEL_LIFT = -0.03
+const FRAME = 0.045
+
+const SKY_RADIUS = 900
+const STAR_COUNT = 2400
+
+const PIXEL_RATIOS = [0.75, 1, 1.25, 1.5, 2]
+const REFLECTION_SCALE = 0.5
+
+// Seconds for the camera to close most of the gap to where the scroll wants
+// it; long enough to feel like a boat, short enough to follow a flick.
+const CAMERA_LAG = 0.55
+
+const TAU = Math.PI * 2
+
+const damp = (current: number, target: number, lag: number, dt: number) =>
+    current + (target - current) * (1 - Math.exp(-dt / lag))
+
+type Shot = {position: THREE.Vector3; yaw: number; pitch: number}
+
+type Panel = {
+    group: THREE.Group
+    image: THREE.Mesh
+    material: THREE.ShaderMaterial
+    center: THREE.Vector3
+    yaw: number
+    width: number
+    height: number
+}
+
+const catmull = (p0: number, p1: number, p2: number, p3: number, t: number) => {
+    const t2 = t * t
+    const t3 = t2 * t
+    return 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3)
+}
+
+/** Where panel `i` stands: a loose row receding to the right, so the next
+ *  panel always hides behind the one in focus rather than behind the copy,
+ *  with a longer stretch of open water where the photos give way to work. */
+const placement = (i: number) => {
+    const gap = i >= SHOT.photos.length ? 16 : 0
+    return {
+        x: 1.8 + i * 2.6 + Math.sin(i * 1.1) * 0.6 + gap * 0.2,
+        z: -34 - i * 12 - gap,
+        yaw: -0.16 + Math.sin(i * 1.7) * 0.06,
+    }
+}
+
+export class SeaScene {
+    private readonly container: HTMLElement
+    private readonly options: SeaSceneOptions
+    private readonly renderer: THREE.WebGLRenderer
+    private readonly scene = new THREE.Scene()
+    private readonly camera: THREE.PerspectiveCamera
+    private readonly post: Post
+    private readonly water: Reflector
+    private readonly sky: THREE.Mesh
+    private readonly stars: THREE.Points
+    private readonly panels: Panel[] = []
+    private readonly frames: THREE.ShaderMaterial[] = []
+    private readonly shared: Record<string, THREE.IUniform>
+    private readonly light: Light = createLight()
+    private readonly textures: THREE.Texture[] = []
+    private readonly disposables: Array<{dispose: () => void}> = []
+    private readonly raycaster = new THREE.Raycaster()
+    private readonly pointer = new THREE.Vector2()
+    private readonly resizeObserver: ResizeObserver
+    private readonly coarse = window.matchMedia("(pointer: coarse)").matches
+
+    private shots: Shot[] = []
+    private shotTarget = 0
+    private shot = 0
+    private parallax = new THREE.Vector2()
+    private parallaxTarget = new THREE.Vector2()
+
+    private level = PIXEL_RATIOS.length - 1
+    private frame = 0
+    private last = 0
+    private time = 0
+    private running = false
+    private paused = false
+    private disposed = false
+    private pending = 0
+    private loaded = 0
+    private built = false
+    private announced = false
+    private hovered = -1
+
+    private samples = 0
+    private sampleStart = 0
+    private slow = 0
+
+    constructor(options: SeaSceneOptions) {
+        this.options = options
+        this.container = options.container
+
+        const width = Math.max(this.container.clientWidth, 1)
+        const height = Math.max(this.container.clientHeight, 1)
+
+        this.renderer = new THREE.WebGLRenderer({antialias: false, alpha: false, powerPreference: "high-performance"})
+        this.renderer.autoClear = false
+        this.renderer.setPixelRatio(this.pixelRatio())
+        this.renderer.setSize(width, height)
+        this.container.appendChild(this.renderer.domElement)
+
+        this.camera = new THREE.PerspectiveCamera(FOV, width / height, 0.1, 2400)
+        this.camera.rotation.order = "YXZ"
+
+        this.post = createPost(this.renderer, this.coarse ? 0 : 4)
+        this.post.setSize(width, height, this.renderer.getPixelRatio())
+
+        this.shared = {
+            uZenith: {value: this.light.zenith},
+            uHorizon: {value: this.light.horizon},
+            uSunDir: {value: new THREE.Vector3(0, 0.1, -1).normalize()},
+            uSunColor: {value: this.light.sun},
+            uSunSize: {value: 0.02},
+            uHalo: {value: 1},
+            uFogDensity: {value: 0.01},
+            uTime: {value: 0},
+        }
+
+        const skyMaterial = new THREE.ShaderMaterial({
+            vertexShader: skyVertex,
+            fragmentShader: skyFragment,
+            uniforms: this.shared,
+            side: THREE.BackSide,
+            depthWrite: false,
+        })
+        const skyGeometry = new THREE.SphereGeometry(SKY_RADIUS, 48, 24)
+        this.sky = new THREE.Mesh(skyGeometry, skyMaterial)
+        this.sky.frustumCulled = false
+        this.sky.renderOrder = -2
+        this.scene.add(this.sky)
+        this.disposables.push(skyMaterial, skyGeometry)
+
+        this.stars = this.createStars()
+        this.scene.add(this.stars)
+
+        const waterGeometry = new THREE.PlaneGeometry(4000, 4000)
+        this.water = new Reflector(waterGeometry, {
+            textureWidth: Math.round(width * this.renderer.getPixelRatio() * REFLECTION_SCALE),
+            textureHeight: Math.round(height * this.renderer.getPixelRatio() * REFLECTION_SCALE),
+            clipBias: 0.002,
+            multisample: 0,
+            shader: {
+                name: "SeaWater",
+                uniforms: {
+                    color: {value: null},
+                    tDiffuse: {value: null},
+                    textureMatrix: {value: null},
+                    uDeep: {value: this.light.deep},
+                    uChop: {value: 1},
+                    uGlitter: {value: 0.3},
+                },
+                vertexShader: waterVertex,
+                fragmentShader: waterFragment,
+            },
+        })
+        const waterMaterial = this.water.material as THREE.ShaderMaterial
+        Object.assign(waterMaterial.uniforms, this.shared)
+        this.water.rotation.x = -Math.PI / 2
+        this.water.frustumCulled = false
+        this.scene.add(this.water)
+        this.disposables.push(waterGeometry, this.water)
+
+        options.panels.forEach((spec, i) => this.createPanel(spec, i))
+
+        this.layout()
+        this.applyLight()
+        this.placeCamera(0)
+
+        window.addEventListener("pointermove", this.handlePointerMove, {passive: true})
+        window.addEventListener("click", this.handleClick)
+        document.addEventListener("visibilitychange", this.sync)
+        this.resizeObserver = new ResizeObserver(this.handleResize)
+        this.resizeObserver.observe(this.container)
+
+        this.built = true
+        if (this.loaded >= this.pending) this.announce()
+        this.sync()
+    }
+
+    setShot(shot: number) {
+        this.shotTarget = shot
+        if (!this.announced) this.shot = shot
+        this.sync()
+    }
+
+    setPaused(paused: boolean) {
+        this.paused = paused
+        this.sync()
+    }
+
+    dispose() {
+        this.disposed = true
+        cancelAnimationFrame(this.frame)
+        window.removeEventListener("pointermove", this.handlePointerMove)
+        window.removeEventListener("click", this.handleClick)
+        document.removeEventListener("visibilitychange", this.sync)
+        this.resizeObserver.disconnect()
+        document.body.style.cursor = ""
+        this.disposables.forEach((d) => d.dispose())
+        this.textures.forEach((t) => t.dispose())
+        this.post.dispose()
+        this.renderer.dispose()
+        this.renderer.domElement.remove()
+    }
+
+    private createStars() {
+        const positions = new Float32Array(STAR_COUNT * 3)
+        const sizes = new Float32Array(STAR_COUNT)
+        const phases = new Float32Array(STAR_COUNT)
+        let seed = 17
+        const random = () => {
+            seed = (seed * 16807) % 2147483647
+            return seed / 2147483647
+        }
+        for (let i = 0; i < STAR_COUNT; i++) {
+            const y = Math.pow(random(), 0.8)
+            const angle = random() * TAU
+            const r = Math.sqrt(1 - y * y)
+            positions.set([Math.cos(angle) * r * 800, y * 800, Math.sin(angle) * r * 800], i * 3)
+            const bright = random()
+            sizes[i] = 0.8 + Math.pow(bright, 6) * 2.6
+            phases[i] = random()
+        }
+        const geometry = new THREE.BufferGeometry()
+        geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
+        geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1))
+        geometry.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1))
+        const material = new THREE.ShaderMaterial({
+            vertexShader: starVertex,
+            fragmentShader: starFragment,
+            uniforms: {
+                uTime: this.shared.uTime,
+                uPixelRatio: {value: this.renderer.getPixelRatio()},
+                uAmount: {value: 0},
+            },
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+        })
+        const points = new THREE.Points(geometry, material)
+        points.frustumCulled = false
+        points.renderOrder = -1
+        this.disposables.push(geometry, material)
+        return points
+    }
+
+    private createPanel(spec: PanelSpec, i: number) {
+        const width = PANEL_WIDTH
+        const height = width / spec.aspect
+        const {x, z, yaw} = placement(i)
+
+        const material = new THREE.ShaderMaterial({
+            vertexShader: panelVertex,
+            fragmentShader: panelFragment,
+            uniforms: {
+                ...this.shared,
+                uMap: {value: null},
+                uHasMap: {value: 0},
+                uFocus: {value: 0},
+                uLight: {value: 1},
+                uAspect: {value: spec.aspect},
+                uBlank: {value: new THREE.Color("#2a3038")},
+            },
+        })
+        const geometry = new THREE.PlaneGeometry(width, height)
+        const image = new THREE.Mesh(geometry, material)
+        image.userData.panel = i
+
+        const frameMaterial = new THREE.ShaderMaterial({
+            vertexShader: panelVertex,
+            fragmentShader: solidFragment,
+            uniforms: {...this.shared, uColor: {value: this.light.frame}},
+        })
+        const frameGeometry = new THREE.BoxGeometry(width + FRAME, height + FRAME, 0.05)
+        const frame = new THREE.Mesh(frameGeometry, frameMaterial)
+        frame.position.z = -0.032
+
+        const group = new THREE.Group()
+        group.add(image, frame)
+        const center = new THREE.Vector3(x, PANEL_LIFT + height / 2, z)
+        group.position.copy(center)
+        group.rotation.y = yaw
+        this.scene.add(group)
+
+        this.frames.push(frameMaterial)
+        this.disposables.push(material, geometry, frameMaterial, frameGeometry)
+        this.panels.push({group, image, material, center, yaw, width, height})
+
+        this.pending++
+        new THREE.TextureLoader().load(
+            spec.image,
+            (texture) => {
+                if (this.disposed) {
+                    texture.dispose()
+                    return
+                }
+                texture.colorSpace = THREE.SRGBColorSpace
+                texture.anisotropy = Math.min(8, this.renderer.capabilities.getMaxAnisotropy())
+                material.uniforms.uMap.value = texture
+                material.uniforms.uHasMap.value = 1
+                this.textures.push(texture)
+                this.settle()
+            },
+            undefined,
+            () => this.settle(),
+        )
+    }
+
+    private settle() {
+        this.loaded++
+        this.options.onProgress(Math.min(this.loaded / Math.max(this.pending, 1), 1))
+        if (this.built && this.loaded >= this.pending) this.announce()
+    }
+
+    private announce() {
+        if (this.announced || this.disposed) return
+        this.announced = true
+        this.renderer
+            .compileAsync(this.scene, this.camera)
+            .catch(() => undefined)
+            .then(() => {
+                if (this.disposed) return
+                this.render()
+                this.options.onReady()
+            })
+    }
+
+    /** Camera rests for every shot, framed for the current aspect: the panel
+     *  sits right of the copy on a wide screen and above it on a tall one. */
+    private layout() {
+        const aspect = this.camera.aspect
+        const tanV = Math.tan(THREE.MathUtils.degToRad(FOV / 2))
+        const tanH = tanV * aspect
+        const portrait = aspect < 0.9
+
+        const shots: Shot[] = []
+        shots.push({
+            position: new THREE.Vector3(portrait ? 0.6 : 0, EYE + 0.15, 24),
+            yaw: portrait ? -0.05 : 0,
+            pitch: -0.025,
+        })
+
+        this.panels.forEach((panel) => {
+            const share = portrait ? 0.86 : aspect < 1.3 ? 0.5 : 0.42
+            const across = portrait ? 0 : 0.34
+            const up = portrait ? 0.34 : 0.04
+
+            const fitWidth = panel.width / (2 * tanH * share)
+            const fitHeight = panel.height / (2 * tanV * (portrait ? 0.34 : 0.6))
+            const distance = Math.max(fitWidth, fitHeight)
+
+            const normal = new THREE.Vector3(Math.sin(panel.yaw), 0, Math.cos(panel.yaw))
+            const right = new THREE.Vector3(Math.cos(panel.yaw), 0, -Math.sin(panel.yaw))
+
+            const position = panel.center
+                .clone()
+                .addScaledVector(normal, distance)
+                .addScaledVector(right, -across * distance * tanH)
+            // Looking down on the panel a little puts the horizon above the
+            // copy, so every line of it sits on dark water.
+            position.y = Math.max(panel.center.y - up * distance * tanV, 1.05) + (portrait ? 0.35 : 0.75)
+
+            const pitch = Math.atan2(panel.center.y - position.y, distance) - Math.atan(up * tanV)
+            shots.push({position, yaw: panel.yaw, pitch})
+        })
+
+        const lastPanel = this.panels[this.panels.length - 1]
+        const end = lastPanel ? lastPanel.center.z : -100
+        shots.push({
+            position: new THREE.Vector3(portrait ? 1.2 : -1, 2.4, end - 34),
+            yaw: portrait ? -0.12 : -0.04,
+            pitch: portrait ? 0.12 : 0.06,
+        })
+
+        while (shots.length < SHOT_COUNT) shots.push(shots[shots.length - 1])
+        this.shots = shots
+    }
+
+    private placeCamera(shot: number) {
+        const s = Math.min(Math.max(shot, 0), this.shots.length - 1)
+        const i = Math.min(Math.floor(s), this.shots.length - 2)
+        const t = s - i
+        const at = (k: number) => this.shots[Math.min(Math.max(k, 0), this.shots.length - 1)]
+        const [a, b, c, d] = [at(i - 1), at(i), at(i + 1), at(i + 2)]
+
+        const p = this.camera.position
+        p.set(
+            catmull(a.position.x, b.position.x, c.position.x, d.position.x, t),
+            catmull(a.position.y, b.position.y, c.position.y, d.position.y, t),
+            catmull(a.position.z, b.position.z, c.position.z, d.position.z, t),
+        )
+        let yaw = catmull(a.yaw, b.yaw, c.yaw, d.yaw, t)
+        let pitch = catmull(a.pitch, b.pitch, c.pitch, d.pitch, t)
+
+        // A slow swell under the camera and a hand on the mouse.
+        const bob = Math.sin(this.time * 0.55) * 0.035 + Math.sin(this.time * 0.31 + 1.3) * 0.02
+        p.y += bob
+        const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw))
+        p.addScaledVector(right, this.parallax.x * 0.22)
+        p.y += this.parallax.y * 0.1
+        yaw -= this.parallax.x * 0.012
+        pitch += this.parallax.y * 0.006
+
+        this.camera.rotation.set(pitch, yaw, Math.sin(this.time * 0.37) * 0.0035)
+    }
+
+    private applyLight() {
+        lightAt(this.shot, this.light)
+        const l = this.light
+        const sun = this.shared.uSunDir.value as THREE.Vector3
+        sun.set(Math.sin(l.bearing) * Math.cos(l.elevation), Math.sin(l.elevation), -Math.cos(l.bearing) * Math.cos(l.elevation))
+        this.shared.uSunSize.value = l.sunSize
+        this.shared.uHalo.value = l.halo
+        this.shared.uFogDensity.value = l.fog
+
+        const water = (this.water.material as THREE.ShaderMaterial).uniforms
+        water.uGlitter.value = l.glitter
+        ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
+
+        this.panels.forEach((panel, i) => {
+            const focus = presence(this.shot, i + 1)
+            panel.material.uniforms.uFocus.value = focus
+            panel.material.uniforms.uLight.value = l.panel
+        })
+    }
+
+    private pixelRatio() {
+        return Math.min(window.devicePixelRatio || 1, PIXEL_RATIOS[this.level])
+    }
+
+    private sync = () => {
+        if (this.disposed) return
+        const run = !this.paused && document.visibilityState === "visible"
+        if (run && !this.running) {
+            this.running = true
+            this.last = 0
+            this.frame = requestAnimationFrame(this.loop)
+        } else if (!run && this.running) {
+            this.running = false
+            cancelAnimationFrame(this.frame)
+        }
+    }
+
+    private loop = (now: number) => {
+        this.frame = requestAnimationFrame(this.loop)
+        const dt = this.last ? Math.min((now - this.last) / 1000, 0.1) : 1 / 60
+        this.last = now
+        this.time += dt
+
+        this.shot = damp(this.shot, this.shotTarget, CAMERA_LAG, dt)
+        this.parallax.x = damp(this.parallax.x, this.parallaxTarget.x, 0.9, dt)
+        this.parallax.y = damp(this.parallax.y, this.parallaxTarget.y, 0.9, dt)
+
+        this.applyLight()
+        this.placeCamera(this.shot)
+
+        this.panels.forEach((panel, i) => {
+            panel.group.position.y = panel.center.y + Math.sin(this.time * 0.6 + i * 1.7) * 0.025
+            panel.group.rotation.z = Math.sin(this.time * 0.42 + i) * 0.004
+        })
+
+        this.render()
+        this.adapt(now)
+    }
+
+    private render() {
+        this.shared.uTime.value = this.time
+        this.sky.position.copy(this.camera.position)
+        this.stars.position.copy(this.camera.position)
+        this.water.position.x = this.camera.position.x
+        this.water.position.z = this.camera.position.z
+        this.post.render(this.scene, this.camera, this.time)
+    }
+
+    /** Steps the resolution down while frames run long, and never back up:
+     *  a phone that struggled once will struggle again. */
+    private adapt(now: number) {
+        if (this.samples === 0) this.sampleStart = now
+        this.samples++
+        if (this.samples < 90) return
+        const fps = (this.samples - 1) / ((now - this.sampleStart) / 1000)
+        this.samples = 0
+        if (fps >= 48 || this.level === 0) {
+            this.slow = 0
+            return
+        }
+        if (++this.slow < 2) return
+        this.slow = 0
+        this.level--
+        this.handleResize()
+    }
+
+    private handleResize = () => {
+        const width = Math.max(this.container.clientWidth, 1)
+        const height = Math.max(this.container.clientHeight, 1)
+        this.renderer.setPixelRatio(this.pixelRatio())
+        this.renderer.setSize(width, height)
+        const ratio = this.renderer.getPixelRatio()
+        this.post.setSize(width, height, ratio)
+        this.water
+            .getRenderTarget()
+            .setSize(Math.round(width * ratio * REFLECTION_SCALE), Math.round(height * ratio * REFLECTION_SCALE))
+        ;(this.stars.material as THREE.ShaderMaterial).uniforms.uPixelRatio.value = ratio
+        this.camera.aspect = width / height
+        this.camera.updateProjectionMatrix()
+        this.layout()
+        if (!this.running) {
+            this.placeCamera(this.shot)
+            this.render()
+        }
+    }
+
+    private pick(clientX: number, clientY: number) {
+        const rect = this.renderer.domElement.getBoundingClientRect()
+        this.pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1)
+        this.raycaster.setFromCamera(this.pointer, this.camera)
+        const hit = this.raycaster.intersectObjects(this.panels.map((p) => p.image), false)[0]
+        if (!hit) return -1
+        const index = hit.object.userData.panel as number
+        return presence(this.shot, index + 1) > 0.6 ? index : -1
+    }
+
+    // Only the panel the camera rests on answers, and never through the copy
+    // or the chrome laid over the canvas.
+    private overCanvas(target: EventTarget | null) {
+        return target instanceof Element && !target.closest("a, button, [data-overlay], [role=dialog]")
+    }
+
+    private handlePointerMove = (event: PointerEvent) => {
+        if (!this.coarse) {
+            this.parallaxTarget.set(
+                (event.clientX / window.innerWidth) * 2 - 1,
+                -((event.clientY / window.innerHeight) * 2 - 1),
+            )
+        }
+        const index = this.overCanvas(event.target) ? this.pick(event.clientX, event.clientY) : -1
+        if (index === this.hovered) return
+        this.hovered = index
+        document.body.style.cursor = index >= 0 ? "pointer" : ""
+    }
+
+    private handleClick = (event: MouseEvent) => {
+        if (this.paused || !this.overCanvas(event.target)) return
+        const index = this.pick(event.clientX, event.clientY)
+        if (index >= 0) this.options.onSelect(index)
+    }
+}
