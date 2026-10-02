@@ -54,12 +54,14 @@ const Shot = ({
         )
     }
 
+    // Only the actions take the pointer: the rest of the layer lets clicks
+    // through to the panel behind it.
     return (
         <PresenceContext.Provider value={shown}>
             <div
                 ref={rootRef}
                 data-overlay
-                className={`ink pointer-events-none fixed inset-x-0 top-0 z-20 flex h-svh flex-col px-[var(--gutter)] pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] pt-20 will-change-transform md:pb-24 ${className}`}
+                className={`ink pointer-events-none fixed inset-x-0 top-0 z-20 [&_a]:pointer-events-auto [&_button]:pointer-events-auto flex h-svh flex-col px-[var(--gutter)] pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+1rem))] pt-20 will-change-transform md:pb-24 ${className}`}
                 style={{opacity: 0, visibility: "hidden"}}
             >
                 {children}
