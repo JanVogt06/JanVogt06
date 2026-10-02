@@ -88,7 +88,7 @@ function App() {
                     <div
                         aria-hidden="true"
                         data-scene
-                        className="pointer-events-none fixed inset-x-0 bottom-0 z-10 h-[62svh] bg-gradient-to-t from-[rgb(7_10_14/0.62)] via-[rgb(7_10_14/0.26)] to-transparent"
+                        className="pointer-events-none fixed inset-x-0 bottom-0 z-10 h-[72svh] bg-gradient-to-t from-[rgb(7_10_14/0.68)] via-[rgb(7_10_14/0.34)] to-transparent"
                     />
                     <div
                         aria-hidden="true"
