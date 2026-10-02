@@ -33,6 +33,10 @@ const PANEL_WIDTH = 3.2
 const PANEL_LIFT = -0.03
 const FRAME = 0.045
 
+/** Where the horizon sits on a wide screen while a panel is in focus, in
+ *  normalised device units above the centre of the frame. */
+const HORIZON = 0.42
+
 const SKY_RADIUS = 900
 const STAR_COUNT = 2400
 
@@ -407,10 +411,18 @@ export class SeaScene {
                 .addScaledVector(normal, distance)
                 .addScaledVector(right, -across * distance * tanH)
             // Looking down on the panel a little puts the horizon above the
-            // copy, so every line of it sits on dark water.
-            position.y = Math.max(panel.center.y - up * distance * tanV, 1.05) + (portrait ? 0.35 : 0.75)
+            // copy, at the same height on every wide screen, so every line of
+            // it sits on dark water.
+            // A tall frame stands too far back to look down that steeply, so
+            // there the eye stops above the water and the pitch follows it.
+            const lift = Math.atan(up * tanV)
+            let pitch = -Math.atan((portrait ? 0.1 : HORIZON) * tanV)
+            position.y = panel.center.y - distance * Math.tan(pitch + lift)
+            if (position.y < 1.05) {
+                position.y = 1.05
+                pitch = Math.atan2(panel.center.y - position.y, distance) - lift
+            }
 
-            const pitch = Math.atan2(panel.center.y - position.y, distance) - Math.atan(up * tanV)
             shots.push({position, yaw: panel.yaw, pitch})
         })
 
