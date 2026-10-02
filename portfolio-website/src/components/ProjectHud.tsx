@@ -1,6 +1,6 @@
 import {useId, useRef, useState} from "react"
 import {X} from "lucide-react"
-import {FolderGit2, Satellite, Zap, Receipt, Sword, Waves} from "lucide-react"
+import {FolderGit2, Satellite, Zap, Receipt, Waves} from "lucide-react"
 import type {LucideIcon} from "lucide-react"
 import BrowserFrame from "./BrowserFrame"
 import {CtaLink} from "./ui/Cta"
@@ -8,7 +8,7 @@ import {projects, primaryLinkOf} from "@/lib/projects"
 import {screenshotFor} from "@/lib/screenshots"
 import useDialog from "@/lib/useDialog"
 
-const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Sword, Waves}
+const iconMap: Record<string, LucideIcon> = {Satellite, Zap, Receipt, Waves}
 
 const ProjectHud = ({index, onClose}: {index: number; onClose: () => void}) => {
     const project = projects[index]

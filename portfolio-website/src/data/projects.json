@@ -74,23 +74,5 @@
       "github": "https://github.com/JanVogt06/Spesenfuchs_Schiri-Spesen-Automat",
       "app": "https://spesen-generator.jan-vogt.dev/"
     }
-  },
-  {
-    "slug": "cryptborne",
-    "icon": "Sword",
-    "title": "Cryptborne",
-    "subtitle": "3D Dungeon-Crawler",
-    "tagline": "Prozedural erzeugte Dungeons mit Gegner-KI",
-    "description": "Prozedural generierter Dungeon-Crawler im mittelalterlichen Fantasy-Setting. Mit variantenreichem Waffensystem und intelligenter Enemy-AI.",
-    "tech": [
-      "Unity",
-      "C#",
-      "Procedural Gen"
-    ],
-    "links": {
-      "github": "https://github.com/JY-Studios/cryptborne",
-      "play": "https://cryptborne.jan-vogt.dev/"
-    },
-    "previewNote": "74 MB Unity-Build"
   }
 ]

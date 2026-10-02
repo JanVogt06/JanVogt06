@@ -14,7 +14,6 @@ Der Name muss dem `slug` aus `src/data/projects.json` entsprechen. Endung
 | SatTrak              | `sattrak.webp`           |
 | SolarFlow            | `solarflow.webp`         |
 | TFV Spesen Generator | `spesen-generator.webp`  |
-| Cryptborne           | `cryptborne.webp`        |
 
 Kein Code muss angefasst werden: `ProjectSlide` liest den Ordner über
 `import.meta.glob`. Fehlt eine Datei, zeigt der Rahmen automatisch den

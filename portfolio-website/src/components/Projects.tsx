@@ -29,8 +29,8 @@ const Opening = () => (
             <div className="mt-6 flex flex-col gap-6 md:mt-8 md:flex-row md:items-end md:justify-between">
                 <p className="max-w-[38ch] text-lead text-fg-2">
                     <Rise mode="fade" delay={320}>
-                        Fünf Dinge, die ich gebaut habe: von der Tsunami-Simulation im Browser bis zum
-                        Dungeon-Crawler.
+                        Vier Dinge, die ich gebaut habe: von der Tsunami-Simulation im Browser bis zur
+                        automatischen Spesenabrechnung.
                     </Rise>
                 </p>
                 <Rise mode="fade" delay={460} as="div">
