@@ -681,8 +681,10 @@ export class SeaScene {
         // A panel stays in the fog until the camera is nearly on it, so the
         // next one never stands behind the one in focus, and goes back into
         // it once passed, so a tall frame never looks past it at an edge.
-        // From the overlook every screen is meant to be seen, if dimly.
-        const overlook = smooth01(1 - Math.abs(this.shot - SHOT.work) / 0.9)
+        // From the overlook on, the whole row of screens stays in sight until
+        // the camera leaves the last one; only a passed screen still goes.
+        const lastWork = SHOT.projects[SHOT.projects.length - 1]
+        const overlook = Math.min(smooth01((this.shot - (SHOT.work - 0.9)) / 0.7), smooth01((lastWork + 0.6 - this.shot) / 0.4))
         this.panels.forEach((panel, i) => {
             const ahead = panelShot(i) - this.shot
             let veil = ahead >= 0 ? smooth01((ahead - 0.3) / 0.7) : smooth01((-ahead - 0.04) / 0.26)
