@@ -1,7 +1,9 @@
 import * as THREE from "three"
 import {Reflector} from "three/examples/jsm/objects/Reflector.js"
 import {
+    lutFragment,
     panelFragment,
+    passVertex,
     panelVertex,
     skyFragment,
     skyVertex,
@@ -11,8 +13,9 @@ import {
     waterFragment,
     waterVertex,
 } from "./glsl"
-import {createLight, lightAt} from "./light"
-import type {Light} from "./light"
+import {MOON, MOON_TINT, lightAt} from "./light"
+import {DETAIL_SIZE, createOcean} from "./ocean"
+import type {Ocean} from "./ocean"
 import {createPost} from "./post"
 import type {Post} from "./post"
 import {SHOT, SHOT_COUNT, presence} from "@/lib/journey"
@@ -42,6 +45,15 @@ const STAR_COUNT = 2400
 
 const PIXEL_RATIOS = [0.75, 1, 1.25, 1.5, 2]
 const REFLECTION_SCALE = 0.5
+
+const LUT_WIDTH = 192
+const LUT_HEIGHT = 96
+
+// Sea water seen from above: almost black, a little blue-green, and the
+// colour of the light that comes through the back of a wave.
+const SEA = new THREE.Color(0.004, 0.012, 0.018)
+const SCATTER = new THREE.Color(0.02, 0.11, 0.09)
+const FRAME_COLOR = new THREE.Color(0.05, 0.055, 0.06)
 
 // Seconds for the camera to close most of the gap to where the scroll wants
 // it; long enough to feel like a boat, short enough to follow a flick.
@@ -74,6 +86,35 @@ type Panel = {
     height: number
 }
 
+/** A square grid whose cells grow away from the middle: a few centimetres
+ *  under the camera, where the swell needs them, and kilometres at the
+ *  horizon, where the sea is only a reflection. */
+const createSeaGeometry = (segments = 256, radius = 2500, density = 7) => {
+    const stretch = (u: number) => (radius * Math.sinh(density * u)) / Math.sinh(density)
+    const positions = new Float32Array((segments + 1) * (segments + 1) * 3)
+    const indices: number[] = []
+    for (let j = 0; j <= segments; j++) {
+        for (let i = 0; i <= segments; i++) {
+            const k = (j * (segments + 1) + i) * 3
+            positions[k] = stretch((i / segments) * 2 - 1)
+            positions[k + 1] = stretch((j / segments) * 2 - 1)
+        }
+    }
+    for (let j = 0; j < segments; j++) {
+        for (let i = 0; i < segments; i++) {
+            const a = j * (segments + 1) + i
+            const b = a + 1
+            const c = a + segments + 1
+            const d = c + 1
+            indices.push(a, b, c, b, d, c)
+        }
+    }
+    const geometry = new THREE.BufferGeometry()
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3))
+    geometry.setIndex(indices)
+    return geometry
+}
+
 const catmull = (p0: number, p1: number, p2: number, p3: number, t: number) => {
     const t2 = t * t
     const t3 = t2 * t
@@ -104,9 +145,15 @@ export class SeaScene {
     private readonly sky: THREE.Mesh
     private readonly stars: THREE.Points
     private readonly panels: Panel[] = []
-    private readonly frames: THREE.ShaderMaterial[] = []
     private readonly shared: Record<string, THREE.IUniform>
-    private readonly light: Light = createLight()
+    private readonly clouds = {value: 0.4}
+    private readonly ocean: Ocean
+    private readonly lut: THREE.WebGLRenderTarget
+    private readonly lutMaterial: THREE.ShaderMaterial
+    private readonly lutScene = new THREE.Scene()
+    private readonly lutCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
+    private litShot = Number.NaN
+    private exposure = 1
     private readonly textures: THREE.Texture[] = []
     private readonly disposables: Array<{dispose: () => void}> = []
     private readonly raycaster = new THREE.Raycaster()
@@ -157,21 +204,51 @@ export class SeaScene {
         this.post = createPost(this.renderer, 4)
         this.post.setSize(width, height, this.renderer.getPixelRatio())
 
+        this.lut = new THREE.WebGLRenderTarget(LUT_WIDTH, LUT_HEIGHT, {
+            type: THREE.HalfFloatType,
+            wrapS: THREE.RepeatWrapping,
+            wrapT: THREE.ClampToEdgeWrapping,
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            depthBuffer: false,
+        })
+        this.lutMaterial = new THREE.ShaderMaterial({
+            vertexShader: passVertex,
+            fragmentShader: lutFragment,
+            uniforms: {
+                uSun: {value: new THREE.Vector3()},
+                uMoon: {value: new THREE.Vector3()},
+                uMoonShare: {value: new THREE.Vector3(...MOON_TINT).multiplyScalar(MOON)},
+                uZenith: {value: new THREE.Vector3()},
+                uHaze: {value: 1},
+            },
+            depthTest: false,
+            depthWrite: false,
+        })
+        const lutQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.lutMaterial)
+        lutQuad.frustumCulled = false
+        this.lutScene.add(lutQuad)
+        this.disposables.push(this.lut, this.lutMaterial, lutQuad.geometry)
+
+        this.ocean = createOcean()
+        this.disposables.push(this.ocean)
+
         this.shared = {
-            uZenith: {value: this.light.zenith},
-            uHorizon: {value: this.light.horizon},
+            uSkyLut: {value: this.lut.texture},
             uSunDir: {value: new THREE.Vector3(0, 0.1, -1).normalize()},
-            uSunColor: {value: this.light.sun},
-            uSunSize: {value: 0.02},
-            uHalo: {value: 1},
-            uFogDensity: {value: 0.01},
+            uMoonDir: {value: new THREE.Vector3(0, -1, 0)},
+            uSunLight: {value: new THREE.Vector3()},
+            uMoonLight: {value: new THREE.Vector3()},
+            uAmbient: {value: new THREE.Vector3()},
+            uFogDensity: {value: 0.002},
+            uInvExposure: {value: 1},
             uTime: {value: 0},
         }
 
         const skyMaterial = new THREE.ShaderMaterial({
             vertexShader: skyVertex,
             fragmentShader: skyFragment,
-            uniforms: this.shared,
+            uniforms: {...this.shared, uClouds: this.clouds},
             side: THREE.BackSide,
             depthWrite: false,
         })
@@ -185,7 +262,7 @@ export class SeaScene {
         this.stars = this.createStars()
         this.scene.add(this.stars)
 
-        const waterGeometry = new THREE.PlaneGeometry(4000, 4000)
+        const waterGeometry = createSeaGeometry()
         this.water = new Reflector(waterGeometry, {
             textureWidth: Math.round(width * this.renderer.getPixelRatio() * REFLECTION_SCALE),
             textureHeight: Math.round(height * this.renderer.getPixelRatio() * REFLECTION_SCALE),
@@ -197,16 +274,22 @@ export class SeaScene {
                     color: {value: null},
                     tDiffuse: {value: null},
                     textureMatrix: {value: null},
-                    uDeep: {value: this.light.deep},
+                    uDetail: {value: null},
+                    uDetailSize: {value: DETAIL_SIZE},
                     uChop: {value: 1},
-                    uGlitter: {value: 0.3},
+                    uSwell: {value: 1},
+                    uSea: {value: SEA},
+                    uScatter: {value: SCATTER},
                 },
                 vertexShader: waterVertex,
                 fragmentShader: waterFragment,
             },
         })
+        // The reflector clones its uniforms, which drops a render target's
+        // texture, so the detail goes in once it exists.
         const waterMaterial = this.water.material as THREE.ShaderMaterial
         Object.assign(waterMaterial.uniforms, this.shared)
+        waterMaterial.uniforms.uDetail.value = this.ocean.texture
         this.water.rotation.x = -Math.PI / 2
         this.water.frustumCulled = false
         this.scene.add(this.water)
@@ -284,6 +367,7 @@ export class SeaScene {
                 uTime: this.shared.uTime,
                 uPixelRatio: {value: this.renderer.getPixelRatio()},
                 uAmount: {value: 0},
+                uInvExposure: this.shared.uInvExposure,
             },
             transparent: true,
             depthWrite: false,
@@ -309,7 +393,6 @@ export class SeaScene {
                 uMap: {value: null},
                 uHasMap: {value: 0},
                 uFocus: {value: 0},
-                uLight: {value: 1},
                 uAspect: {value: spec.aspect},
                 uBlank: {value: new THREE.Color("#2a3038")},
                 uVeil: {value: 1},
@@ -322,7 +405,7 @@ export class SeaScene {
         const frameMaterial = new THREE.ShaderMaterial({
             vertexShader: panelVertex,
             fragmentShader: solidFragment,
-            uniforms: {...this.shared, uColor: {value: this.light.frame}, uVeil: material.uniforms.uVeil},
+            uniforms: {...this.shared, uColor: {value: FRAME_COLOR}, uVeil: material.uniforms.uVeil},
         })
         const frameGeometry = new THREE.BoxGeometry(width + FRAME, height + FRAME, 0.05)
         const frame = new THREE.Mesh(frameGeometry, frameMaterial)
@@ -335,7 +418,6 @@ export class SeaScene {
         group.rotation.y = yaw
         this.scene.add(group)
 
-        this.frames.push(frameMaterial)
         this.disposables.push(material, geometry, frameMaterial, frameGeometry)
         this.panels.push({group, image, material, center, yaw, width, height})
 
@@ -390,7 +472,7 @@ export class SeaScene {
         const shots: Shot[] = []
         shots.push({
             position: new THREE.Vector3(portrait ? 0.6 : 0, EYE + 0.15, 24),
-            yaw: portrait ? -0.05 : 0,
+            yaw: portrait ? 0.22 : 0,
             pitch: -0.025,
         })
 
@@ -474,17 +556,32 @@ export class SeaScene {
     }
 
     private applyLight() {
-        lightAt(this.shot, this.light)
-        const l = this.light
-        const sun = this.shared.uSunDir.value as THREE.Vector3
-        sun.set(Math.sin(l.bearing) * Math.cos(l.elevation), Math.sin(l.elevation), -Math.cos(l.bearing) * Math.cos(l.elevation))
-        this.shared.uSunSize.value = l.sunSize
-        this.shared.uHalo.value = l.halo
-        this.shared.uFogDensity.value = l.fog
+        // The atmosphere is only worked out again once the light has moved.
+        if (!(Math.abs(this.shot - this.litShot) <= 0.0005)) {
+            this.litShot = this.shot
+            const l = lightAt(this.shot)
+            const u = this.shared
+            ;(u.uSunDir.value as THREE.Vector3).set(...l.sun)
+            ;(u.uMoonDir.value as THREE.Vector3).set(...l.moon)
+            ;(u.uSunLight.value as THREE.Vector3).set(...l.sunLight)
+            ;(u.uMoonLight.value as THREE.Vector3).set(...l.moonLight)
+            ;(u.uAmbient.value as THREE.Vector3).set(...l.ambient)
+            u.uFogDensity.value = l.fog
+            u.uInvExposure.value = 1 / l.exposure
+            this.exposure = l.exposure
+            this.clouds.value = l.clouds
+            ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
 
-        const water = (this.water.material as THREE.ShaderMaterial).uniforms
-        water.uGlitter.value = l.glitter
-        ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
+            const lut = this.lutMaterial.uniforms
+            ;(lut.uSun.value as THREE.Vector3).set(...l.sun)
+            ;(lut.uMoon.value as THREE.Vector3).set(...l.moon)
+            lut.uHaze.value = l.haze
+            ;(lut.uZenith.value as THREE.Vector3).set(...l.zenith)
+            const previous = this.renderer.getRenderTarget()
+            this.renderer.setRenderTarget(this.lut)
+            this.renderer.render(this.lutScene, this.lutCamera)
+            this.renderer.setRenderTarget(previous)
+        }
 
         // A panel stays in the fog until the camera is nearly on it, so the
         // next one never stands behind the one in focus, and goes back into
@@ -493,7 +590,6 @@ export class SeaScene {
             const ahead = i + 1 - this.shot
             const veil = ahead >= 0 ? smooth01((ahead - 0.3) / 0.7) : smooth01((-ahead - 0.04) / 0.26)
             panel.material.uniforms.uFocus.value = presence(this.shot, i + 1)
-            panel.material.uniforms.uLight.value = l.panel
             panel.material.uniforms.uVeil.value = veil
             panel.group.visible = veil < 0.995
         })
@@ -542,9 +638,12 @@ export class SeaScene {
         this.shared.uTime.value = this.time
         this.sky.position.copy(this.camera.position)
         this.stars.position.copy(this.camera.position)
-        this.water.position.x = this.camera.position.x
-        this.water.position.z = this.camera.position.z
-        this.post.render(this.scene, this.camera, this.time)
+        // The grid follows the camera in whole cells of its finest spacing,
+        // so the vertices under the eye never swim through the swell.
+        this.water.position.x = Math.round(this.camera.position.x / 0.5) * 0.5
+        this.water.position.z = Math.round(this.camera.position.z / 0.5) * 0.5
+        this.ocean.update(this.renderer, this.time)
+        this.post.render(this.scene, this.camera, this.time, this.exposure)
     }
 
     /** Steps the resolution down while frames run long on a desktop, and

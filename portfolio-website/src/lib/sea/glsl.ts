@@ -1,14 +1,34 @@
-// Every surface fades into the sky colour of its own bearing on the horizon,
-// so the sea, the panels and the sky meet without a seam.
+import {ATMOSPHERE_GLSL} from "./atmosphere"
+
+// The sky is painted once per change of light into a small lookup, and every
+// surface reads its colour from there: the sea, the panels and the haze all
+// fade into the sky of their own bearing, so nothing meets with a seam.
 export const SKY = /* glsl */ `
-    uniform vec3 uZenith;
-    uniform vec3 uHorizon;
+    const float PI = 3.14159265;
+
+    uniform sampler2D uSkyLut;
     uniform vec3 uSunDir;
-    uniform vec3 uSunColor;
-    uniform float uSunSize;
-    uniform float uHalo;
+    uniform vec3 uMoonDir;
+    uniform vec3 uSunLight;
+    uniform vec3 uMoonLight;
+    uniform vec3 uAmbient;
     uniform float uFogDensity;
+    uniform float uInvExposure;
     uniform float uTime;
+
+    vec3 skyLut(vec3 dir) {
+        float e = asin(clamp(dir.y, 0.0, 1.0));
+        vec2 uv = vec2(atan(dir.x, -dir.z) / (2.0 * PI) + 0.5, sqrt(e / (0.5 * PI)));
+        return texture2D(uSkyLut, uv).rgb;
+    }
+
+    vec3 horizonColor(vec3 dir) {
+        return skyLut(normalize(vec3(dir.x, 0.0, dir.z) + vec3(0.0, 1e-4, 0.0)));
+    }
+
+    float fogAmount(float dist) {
+        return 1.0 - exp(-dist * uFogDensity);
+    }
 
     float hash12(vec2 p) {
         vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -23,45 +43,31 @@ export const SKY = /* glsl */ `
         return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x),
                    mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
     }
+`
 
-    float fbm(vec2 p) {
-        float v = 0.0;
-        float a = 0.5;
-        for (int i = 0; i < 4; i++) {
-            v += a * noise(p);
-            p = p * 2.03 + vec2(17.1, 9.2);
-            a *= 0.5;
-        }
-        return v;
-    }
+export const lutFragment = /* glsl */ `
+    precision highp float;
 
-    vec3 skyColor(vec3 dir) {
-        float e = dir.y;
-        float up = pow(clamp(e, 0.0, 1.0), 0.5);
-        vec3 col = mix(uHorizon, uZenith, smoothstep(0.0, 1.0, up));
+    ${ATMOSPHERE_GLSL}
 
-        // A low band of haze sits on the horizon in every light.
-        col += uHorizon * 0.18 * exp(-abs(e) * 22.0);
+    uniform vec3 uSun;
+    uniform vec3 uMoon;
+    uniform vec3 uMoonShare;
+    uniform vec3 uZenith;
+    uniform float uHaze;
 
-        // Thin layers of stratus, stretched along the horizon.
-        if (e > 0.004) {
-            vec2 q = dir.xz / (e + 0.12);
-            float layer = fbm(vec2(q.x * 0.55, q.y * 1.6) + vec2(uTime * 0.004, 0.0));
-            col *= 1.0 + (layer - 0.5) * 0.16 * smoothstep(0.0, 0.08, e) * (1.0 - smoothstep(0.35, 0.9, e));
-        }
+    varying vec2 vUv;
 
-        float mu = max(dot(dir, uSunDir), 0.0);
-        col += uSunColor * uHalo * (pow(mu, 6.0) * 0.16 + pow(mu, 48.0) * 0.32 + pow(mu, 600.0) * 0.6);
-        col += uSunColor * smoothstep(cos(uSunSize), cos(uSunSize * 0.82), mu) * 1.6;
-        return col;
-    }
-
-    vec3 horizonColor(vec3 dir) {
-        return skyColor(normalize(vec3(dir.x, 0.0, dir.z) + vec3(0.0, 1e-4, 0.0)));
-    }
-
-    float fogAmount(float dist) {
-        return 1.0 - exp(-pow(dist * uFogDensity, 1.35));
+    void main() {
+        float phi = (vUv.x - 0.5) * 6.2831853;
+        float e = vUv.y * vUv.y * 1.5707963;
+        vec3 dir = vec3(sin(phi) * cos(e), sin(e), -cos(phi) * cos(e));
+        vec3 col = scatter(dir, uSun, uHaze);
+        if (uMoon.y > -0.2) col += scatter(dir, uMoon, uHaze) * uMoonShare;
+        // Single scattering alone leaves the horizon yellow; light that
+        // scatters again on its way puts the blue of the sky back into it.
+        col += uZenith * pow(1.0 - e / 1.5707963, 8.0);
+        gl_FragColor = vec4(col, 1.0);
     }
 `
 
@@ -76,16 +82,71 @@ export const skyVertex = /* glsl */ `
     }
 `
 
+// Discs a little larger than the real ones, which would be a dozen pixels
+// across; the bloom does the rest.
 export const skyFragment = /* glsl */ `
     precision highp float;
 
     ${SKY}
 
+    uniform float uClouds;
+
     varying vec3 vWorld;
+
+    float fbm(vec2 p) {
+        float v = 0.0;
+        float a = 0.5;
+        for (int i = 0; i < 5; i++) {
+            v += a * noise(p);
+            p = mat2(1.6, 1.2, -1.2, 1.6) * p + vec2(17.1, 9.2);
+            a *= 0.5;
+        }
+        return v;
+    }
+
+    float henyey(float c, float g) {
+        float g2 = g * g;
+        return (1.0 - g2) / (4.0 * PI * pow(1.0 + g2 - 2.0 * g * c, 1.5));
+    }
+
+    vec3 disc(vec3 dir, vec3 toward, float radius, vec3 radiance) {
+        float angle = acos(clamp(dot(dir, toward), -1.0, 1.0));
+        if (angle > radius * 1.2) return vec3(0.0);
+        float r = clamp(angle / radius, 0.0, 1.0);
+        float limb = 1.0 - 0.55 * (1.0 - sqrt(1.0 - r * r));
+        return radiance * limb * (1.0 - smoothstep(0.92, 1.08, angle / radius));
+    }
 
     void main() {
         vec3 dir = normalize(vWorld - cameraPosition);
-        gl_FragColor = vec4(skyColor(dir), 1.0);
+        vec3 col = skyLut(dir);
+
+        // The mirror below the waterline never draws the discs: on moving
+        // water they only ever show as glints, which the sea works out itself.
+        float above = step(0.0, cameraPosition.y);
+        col += above * disc(dir, uSunDir, 0.0075, uSunLight * 700.0);
+        col += above * disc(dir, uMoonDir, 0.0095, uMoonLight * 5.0 * (0.86 + 0.14 * noise((dir.xy - uMoonDir.xy) * 900.0)));
+
+        // A deck of cumulus a couple of kilometres up, lit through by the
+        // sun from behind and fading into the haze towards the horizon.
+        if (dir.y > 0.0 && uClouds > 0.0) {
+            float t = 1800.0 / max(dir.y, 0.015);
+            vec2 p = (cameraPosition.xz + dir.xz * t) * 0.00024 + vec2(uTime * 0.0035, uTime * 0.0011);
+            float n = fbm(p);
+            float density = smoothstep(1.0 - uClouds, 1.0 - uClouds + 0.3, n);
+            if (density > 0.0) {
+                float toward = fbm(p + uSunDir.xz * 0.06);
+                float shade = clamp(1.0 - (toward - n) * 3.5, 0.35, 1.25);
+                float c = dot(dir, uSunDir);
+                vec3 lit = uSunLight * (0.22 + 1.6 * henyey(c, 0.6)) * shade
+                    + uMoonLight * (0.22 + 1.6 * henyey(dot(dir, uMoonDir), 0.6)) * shade;
+                vec3 cloud = uAmbient * 0.28 + lit * 0.32;
+                cloud = mix(cloud, col, 1.0 - exp(-t * 0.00004));
+                col = mix(col, cloud, density * 0.92 * smoothstep(0.0, 0.05, dir.y));
+            }
+        }
+
+        gl_FragColor = vec4(col, 1.0);
     }
 `
 
@@ -102,7 +163,7 @@ export const starVertex = /* glsl */ `
     void main() {
         vec4 world = modelMatrix * vec4(position, 1.0);
         vLift = normalize(world.xyz - cameraPosition).y;
-        vTwinkle = 0.75 + 0.25 * sin(uTime * (0.6 + aPhase) + aPhase * 40.0);
+        vTwinkle = 0.7 + 0.3 * sin(uTime * (0.6 + aPhase) + aPhase * 40.0);
         gl_PointSize = aSize * uPixelRatio;
         gl_Position = projectionMatrix * viewMatrix * world;
         gl_Position.z = gl_Position.w * 0.99999;
@@ -113,37 +174,77 @@ export const starFragment = /* glsl */ `
     precision highp float;
 
     uniform float uAmount;
+    uniform float uInvExposure;
 
     varying float vTwinkle;
     varying float vLift;
 
     void main() {
-        vec2 c = gl_PointCoord - 0.5;
-        float d = length(c);
+        float d = length(gl_PointCoord - 0.5);
         float core = smoothstep(0.5, 0.0, d);
-        // Stars drown in the haze near the horizon, as they do.
-        float fade = smoothstep(0.02, 0.22, abs(vLift));
-        float a = core * vTwinkle * uAmount * fade;
-        gl_FragColor = vec4(vec3(0.85, 0.9, 1.0) * a, a);
+        float fade = smoothstep(0.02, 0.25, abs(vLift));
+        float a = core * core * vTwinkle * uAmount * fade;
+        gl_FragColor = vec4(vec3(0.82, 0.88, 1.0) * a * 1.6 * uInvExposure, 1.0);
     }
 `
 
+/** The long swell, as Gerstner waves the vertices actually ride. */
+const SWELL = /* glsl */ `
+    const int SWELLS = 4;
+    const vec4 SWELL[4] = vec4[4](
+        // direction (radians), wavelength (m), amplitude (m), steepness
+        vec4(0.30, 34.0, 0.16, 0.45),
+        vec4(-0.45, 21.0, 0.09, 0.5),
+        vec4(0.85, 13.0, 0.05, 0.55),
+        vec4(-0.1, 8.5, 0.03, 0.6)
+    );
+`
+
 export const waterVertex = /* glsl */ `
+    ${SWELL}
+
     uniform mat4 textureMatrix;
+    uniform float uTime;
+    uniform float uSwell;
 
     varying vec4 vMirror;
     varying vec3 vWorld;
+    varying vec3 vNormal;
+    varying float vCrest;
 
     void main() {
         vMirror = textureMatrix * vec4(position, 1.0);
         vec4 world = modelMatrix * vec4(position, 1.0);
+
+        // The swell flattens out before the grid gets too coarse to carry it.
+        float dist = length(world.xz - cameraPosition.xz);
+        float fade = (1.0 - smoothstep(25.0, 90.0, dist)) * uSwell;
+
+        vec3 offset = vec3(0.0);
+        vec3 n = vec3(0.0, 1.0, 0.0);
+        float crest = 0.0;
+        for (int i = 0; i < SWELLS; i++) {
+            vec4 s = SWELL[i];
+            vec2 d = vec2(cos(s.x), sin(s.x));
+            float k = 6.2831853 / s.y;
+            float w = sqrt(9.81 * k);
+            float phase = k * dot(d, world.xz) - w * uTime + float(i) * 2.1;
+            float c = cos(phase);
+            float sn = sin(phase);
+            offset.xz += s.w * s.z * d * c;
+            offset.y += s.z * sn;
+            n.xz -= d * k * s.z * c;
+            n.y -= s.w * k * s.z * sn;
+            crest += sn * s.z;
+        }
+        world.xyz += offset * fade;
+        vNormal = normalize(vec3(n.x * fade, mix(1.0, n.y, fade), n.z * fade));
+        vCrest = crest * fade / 0.33;
         vWorld = world.xyz;
         gl_Position = projectionMatrix * viewMatrix * world;
     }
 `
 
-// Deep-water swell: every component travels at the speed the dispersion
-// relation gives its wavelength, so the surface moves like real water.
 export const waterFragment = /* glsl */ `
     precision highp float;
 
@@ -151,33 +252,25 @@ export const waterFragment = /* glsl */ `
 
     uniform sampler2D tDiffuse;
     uniform vec3 color;
-    uniform vec3 uDeep;
+    uniform sampler2D uDetail;
+    uniform float uDetailSize;
     uniform float uChop;
-    uniform float uGlitter;
+    uniform vec3 uSea;
+    uniform vec3 uScatter;
 
     varying vec4 vMirror;
     varying vec3 vWorld;
+    varying vec3 vNormal;
+    varying float vCrest;
 
-    const int WAVES = 12;
-
-    vec2 slope(vec2 p, float footprint) {
-        vec2 g = vec2(0.0);
-        float lambda = 11.0;
-        float steep = 0.055;
-        float angle = 0.35;
-        for (int i = 0; i < WAVES; i++) {
-            float k = 6.2831853 / lambda;
-            float w = sqrt(9.81 * k);
-            vec2 d = vec2(cos(angle), sin(angle));
-            // A wave shorter than a few pixels only flickers, so it fades out
-            // before the surface can alias it.
-            float keep = 1.0 - smoothstep(lambda * 0.12, lambda * 0.45, footprint);
-            g += d * steep * keep * cos(dot(d, p) * k - w * uTime + float(i) * 1.7);
-            lambda *= 0.69;
-            steep *= 0.93;
-            angle += 2.399;
-        }
-        return g;
+    float ggx(vec3 n, vec3 v, vec3 l, float rough) {
+        vec3 h = normalize(l + v);
+        float a = rough * rough;
+        float a2 = a * a;
+        float nh = max(dot(n, h), 0.0);
+        float d = a2 / (PI * pow(nh * nh * (a2 - 1.0) + 1.0, 2.0));
+        float f = 0.02 + 0.98 * pow(1.0 - max(dot(v, h), 0.0), 5.0);
+        return d * f * 0.25 / max(dot(n, v), 0.15) * smoothstep(0.0, 0.1, dot(n, l));
     }
 
     void main() {
@@ -185,29 +278,50 @@ export const waterFragment = /* glsl */ `
         float dist = length(toEye);
         vec3 v = toEye / dist;
 
-        float footprint = length(fwidth(vWorld.xz));
-        vec2 g = slope(vWorld.xz, footprint) * uChop;
-        vec3 n = normalize(vec3(-g.x, 1.0, -g.y));
+        // Two scales of the same animated spectrum, one turned against the
+        // other, so neither ever shows its tile.
+        vec2 p = vWorld.xz / uDetailSize;
+        vec2 q = mat2(0.8, 0.6, -0.6, 0.8) * vWorld.xz / (uDetailSize * 0.37);
+        vec2 slope = (texture2D(uDetail, p).xy + texture2D(uDetail, q).xy * 0.7) * uChop;
 
-        float facing = max(dot(n, v), 0.0);
-        float fresnel = 0.02 + 0.98 * pow(1.0 - facing, 5.0);
+        vec3 s = normalize(vNormal);
+        vec2 swell = -s.xz / s.y;
+        vec3 n = normalize(vec3(-(swell.x + slope.x), 1.0, -(swell.y + slope.y)));
 
-        // Ripples stretch a reflection downwards far more than sideways, so
-        // the mirror is pulled apart along the vertical and smeared a little.
+        float nv = max(dot(n, v), 0.001);
+        float fresnel = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
+
+        // Ripples stretch a reflection downwards far more than sideways.
         vec4 mirror = vMirror;
         float reach = min(mirror.w, 6.0);
-        mirror.xy += vec2(n.x * 0.012, n.z * 0.045) * reach;
-        vec2 smear = vec2(0.0, 0.006 + abs(n.z) * 0.03) * reach;
-        vec3 reflected = texture2DProj(tDiffuse, mirror).rgb * 0.4;
-        reflected += texture2DProj(tDiffuse, mirror + vec4(smear, 0.0, 0.0)).rgb * 0.3;
-        reflected += texture2DProj(tDiffuse, mirror - vec4(smear, 0.0, 0.0)).rgb * 0.3;
+        mirror.xy += vec2(n.x * 0.014, n.z * 0.05) * reach;
+        vec2 smear = vec2(0.0, 0.004 + abs(n.z) * 0.025) * reach;
+        vec4 mirrored = texture2DProj(tDiffuse, mirror) * 0.4;
+        mirrored += texture2DProj(tDiffuse, mirror + vec4(smear, 0.0, 0.0)) * 0.3;
+        mirrored += texture2DProj(tDiffuse, mirror - vec4(smear, 0.0, 0.0)) * 0.3;
+        vec3 reflected = mirrored.rgb;
+        // Panels write no alpha, so this is how much open sky the water sees.
+        float open = clamp(mirrored.a, 0.0, 1.0);
 
-        vec3 body = uDeep * (0.7 + 0.3 * n.y);
+        // The body of the water: dark, lit by the sky, and green-blue where
+        // the sun shines through the back of a crest.
+        vec3 light = uSunLight * max(uSunDir.y, 0.0) + uMoonLight * max(uMoonDir.y, 0.0);
+        vec3 body = uSea * (uAmbient + light * 0.6);
+        float through = max(vCrest + 0.35, 0.0) * pow(max(dot(uSunDir, -v), 0.0), 4.0) * pow(0.5 - 0.5 * dot(uSunDir, n), 3.0);
+        body += uScatter * uSunLight * (through * 1.4 + pow(nv, 2.0) * 0.05);
+
         vec3 col = mix(body, reflected, fresnel);
 
-        vec3 r = reflect(-v, n);
-        float mu = max(dot(r, uSunDir), 0.0);
-        col += uSunColor * uGlitter * (pow(mu, 900.0) * 9.0 + pow(mu, 90.0) * 0.35);
+        // The sun and moon break up on capillary ripples far too fine for the
+        // reflection, so the glints get a third, much smaller scale of their
+        // own. Each is capped a little above white: a field of sparks, not a
+        // few pixels so bright the bloom smears them into one blot.
+        vec2 r = mat2(-0.6, 0.8, 0.8, 0.6) * vWorld.xz / (uDetailSize * 0.083);
+        vec2 ripple = texture2D(uDetail, r).xy * 1.1 * uChop;
+        vec3 m = normalize(vec3(-(swell.x + slope.x + ripple.x), 1.0, -(swell.y + slope.y + ripple.y)));
+        float rough = mix(0.05, 0.22, smoothstep(40.0, 900.0, dist));
+        vec3 glint = uSunLight * ggx(m, v, uSunDir, rough) + uMoonLight * ggx(m, v, uMoonDir, rough) * 1.5;
+        col += min(glint, vec3(9.0 * uInvExposure)) * open;
 
         col = mix(col, horizonColor(-v), fogAmount(dist));
         gl_FragColor = vec4(col, 1.0);
@@ -217,15 +331,19 @@ export const waterFragment = /* glsl */ `
 export const panelVertex = /* glsl */ `
     varying vec2 vUv;
     varying vec3 vWorld;
+    varying vec3 vNormal;
 
     void main() {
         vUv = uv;
         vec4 world = modelMatrix * vec4(position, 1.0);
         vWorld = world.xyz;
+        vNormal = normalize(mat3(modelMatrix) * normal);
         gl_Position = projectionMatrix * viewMatrix * world;
     }
 `
 
+// A panel is a screen: it keeps its own brightness whatever the light, so it
+// is scaled against the exposure and reads the same at noon and at night.
 export const panelFragment = /* glsl */ `
     precision highp float;
 
@@ -234,32 +352,28 @@ export const panelFragment = /* glsl */ `
     uniform sampler2D uMap;
     uniform float uHasMap;
     uniform float uFocus;
-    uniform float uLight;
     uniform float uAspect;
     uniform vec3 uBlank;
     uniform float uVeil;
 
     varying vec2 vUv;
     varying vec3 vWorld;
+    varying vec3 vNormal;
 
     void main() {
         vec3 c = uHasMap > 0.5 ? texture2D(uMap, vUv).rgb : uBlank;
 
-        // Out of focus a panel is a print left in the fog; in focus it lights up.
         float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
-        c = mix(vec3(luma), c, mix(0.08, 1.0, uFocus));
-        c *= uLight * mix(0.62, 1.0, uFocus);
+        c = mix(vec3(luma), c, mix(0.1, 1.0, uFocus));
+        c *= 0.95 * uInvExposure * mix(0.6, 1.0, uFocus);
 
         vec2 edge = min(vUv, 1.0 - vUv) * vec2(uAspect, 1.0);
         float rim = 1.0 - smoothstep(0.0, 0.006, min(edge.x, edge.y));
-        c = mix(c, vec3(0.8), rim * 0.12);
-
-        // Even up close there is a little air between the eye and the print.
-        c = mix(c, uHorizon, 0.06 + 0.06 * (1.0 - uFocus));
+        c = mix(c, vec3(0.7) * uInvExposure, rim * 0.12);
 
         float dist = length(cameraPosition - vWorld);
         c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
-        gl_FragColor = vec4(c, 1.0);
+        gl_FragColor = vec4(c, 0.0);
     }
 `
 
@@ -273,11 +387,15 @@ export const solidFragment = /* glsl */ `
 
     varying vec2 vUv;
     varying vec3 vWorld;
+    varying vec3 vNormal;
 
     void main() {
+        vec3 n = normalize(vNormal);
+        vec3 light = uAmbient + uSunLight * max(dot(n, uSunDir), 0.0) + uMoonLight * max(dot(n, uMoonDir), 0.0);
+        vec3 c = uColor * light / PI;
         float dist = length(cameraPosition - vWorld);
-        vec3 c = mix(uColor, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
-        gl_FragColor = vec4(c, 1.0);
+        c = mix(c, horizonColor(vWorld - cameraPosition), max(fogAmount(dist), uVeil));
+        gl_FragColor = vec4(c, 0.0);
     }
 `
 
