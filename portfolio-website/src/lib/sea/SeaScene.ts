@@ -45,6 +45,12 @@ const CAMERA_LAG = 0.55
 
 const TAU = Math.PI * 2
 
+// Seconds the opening shot takes to drift in out of the fog once the page
+// is ready, and how far back and up it starts.
+const INTRO = 4.2
+const INTRO_BACK = 9
+const INTRO_UP = 0.9
+
 const smooth01 = (t: number) => {
     const c = Math.min(Math.max(t, 0), 1)
     return c * c * (3 - 2 * c)
@@ -121,6 +127,7 @@ export class SeaScene {
     private built = false
     private announced = false
     private hovered = -1
+    private introStart = -1
 
     private samples = 0
     private sampleStart = 0
@@ -258,7 +265,7 @@ export class SeaScene {
             const r = Math.sqrt(1 - y * y)
             positions.set([Math.cos(angle) * r * 800, y * 800, Math.sin(angle) * r * 800], i * 3)
             const bright = random()
-            sizes[i] = 0.8 + Math.pow(bright, 6) * 2.6
+            sizes[i] = 1.4 + Math.pow(bright, 6) * 3.2
             phases[i] = random()
         }
         const geometry = new THREE.BufferGeometry()
@@ -361,6 +368,7 @@ export class SeaScene {
             .catch(() => undefined)
             .then(() => {
                 if (this.disposed) return
+                this.introStart = this.time
                 this.render()
                 this.options.onReady()
             })
@@ -432,6 +440,13 @@ export class SeaScene {
         )
         let yaw = catmull(a.yaw, b.yaw, c.yaw, d.yaw, t)
         let pitch = catmull(a.pitch, b.pitch, c.pitch, d.pitch, t)
+
+        const intro = this.introStart < 0 ? 0 : Math.min((this.time - this.introStart) / INTRO, 1)
+        const away = 1 - intro * intro * (3 - 2 * intro)
+        const back = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw)).multiplyScalar(INTRO_BACK * away)
+        p.add(back)
+        p.y += INTRO_UP * away
+        pitch -= 0.03 * away
 
         // A slow swell under the camera and a hand on the mouse.
         const bob = Math.sin(this.time * 0.55) * 0.035 + Math.sin(this.time * 0.31 + 1.3) * 0.02

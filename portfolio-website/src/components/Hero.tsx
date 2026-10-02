@@ -21,6 +21,18 @@ const Hero = ({flow}: {flow: boolean}) => (
             </p>
         </div>
 
+        {/* Sits in the row of the corner chrome, between the sound and the
+            clock, so it never crowds the copy above it. */}
+        <div
+            aria-hidden="true"
+            className="absolute bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 hidden h-11 -translate-x-1/2 items-center gap-3 md:flex"
+        >
+            <span className="label text-fg-2">Scrollen</span>
+            <span className="relative block h-3 w-px overflow-hidden bg-fg/20">
+                <span className="animate-cue absolute inset-0 bg-fg"/>
+            </span>
+        </div>
+
         <div className="mt-auto">
             <h1 className="text-display font-medium text-fg">
                 <Rise delay={150} duration={1300}>Jan Vogt</Rise>

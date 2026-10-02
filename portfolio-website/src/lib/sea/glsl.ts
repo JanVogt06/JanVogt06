@@ -44,7 +44,7 @@ export const SKY = /* glsl */ `
         col += uHorizon * 0.18 * exp(-abs(e) * 22.0);
 
         // Thin layers of stratus, stretched along the horizon.
-        if (e > 0.0) {
+        if (e > 0.004) {
             vec2 q = dir.xz / (e + 0.12);
             float layer = fbm(vec2(q.x * 0.55, q.y * 1.6) + vec2(uTime * 0.004, 0.0));
             col *= 1.0 + (layer - 0.5) * 0.16 * smoothstep(0.0, 0.08, e) * (1.0 - smoothstep(0.35, 0.9, e));
@@ -123,7 +123,7 @@ export const starFragment = /* glsl */ `
         float core = smoothstep(0.5, 0.0, d);
         // Stars drown in the haze near the horizon, as they do.
         float fade = smoothstep(0.02, 0.22, abs(vLift));
-        float a = core * core * vTwinkle * uAmount * fade;
+        float a = core * vTwinkle * uAmount * fade;
         gl_FragColor = vec4(vec3(0.85, 0.9, 1.0) * a, a);
     }
 `
