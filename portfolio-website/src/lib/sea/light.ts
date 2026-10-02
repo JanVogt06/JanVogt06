@@ -1,4 +1,5 @@
 import {scatter, transmittance} from "./atmosphere"
+import {SHOT} from "@/lib/journey"
 
 type Vec3 = [number, number, number]
 
@@ -40,26 +41,34 @@ export const MOON = 0.006
 /** Moonlight is sunlight, but the eye reads it at night as cool. */
 export const MOON_TINT: Vec3 = [0.62, 0.8, 1.2]
 
+// The day is pinned to the chapters rather than to fixed shots, so it keeps
+// its shape however many photos or projects there are: sunrise on the
+// opening, noon on the last photo, afternoon over the screens, the sun down
+// a little before the last project and night at the end.
+const NOON = SHOT.work - 1
+const SUNSET = SHOT.contact - 2.2
+const DUSK = SHOT.contact - 1
+
 // Elevation and bearing in radians; bearing 0 is straight down the row of
 // panels, positive to the right.
 const KEYS: Key[] = [
-    {shot: 0, sun: [0.045, -0.32], moon: [-0.5, 0.3], haze: 0.95, fog: 0.0034, clouds: 0.46},
-    {shot: 1.4, sun: [0.36, -0.6], moon: [-0.5, 0.3], haze: 1.25, fog: 0.0024, clouds: 0.43},
-    {shot: 3, sun: [1.05, -1.2], moon: [-0.5, 0.3], haze: 0.8, fog: 0.0016, clouds: 0.4},
-    {shot: 4, sun: [0.3, 0.3], moon: [-0.5, 0.3], haze: 1, fog: 0.0019, clouds: 0.44},
-    {shot: 7.6, sun: [0.014, 0.42], moon: [-0.4, 0.3], haze: 1.45, fog: 0.0026, clouds: 0.5},
-    {shot: 9, sun: [-0.075, 0.46], moon: [-0.05, 0.3], haze: 1.3, fog: 0.0024, clouds: 0.46},
-    {shot: 10, sun: [-0.32, 0.5], moon: [0.3, 0.28], haze: 1, fog: 0.002, clouds: 0.36},
+    {shot: SHOT.hero, sun: [0.045, -0.32], moon: [-0.5, 0.3], haze: 0.95, fog: 0.0034, clouds: 0.46},
+    {shot: SHOT.hero + 1.4, sun: [0.36, -0.6], moon: [-0.5, 0.3], haze: 1.25, fog: 0.0024, clouds: 0.43},
+    {shot: NOON, sun: [1.05, -1.2], moon: [-0.5, 0.3], haze: 0.8, fog: 0.0016, clouds: 0.4},
+    {shot: SHOT.work, sun: [0.3, 0.3], moon: [-0.5, 0.3], haze: 1, fog: 0.0019, clouds: 0.44},
+    {shot: SUNSET, sun: [0.014, 0.42], moon: [-0.4, 0.3], haze: 1.45, fog: 0.0026, clouds: 0.5},
+    {shot: DUSK, sun: [-0.075, 0.46], moon: [-0.05, 0.3], haze: 1.3, fog: 0.0024, clouds: 0.46},
+    {shot: SHOT.contact, sun: [-0.32, 0.5], moon: [0.3, 0.28], haze: 1, fog: 0.002, clouds: 0.36},
 ]
 
 const CLOCK: Array<[number, number]> = [
-    [0, 6 * 60 + 12],
-    [1.4, 8 * 60 + 40],
-    [3, 13 * 60 + 5],
-    [4, 16 * 60 + 10],
-    [7.6, 20 * 60 + 21],
-    [9, 20 * 60 + 58],
-    [10, 23 * 60 + 17],
+    [SHOT.hero, 6 * 60 + 12],
+    [SHOT.hero + 1.4, 8 * 60 + 40],
+    [NOON, 13 * 60 + 5],
+    [SHOT.work, 16 * 60 + 10],
+    [SUNSET, 20 * 60 + 21],
+    [DUSK, 20 * 60 + 58],
+    [SHOT.contact, 23 * 60 + 17],
 ]
 
 const smooth = (t: number) => t * t * (3 - 2 * t)

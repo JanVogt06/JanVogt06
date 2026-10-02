@@ -1,3 +1,6 @@
+import {stations} from "./about"
+import {projects} from "./projects"
+
 // Stops are placed in svh, so scrolling has to be measured in svh too:
 // against innerHeight, a mobile toolbar sliding away would shift every shot.
 let probe: HTMLDivElement | null = null
@@ -20,21 +23,26 @@ const smallViewport = () => {
     return probe.offsetHeight || window.innerHeight
 }
 
+const PHOTOS = stations.length
+const WORK = projects.length
+
+const run = (from: number, count: number) => Array.from({length: count}, (_, i) => from + i)
+
 /**
  * The page is one camera move along a row of panels standing in the sea.
- * Every stop is a shot the camera rests on: the opening view, three photos,
- * a look down the row of screens that opens the work, five projects and the
- * night sky at the end.
+ * Every stop is a shot the camera rests on: the opening view, a photo per
+ * station, a look down the row of screens that opens the work, a screen per
+ * project and the night sky at the end.
  */
 export const SHOT = {
     hero: 0,
-    photos: [1, 2, 3],
-    work: 4,
-    projects: [5, 6, 7, 8, 9],
-    contact: 10,
-} as const
+    photos: run(1, PHOTOS),
+    work: PHOTOS + 1,
+    projects: run(PHOTOS + 2, WORK),
+    contact: PHOTOS + WORK + 2,
+}
 
-export const SHOT_COUNT = 11
+export const SHOT_COUNT = SHOT.contact + 1
 
 /** The shot that has panel `i` in focus: the photos first, then the work. */
 export const panelShot = (i: number) =>
@@ -42,7 +50,14 @@ export const panelShot = (i: number) =>
 
 /** Screens of scrolling between one shot and the next. The long ones are
  *  where the chapters turn, and the day with them. */
-const GAPS = [1.5, 1.05, 1.05, 1.35, 1.3, 1.05, 1.05, 1.05, 1.05, 1.5]
+const GAPS = [
+    1.5,
+    ...run(0, PHOTOS - 1).map(() => 1.05),
+    1.35,
+    1.3,
+    ...run(0, WORK - 1).map(() => 1.05),
+    1.5,
+]
 
 export const STOP_SCREENS = GAPS.reduce<number[]>((acc, gap) => [...acc, acc[acc.length - 1] + gap], [0])
 
