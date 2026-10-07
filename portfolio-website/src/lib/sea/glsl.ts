@@ -284,7 +284,7 @@ export const waterFragment = /* glsl */ `
         float a2 = a * a;
         float nh = max(dot(n, h), 0.0);
         float d = a2 / (PI * pow(nh * nh * (a2 - 1.0) + 1.0, 2.0));
-        float f = 0.02 + 0.98 * pow(1.0 - max(dot(v, h), 0.0), 5.0);
+        float f = 0.02 + 0.98 * pow(max(1.0 - max(dot(v, h), 0.0), 0.0), 5.0);
         return d * f * 0.25 / max(dot(n, v), 0.15) * smoothstep(0.0, 0.1, dot(n, l));
     }
 
@@ -317,7 +317,7 @@ export const waterFragment = /* glsl */ `
         vec3 n = normalize(vec3(-(swell.x + slope.x), 1.0, -(swell.y + slope.y)));
 
         float nv = max(dot(n, v), 0.001);
-        float fresnel = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
+        float fresnel = 0.02 + 0.98 * pow(max(1.0 - nv, 0.0), 5.0);
 
         // Ripples stretch a reflection downwards far more than sideways.
         vec4 mirror = vMirror;
@@ -430,7 +430,8 @@ export const screenFragment = /* glsl */ `
         float depth = 1.0 - vUv.y;
         float front = uOn * 1.15;
         float shown = 1.0 - smoothstep(front - 0.1, front, depth);
-        float line = exp(-pow((depth - front + 0.04) * 28.0, 2.0)) * step(0.001, uOn) * step(uOn, 0.999);
+        float wipe = (depth - front + 0.04) * 28.0;
+        float line = exp(-wipe * wipe) * step(0.001, uOn) * step(uOn, 0.999);
 
         vec3 standby = vec3(luma) * 0.07;
         vec3 picture = mix(vec3(luma), img, mix(0.55, 1.0, uFocus)) * mix(0.4, 1.0, uFocus);
@@ -438,7 +439,7 @@ export const screenFragment = /* glsl */ `
 
         vec3 n = normalize(vNormal);
         vec3 v = normalize(cameraPosition - vWorld);
-        float f = 0.03 + 0.97 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+        float f = 0.03 + 0.97 * pow(max(1.0 - max(dot(n, v), 0.0), 0.0), 5.0);
         c += skyLut(reflect(-v, n)) * min(f, 0.3) * 0.3;
 
         float dist = length(cameraPosition - vWorld);
@@ -467,7 +468,7 @@ export const bezelFragment = /* glsl */ `
         vec3 v = normalize(cameraPosition - vWorld);
         vec3 n = normalize(vNormal);
         n = dot(n, v) < 0.0 ? -n : n;
-        float f = 0.04 + 0.96 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
+        float f = 0.04 + 0.96 * pow(max(1.0 - max(dot(n, v), 0.0), 0.0), 5.0);
         vec3 c = vec3(0.02) * lit(n) + skyLut(reflect(-v, n)) * f;
 
         float dist = length(cameraPosition - vWorld);
