@@ -269,6 +269,9 @@ export const waterFragment = /* glsl */ `
     uniform float uChop;
     uniform vec3 uSea;
     uniform vec3 uScatter;
+    uniform sampler2D uRipple;
+    uniform vec2 uRippleCenter;
+    uniform float uRippleSize;
 
     varying vec4 vMirror;
     varying vec3 vWorld;
@@ -295,6 +298,19 @@ export const waterFragment = /* glsl */ `
         vec2 p = vWorld.xz / uDetailSize;
         vec2 q = mat2(0.8, 0.6, -0.6, 0.8) * vWorld.xz / (uDetailSize * 0.37);
         vec2 slope = (texture2D(uDetail, p).xy + texture2D(uDetail, q).xy * 0.7) * uChop;
+
+        // Whatever the visitor has stirred up, from the solver that runs in
+        // the patch of sea in front of the camera.
+        vec2 ru = (vWorld.xz - uRippleCenter) / uRippleSize + 0.5;
+        float inside = smoothstep(0.0, 0.08, min(min(ru.x, 1.0 - ru.x), min(ru.y, 1.0 - ru.y)));
+        if (inside > 0.0) {
+            const float T = 1.0 / 256.0;
+            vec2 stirred = vec2(
+                texture2D(uRipple, ru + vec2(T, 0.0)).r - texture2D(uRipple, ru - vec2(T, 0.0)).r,
+                texture2D(uRipple, ru + vec2(0.0, T)).r - texture2D(uRipple, ru - vec2(0.0, T)).r
+            );
+            slope += stirred * 0.55 * inside;
+        }
 
         vec3 s = normalize(vNormal);
         vec2 swell = -s.xz / s.y;

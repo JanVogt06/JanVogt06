@@ -19,6 +19,8 @@ import {
 import {MOON, MOON_TINT, lightAt} from "./light"
 import {DETAIL_SIZE, createOcean} from "./ocean"
 import type {Ocean} from "./ocean"
+import {RIPPLE_SIZE, createRipples} from "./ripples"
+import type {RippleSource, Ripples} from "./ripples"
 import {createPost} from "./post"
 import type {Post} from "./post"
 import {SHOT, SHOT_COUNT, panelShot, presence} from "@/lib/journey"
@@ -32,6 +34,8 @@ export type SeaSceneOptions = {
     onSelect: (panel: number) => void
     onProgress: (fraction: number) => void
     onReady: () => void
+    /** Called the first time the visitor stirs the water. */
+    onStir?: () => void
 }
 
 const FOV = 38
@@ -164,6 +168,11 @@ export class SeaScene {
     private readonly shared: Record<string, THREE.IUniform>
     private readonly clouds = {value: 0.4}
     private readonly ocean: Ocean
+    private readonly ripples: Ripples
+    private readonly stirFrom = new THREE.Vector2()
+    private readonly stirTo = new THREE.Vector2()
+    private stirring = false
+    private stirred = false
     private readonly lut: THREE.WebGLRenderTarget
     private readonly lutMaterial: THREE.ShaderMaterial
     private readonly lutScene = new THREE.Scene()
@@ -248,6 +257,8 @@ export class SeaScene {
 
         this.ocean = createOcean()
         this.disposables.push(this.ocean)
+        this.ripples = createRipples()
+        this.disposables.push(this.ripples)
 
         this.shared = {
             uSkyLut: {value: this.lut.texture},
@@ -296,6 +307,9 @@ export class SeaScene {
                     uSwell: {value: 1},
                     uSea: {value: SEA},
                     uScatter: {value: SCATTER},
+                    uRipple: {value: null},
+                    uRippleCenter: {value: new THREE.Vector2()},
+                    uRippleSize: {value: RIPPLE_SIZE},
                 },
                 vertexShader: waterVertex,
                 fragmentShader: waterFragment,
@@ -306,6 +320,7 @@ export class SeaScene {
         const waterMaterial = this.water.material as THREE.ShaderMaterial
         Object.assign(waterMaterial.uniforms, this.shared)
         waterMaterial.uniforms.uDetail.value = this.ocean.texture
+        waterMaterial.uniforms.uRippleCenter.value = this.ripples.center
         this.water.rotation.x = -Math.PI / 2
         this.water.frustumCulled = false
         this.scene.add(this.water)
@@ -319,6 +334,7 @@ export class SeaScene {
 
         window.addEventListener("pointermove", this.handlePointerMove, {passive: true})
         window.addEventListener("click", this.handleClick)
+        window.addEventListener("pointerdown", this.handlePointerDown, {passive: true})
         document.addEventListener("visibilitychange", this.sync)
         this.resizeObserver = new ResizeObserver(this.handleResize)
         this.resizeObserver.observe(this.container)
@@ -344,6 +360,7 @@ export class SeaScene {
         cancelAnimationFrame(this.frame)
         window.removeEventListener("pointermove", this.handlePointerMove)
         window.removeEventListener("click", this.handleClick)
+        window.removeEventListener("pointerdown", this.handlePointerDown)
         document.removeEventListener("visibilitychange", this.sync)
         this.resizeObserver.disconnect()
         document.body.style.cursor = ""
@@ -737,8 +754,61 @@ export class SeaScene {
             panel.material.uniforms.uOn.value = panel.on
         })
 
+        this.stir(dt)
         this.render()
         this.adapt(now)
+    }
+
+    /** Runs the solver over the patch in front of the camera, with the prints
+     *  that stand in the water rocking it as they bob. */
+    private stir(dt: number) {
+        const forward = new THREE.Vector3()
+        this.camera.getWorldDirection(forward)
+        forward.y = 0
+        forward.normalize()
+        const focus = new THREE.Vector2(
+            this.camera.position.x + forward.x * RIPPLE_SIZE * 0.42,
+            this.camera.position.z + forward.z * RIPPLE_SIZE * 0.42,
+        )
+        const sources: RippleSource[] = []
+        this.panels.forEach((panel, i) => {
+            if (panel.kind !== "print" || !panel.group.visible) return
+            if (Math.hypot(panel.center.x - focus.x, panel.center.z - focus.y) > RIPPLE_SIZE * 0.6) return
+            sources.push({
+                x: panel.center.x,
+                z: panel.center.z,
+                angle: -panel.yaw,
+                half: panel.width / 2 + MOUNT,
+                strength: Math.cos(this.time * 0.6 + i * 1.7) * 0.05,
+            })
+        })
+        this.ripples.update(this.renderer, dt, focus, sources)
+    }
+
+    /** Where a pointer at these client coordinates meets the sea, if it does. */
+    private onWater(clientX: number, clientY: number, out: THREE.Vector2) {
+        const rect = this.renderer.domElement.getBoundingClientRect()
+        this.pointer.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1)
+        this.raycaster.setFromCamera(this.pointer, this.camera)
+        const ray = this.raycaster.ray
+        if (ray.direction.y > -0.01) return false
+        const t = -ray.origin.y / ray.direction.y
+        if (t > RIPPLE_SIZE * 1.2) return false
+        out.set(ray.origin.x + ray.direction.x * t, ray.origin.z + ray.direction.z * t)
+        return true
+    }
+
+    private markStirred() {
+        if (this.stirred) return
+        this.stirred = true
+        this.options.onStir?.()
+    }
+
+    private handlePointerDown = (event: PointerEvent) => {
+        if (this.paused || !this.overCanvas(event.target)) return
+        if (!this.onWater(event.clientX, event.clientY, this.stirTo)) return
+        this.ripples.stroke(this.stirTo, this.stirTo, 1.2)
+        this.markStirred()
     }
 
     private render() {
@@ -750,6 +820,7 @@ export class SeaScene {
         this.water.position.x = Math.round(this.camera.position.x / 0.5) * 0.5
         this.water.position.z = Math.round(this.camera.position.z / 0.5) * 0.5
         this.ocean.update(this.renderer, this.time)
+        ;(this.water.material as THREE.ShaderMaterial).uniforms.uRipple.value = this.ripples.texture()
         this.post.render(this.scene, this.camera, this.time, this.exposure)
     }
 
@@ -816,7 +887,24 @@ export class SeaScene {
                 -((event.clientY / window.innerHeight) * 2 - 1),
             )
         }
-        const index = this.overCanvas(event.target) ? this.pick(event.clientX, event.clientY) : -1
+        const over = this.overCanvas(event.target)
+        if (!this.coarse && over && !this.paused && this.onWater(event.clientX, event.clientY, this.stirTo)) {
+            // A stroke runs from where the pointer last touched the water, so
+            // a quick sweep leaves a wake rather than a row of dots.
+            if (this.stirring && this.stirFrom.distanceTo(this.stirTo) < 4) {
+                const moved = this.stirFrom.distanceTo(this.stirTo)
+                if (moved > 0.02) {
+                    this.ripples.stroke(this.stirFrom, this.stirTo, Math.min(moved * 0.35, 0.5))
+                    if (moved > 0.4) this.markStirred()
+                }
+            }
+            this.stirFrom.copy(this.stirTo)
+            this.stirring = true
+        } else {
+            this.stirring = false
+        }
+
+        const index = over ? this.pick(event.clientX, event.clientY) : -1
         if (index === this.hovered) return
         this.hovered = index
         document.body.style.cursor = index >= 0 ? "pointer" : ""
