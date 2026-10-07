@@ -1,6 +1,7 @@
 import {ArrowUpRight} from "lucide-react"
 import Shot from "./Shot"
 import Rise from "./type/Rise"
+import Letters from "./type/Letters"
 import Cta, {CtaLink} from "./ui/Cta"
 import {Eyebrow} from "./About"
 import {REPOSITORIES} from "./Projects"
@@ -16,7 +17,7 @@ const Contact = ({flow, onCredits}: {flow: boolean; onCredits: () => void}) => (
             <Eyebrow index="03" label="Kontakt"/>
 
             <p className="mt-4 text-display font-medium text-fg">
-                <Rise delay={60} duration={1100}>Sag Hallo.</Rise>
+                <Letters text="Sag Hallo." delay={60} stagger={32} duration={1100}/>
             </p>
 
             <div className="mt-8 grid gap-8 md:grid-cols-12 md:items-end md:gap-12 short:mt-5">

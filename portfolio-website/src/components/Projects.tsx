@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from "react"
 import {ArrowDown} from "lucide-react"
 import Shot from "./Shot"
 import Rise from "./type/Rise"
+import Letters from "./type/Letters"
 import Cta, {CtaLink} from "./ui/Cta"
 import {Eyebrow} from "./About"
 import {projects, primaryLinkOf} from "@/lib/projects"
@@ -24,7 +25,7 @@ const Opening = () => (
         <div className="mt-auto w-full">
             <p className="label text-fg-2">Kapitel 02</p>
             <h2 className="mt-4 text-display font-medium text-fg">
-                <Rise delay={80} duration={1200}>Projekte</Rise>
+                <Letters text="Projekte" delay={80} stagger={36} duration={1200}/>
             </h2>
             <div className="mt-6 flex flex-col gap-6 md:mt-8 md:flex-row md:items-end md:justify-between">
                 <p className="max-w-[38ch] text-lead text-fg-2">
@@ -144,7 +145,7 @@ const ProjectCopy = ({
         <div className="lg:col-span-6">
             <Eyebrow index="02" label="Projekte" count={`${pad(index + 1)} / ${pad(total)}`}/>
             <h2 className="mt-4 text-heading font-medium text-fg short:mt-3">
-                <Rise delay={60}>{project.title}</Rise>
+                <Letters text={project.title} delay={60}/>
             </h2>
             <Rise mode="fade" delay={160} as="div">
                 <p className="mt-3 text-lead text-fg">{project.subtitle}</p>

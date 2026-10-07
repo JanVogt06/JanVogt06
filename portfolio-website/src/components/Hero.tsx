@@ -2,6 +2,7 @@ import {useEffect, useState} from "react"
 import {ArrowDown} from "lucide-react"
 import Shot from "./Shot"
 import Rise from "./type/Rise"
+import Letters from "./type/Letters"
 import Cta from "./ui/Cta"
 import {SHOT} from "@/lib/journey"
 import {scrollToChapter} from "@/lib/smoothScroll"
@@ -50,7 +51,7 @@ const Hero = ({flow}: {flow: boolean}) => (
 
         <div className="mt-auto">
             <h1 className="text-display font-medium text-fg">
-                <Rise delay={150} duration={1300}>Jan Vogt</Rise>
+                <Letters text="Jan Vogt" delay={200} stagger={45} duration={1300}/>
             </h1>
 
             <div className="mt-6 flex flex-col gap-7 md:mt-8 md:flex-row md:items-end md:justify-between">

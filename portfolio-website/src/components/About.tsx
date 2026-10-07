@@ -2,6 +2,7 @@ import {useId, useRef} from "react"
 import {X} from "lucide-react"
 import Shot from "./Shot"
 import Rise from "./type/Rise"
+import Letters from "./type/Letters"
 import Cta from "./ui/Cta"
 import {stations} from "@/lib/about"
 import type {Entry, Station} from "@/lib/about"
@@ -51,7 +52,7 @@ const StationCopy = ({station, index, onOpen}: {station: Station; index: number;
             <Eyebrow index="01" label="Über mich" count={`${index + 1} / ${total}`}/>
 
             <h2 className="mt-4 text-heading font-medium text-fg">
-                <Rise delay={60}>{station.title}</Rise>
+                <Letters text={station.title} delay={60}/>
             </h2>
 
             <ul className={`mt-6 short:mt-4 ${dense ? "grid grid-cols-2 gap-x-5 sm:gap-x-8" : "border-t border-hair"}`}>
