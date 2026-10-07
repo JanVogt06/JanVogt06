@@ -11,6 +11,7 @@ import Contact from "./components/Contact"
 import ProjectHud from "./components/ProjectHud"
 import Credits from "./components/Credits"
 import Sky from "./components/Sky"
+import Cursor from "./components/Cursor"
 import {useSmoothScroll} from "@/lib/smoothScroll"
 import useMediaQuery from "@/lib/useMediaQuery"
 import {hasWebGL2} from "@/lib/sea/support"
@@ -36,6 +37,7 @@ function App() {
     useSmoothScroll()
 
     const reduced = useMediaQuery("(prefers-reduced-motion: reduce)")
+    const fine = useMediaQuery("(pointer: fine)")
     const scene = useMemo(() => hasWebGL2() && !reduced, [reduced])
 
     const [photo, setPhoto] = useState<number | null>(null)
@@ -134,6 +136,7 @@ function App() {
             {project !== null && <ProjectHud index={project} onClose={() => setProject(null)}/>}
             <AnimatePresence>{credits && <Credits key="credits" onClose={() => setCredits(false)}/>}</AnimatePresence>
 
+            {scene && fine && <Cursor/>}
             <Boot progress={progress} ready={ready}/>
         </MotionConfig>
     )

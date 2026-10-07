@@ -36,6 +36,7 @@ const Sea = ({
             onProgress: (f) => handlers.current.onProgress(f),
             onReady: () => handlers.current.onReady(),
             onStir: sea.markStirred,
+            onHover: sea.setHover,
         })
         attachScene(scene)
         const unsubscribe = journey.subscribe((shot) => scene.setShot(shot))

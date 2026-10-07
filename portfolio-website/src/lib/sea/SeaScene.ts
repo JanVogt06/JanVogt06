@@ -44,6 +44,8 @@ export type SeaSceneOptions = {
     onReady: () => void
     /** Called the first time the visitor stirs the water. */
     onStir?: () => void
+    /** Called as the pointer comes onto or leaves a panel in focus. */
+    onHover?: (kind: PanelSpec["kind"] | null) => void
 }
 
 const FOV = 38
@@ -112,6 +114,8 @@ type Panel = {
     height: number
     /** How far a screen has switched on, 0 to 1. */
     on: number
+    /** How far the panel leans towards the pointer, 0 to 1. */
+    lean: number
 }
 
 /** A square grid whose cells grow away from the middle: a few centimetres
@@ -402,6 +406,7 @@ export class SeaScene {
         document.removeEventListener("visibilitychange", this.sync)
         this.resizeObserver.disconnect()
         document.body.style.cursor = ""
+        this.options.onHover?.(null)
         this.disposables.forEach((d) => d.dispose())
         this.textures.forEach((t) => t.dispose())
         this.post.dispose()
@@ -544,7 +549,7 @@ export class SeaScene {
         group.position.copy(center)
         group.rotation.y = yaw
         this.scene.add(group)
-        this.panels.push({kind: spec.kind, group, image, material, center, yaw, width, height, on: 0})
+        this.panels.push({kind: spec.kind, group, image, material, center, yaw, width, height, on: 0, lean: 0})
 
         this.pending++
         new THREE.TextureLoader().load(
@@ -786,9 +791,13 @@ export class SeaScene {
         this.placeCamera(this.shot)
 
         this.panels.forEach((panel, i) => {
-            const hover = panel.kind === "screen" ? 0.05 : 0.025
-            panel.group.position.y = panel.center.y + Math.sin(this.time * 0.6 + i * 1.7) * hover
+            const bob = panel.kind === "screen" ? 0.05 : 0.025
+            panel.group.position.y = panel.center.y + Math.sin(this.time * 0.6 + i * 1.7) * bob
             panel.group.rotation.z = Math.sin(this.time * 0.42 + i) * 0.004
+            // The panel under the pointer leans a little towards it.
+            panel.lean = damp(panel.lean, i === this.hovered ? 1 : 0, 0.35, dt)
+            panel.group.rotation.y = panel.yaw + panel.lean * this.parallax.x * 0.09
+            panel.group.rotation.x = -panel.lean * this.parallax.y * 0.06
             if (panel.kind !== "screen") return
             // The whole row comes on as the camera reaches the overlook and
             // stays on through the work; the one in focus burns brightest.
@@ -984,6 +993,7 @@ export class SeaScene {
         if (index === this.hovered) return
         this.hovered = index
         document.body.style.cursor = index >= 0 ? "pointer" : ""
+        this.options.onHover?.(index >= 0 ? this.panels[index].kind : null)
     }
 
     private handleClick = (event: MouseEvent) => {
