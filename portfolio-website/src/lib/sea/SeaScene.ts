@@ -23,6 +23,10 @@ import {RIPPLE_SIZE, createRipples} from "./ripples"
 import {createLandmarks} from "./landmarks"
 import {createGulls} from "./gulls"
 import type {Gulls} from "./gulls"
+import {createFigures} from "./figures"
+import type {Figures} from "./figures"
+import {sky} from "@/lib/constellations"
+import type {SkyMark} from "@/lib/constellations"
 import type {Landmarks} from "./landmarks"
 import type {RippleSource, Ripples} from "./ripples"
 import {createPost} from "./post"
@@ -175,6 +179,9 @@ export class SeaScene {
     private readonly ripples: Ripples
     private readonly landmarks: Landmarks
     private readonly gulls: Gulls
+    private readonly figures: Figures
+    private readonly marks: SkyMark[] = []
+    private night = 0
     private dark = 0
     private readonly stirFrom = new THREE.Vector2()
     private readonly stirTo = new THREE.Vector2()
@@ -349,6 +356,11 @@ export class SeaScene {
         this.scene.add(this.gulls.mesh)
         this.disposables.push(this.gulls)
 
+        this.figures = createFigures(this.shared.uInvExposure)
+        this.scene.add(this.figures.group)
+        this.disposables.push(this.figures)
+        this.marks = this.figures.directions.map(() => ({x: 0, y: 0}))
+
         this.layout()
         this.applyLight()
         this.placeCamera(0)
@@ -369,6 +381,11 @@ export class SeaScene {
         this.shotTarget = shot
         if (!this.announced) this.shot = shot
         this.sync()
+    }
+
+    /** Lights one constellation up, or none. */
+    setFigure(group: number | null) {
+        this.figures.setActive(group)
     }
 
     setPaused(paused: boolean) {
@@ -625,12 +642,15 @@ export class SeaScene {
         const end = lastPanel ? lastPanel.center.z : -100
         shots.push({
             position: new THREE.Vector3(portrait ? 1.2 : -1, 2.4, end - 34),
-            yaw: portrait ? -0.24 : -0.04,
+            yaw: portrait ? -0.17 : -0.04,
             pitch: portrait ? 0.1 : 0.06,
         })
 
         while (shots.length < SHOT_COUNT) shots.push(shots[shots.length - 1])
         this.shots = shots
+
+        const night = shots[SHOT.contact]
+        this.figures.place(night.yaw, night.pitch, tanH, tanV, portrait)
     }
 
     /** The shot that opens the work: from in front of the row and off to
@@ -705,6 +725,7 @@ export class SeaScene {
             this.clouds.value = l.clouds
             ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
             this.dark = smooth01((l.exposure - 30) / 150)
+            this.night = l.stars
 
             const lut = this.lutMaterial.uniforms
             ;(lut.uSun.value as THREE.Vector3).set(...l.sun)
@@ -777,6 +798,7 @@ export class SeaScene {
         })
 
         this.landmarks.update(this.time, this.dark, this.renderer.getPixelRatio())
+        this.drawFigures()
         const ahead = new THREE.Vector3()
         this.camera.getWorldDirection(ahead)
         ahead.y = 0
@@ -785,6 +807,27 @@ export class SeaScene {
         this.stir(dt)
         this.render()
         this.adapt(now)
+    }
+
+    /** The constellations come out over the last shot, and the page is told
+     *  where each star sits so it can write its name beside it. */
+    private drawFigures() {
+        const amount = this.night * smooth01((this.shot - (SHOT.contact - 0.75)) / 0.5)
+        this.figures.update(this.time, amount, this.renderer.getPixelRatio())
+        if (!sky.listening()) return
+        if (amount <= 0.01) {
+            sky.emit(this.marks, 0)
+            return
+        }
+        this.camera.updateMatrixWorld()
+        const rect = this.renderer.domElement.getBoundingClientRect()
+        const point = new THREE.Vector3()
+        this.figures.directions.forEach((dir, i) => {
+            point.copy(dir).multiplyScalar(650).add(this.camera.position).project(this.camera)
+            this.marks[i].x = rect.left + ((point.x + 1) / 2) * rect.width
+            this.marks[i].y = rect.top + ((1 - point.y) / 2) * rect.height
+        })
+        sky.emit(this.marks, amount)
     }
 
     /** Runs the solver over the patch in front of the camera, with the prints
@@ -847,6 +890,7 @@ export class SeaScene {
         this.shared.uTime.value = this.time
         this.sky.position.copy(this.camera.position)
         this.stars.position.copy(this.camera.position)
+        this.figures.group.position.copy(this.camera.position)
         // The grid follows the camera in whole cells of its finest spacing,
         // so the vertices under the eye never swim through the swell.
         this.water.position.x = Math.round(this.camera.position.x / 0.5) * 0.5

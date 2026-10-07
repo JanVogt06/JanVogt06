@@ -11,6 +11,7 @@ export const attachScene = (scene: SeaScene | null) => {
 
 export const sea = {
     setPaused: (paused: boolean) => current?.setPaused(paused),
+    setFigure: (group: number | null) => current?.setFigure(group),
 
     /** Whether the visitor has found out that the water answers them. */
     isStirred: () => stirred,
