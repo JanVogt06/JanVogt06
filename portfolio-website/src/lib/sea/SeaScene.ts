@@ -20,6 +20,8 @@ import {MOON, MOON_TINT, lightAt} from "./light"
 import {DETAIL_SIZE, createOcean} from "./ocean"
 import type {Ocean} from "./ocean"
 import {RIPPLE_SIZE, createRipples} from "./ripples"
+import {createLandmarks} from "./landmarks"
+import type {Landmarks} from "./landmarks"
 import type {RippleSource, Ripples} from "./ripples"
 import {createPost} from "./post"
 import type {Post} from "./post"
@@ -169,6 +171,8 @@ export class SeaScene {
     private readonly clouds = {value: 0.4}
     private readonly ocean: Ocean
     private readonly ripples: Ripples
+    private readonly landmarks: Landmarks
+    private dark = 0
     private readonly stirFrom = new THREE.Vector2()
     private readonly stirTo = new THREE.Vector2()
     private stirring = false
@@ -327,6 +331,17 @@ export class SeaScene {
         this.disposables.push(waterGeometry, this.water)
 
         options.panels.forEach((spec, i) => this.createPanel(spec, i))
+
+        // Placed against the row: the island lies far off to the right of
+        // where the night ends, the buoys mark the start, the work and the end.
+        const firstScreen = this.panels.find((p) => p.kind === "screen")
+        const lastPanel = this.panels[this.panels.length - 1]
+        const marks: Array<{at: THREE.Vector3; color: "red" | "green"}> = [{at: new THREE.Vector3(8, 0, -14), color: "green"}]
+        if (firstScreen) marks.push({at: firstScreen.center.clone().setY(0).add(new THREE.Vector3(5.5, 0, 7)), color: "red"})
+        if (lastPanel) marks.push({at: lastPanel.center.clone().setY(0).add(new THREE.Vector3(30, 0, -52)), color: "green"})
+        this.landmarks = createLandmarks(this.shared, new THREE.Vector3(260, 0, -760), marks)
+        this.scene.add(this.landmarks.group)
+        this.disposables.push(this.landmarks)
 
         this.layout()
         this.applyLight()
@@ -683,6 +698,7 @@ export class SeaScene {
             this.exposure = l.exposure
             this.clouds.value = l.clouds
             ;(this.stars.material as THREE.ShaderMaterial).uniforms.uAmount.value = l.stars
+            this.dark = smooth01((l.exposure - 30) / 150)
 
             const lut = this.lutMaterial.uniforms
             ;(lut.uSun.value as THREE.Vector3).set(...l.sun)
@@ -754,6 +770,7 @@ export class SeaScene {
             panel.material.uniforms.uOn.value = panel.on
         })
 
+        this.landmarks.update(this.time, this.dark, this.renderer.getPixelRatio())
         this.stir(dt)
         this.render()
         this.adapt(now)
@@ -781,6 +798,10 @@ export class SeaScene {
                 half: panel.width / 2 + MOUNT,
                 strength: Math.cos(this.time * 0.6 + i * 1.7) * 0.05,
             })
+        })
+        this.landmarks.buoys.forEach((b) => {
+            if (Math.hypot(b.base.x - focus.x, b.base.z - focus.y) > RIPPLE_SIZE * 0.6) return
+            sources.push({x: b.base.x, z: b.base.z, angle: 0, half: 0.25, strength: Math.cos(this.time * 1.1 + b.phase) * 0.08})
         })
         this.ripples.update(this.renderer, dt, focus, sources)
     }
