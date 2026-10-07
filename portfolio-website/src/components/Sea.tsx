@@ -1,7 +1,7 @@
 import {useEffect, useRef} from "react"
 import {SeaScene} from "@/lib/sea/SeaScene"
 import type {PanelSpec} from "@/lib/sea/SeaScene"
-import {attachScene} from "@/lib/sea/controller"
+import {attachScene, sea} from "@/lib/sea/controller"
 import {journey} from "@/lib/journey"
 
 /**
@@ -35,6 +35,7 @@ const Sea = ({
             onSelect: (i) => handlers.current.onSelect(i),
             onProgress: (f) => handlers.current.onProgress(f),
             onReady: () => handlers.current.onReady(),
+            onStir: sea.markStirred,
         })
         attachScene(scene)
         const unsubscribe = journey.subscribe((shot) => scene.setShot(shot))
