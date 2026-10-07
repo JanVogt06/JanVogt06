@@ -10,6 +10,7 @@ import Projects from "./components/Projects"
 import Contact from "./components/Contact"
 import ProjectHud from "./components/ProjectHud"
 import Credits from "./components/Credits"
+import Sky from "./components/Sky"
 import {useSmoothScroll} from "@/lib/smoothScroll"
 import useMediaQuery from "@/lib/useMediaQuery"
 import {hasWebGL2} from "@/lib/sea/support"
@@ -110,6 +111,7 @@ function App() {
                     <About flow={false} onOpen={setPhoto}/>
                     <Projects flow={false} onOpen={setProject}/>
                     <Contact flow={false} onCredits={() => setCredits(true)}/>
+                    <Sky/>
                 </main>
             ) : (
                 <main className="seascape">
