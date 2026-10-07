@@ -21,6 +21,8 @@ import {DETAIL_SIZE, createOcean} from "./ocean"
 import type {Ocean} from "./ocean"
 import {RIPPLE_SIZE, createRipples} from "./ripples"
 import {createLandmarks} from "./landmarks"
+import {createGulls} from "./gulls"
+import type {Gulls} from "./gulls"
 import type {Landmarks} from "./landmarks"
 import type {RippleSource, Ripples} from "./ripples"
 import {createPost} from "./post"
@@ -172,6 +174,7 @@ export class SeaScene {
     private readonly ocean: Ocean
     private readonly ripples: Ripples
     private readonly landmarks: Landmarks
+    private readonly gulls: Gulls
     private dark = 0
     private readonly stirFrom = new THREE.Vector2()
     private readonly stirTo = new THREE.Vector2()
@@ -333,15 +336,18 @@ export class SeaScene {
         options.panels.forEach((spec, i) => this.createPanel(spec, i))
 
         // Placed against the row: the island lies far off to the right of
-        // where the night ends, the buoys mark the start, the work and the end.
-        const firstScreen = this.panels.find((p) => p.kind === "screen")
+        // where the night ends, one buoy greets the morning and one blinks
+        // on the moonlit water at the end.
         const lastPanel = this.panels[this.panels.length - 1]
         const marks: Array<{at: THREE.Vector3; color: "red" | "green"}> = [{at: new THREE.Vector3(8, 0, -14), color: "green"}]
-        if (firstScreen) marks.push({at: firstScreen.center.clone().setY(0).add(new THREE.Vector3(5.5, 0, 7)), color: "red"})
-        if (lastPanel) marks.push({at: lastPanel.center.clone().setY(0).add(new THREE.Vector3(30, 0, -52)), color: "green"})
+        if (lastPanel) marks.push({at: lastPanel.center.clone().setY(0).add(new THREE.Vector3(46, 0, -56)), color: "red"})
         this.landmarks = createLandmarks(this.shared, new THREE.Vector3(260, 0, -760), marks)
         this.scene.add(this.landmarks.group)
         this.disposables.push(this.landmarks)
+
+        this.gulls = createGulls(this.shared)
+        this.scene.add(this.gulls.mesh)
+        this.disposables.push(this.gulls)
 
         this.layout()
         this.applyLight()
@@ -771,6 +777,11 @@ export class SeaScene {
         })
 
         this.landmarks.update(this.time, this.dark, this.renderer.getPixelRatio())
+        const ahead = new THREE.Vector3()
+        this.camera.getWorldDirection(ahead)
+        ahead.y = 0
+        ahead.normalize().multiplyScalar(30).add(this.camera.position)
+        this.gulls.update(this.time, dt, ahead, 1 - this.dark)
         this.stir(dt)
         this.render()
         this.adapt(now)

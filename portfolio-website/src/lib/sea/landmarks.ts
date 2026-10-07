@@ -234,8 +234,8 @@ export const createLandmarks = (
     group.add(beams)
 
     // Buoys: a painted float and a cage with a lamp on top.
-    const red = new THREE.Color(0.6, 0.06, 0.05)
-    const green = new THREE.Color(0.05, 0.36, 0.16)
+    const red = new THREE.Color(0.4, 0.07, 0.06)
+    const green = new THREE.Color(0.06, 0.22, 0.12)
     const floatGeometry = new THREE.CylinderGeometry(0.45, 0.6, 1.4, 20)
     const topGeometry = new THREE.ConeGeometry(0.35, 0.9, 16)
     disposables.push(floatGeometry, topGeometry)
