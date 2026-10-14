@@ -2,6 +2,27 @@ import * as THREE from 'three'
 
 const Y = new THREE.Vector3(0, 1, 0)
 const twist = new THREE.Quaternion()
+const side = new THREE.Vector3()
+const ahead = new THREE.Vector3()
+const basis = new THREE.Matrix4()
+
+// Unit direction from the planet's centre for a latitude and longitude in
+// degrees, with the north pole at +y and longitude 0 along +x.
+export function directionAt(lat: number, lon: number, target = new THREE.Vector3()) {
+  const phi = THREE.MathUtils.degToRad(lat)
+  const lambda = THREE.MathUtils.degToRad(lon)
+  return target.set(Math.cos(phi) * Math.cos(lambda), Math.sin(phi), Math.cos(phi) * Math.sin(lambda))
+}
+
+// Orientation that stands an object upright at `up` with its local +z
+// pointing along `front`, flattened onto the ground there.
+export function facing(up: THREE.Vector3, front: THREE.Vector3, target = new THREE.Quaternion()) {
+  ahead.copy(front).addScaledVector(up, -front.dot(up))
+  if (ahead.lengthSq() < 1e-8) ahead.set(1, 0, 0).addScaledVector(up, -up.x)
+  ahead.normalize()
+  side.crossVectors(up, ahead)
+  return target.setFromRotationMatrix(basis.makeBasis(side, up, ahead))
+}
 
 // Orientation that stands an object upright at `up` on the planet, turned by
 // `yaw` around the local vertical.
