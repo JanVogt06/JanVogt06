@@ -1,7 +1,9 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 import './style.css'
 import { stations } from './content/stations'
+import roverModel from './models/rover.glb?url'
 import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
 import { FollowCamera } from './world/FollowCamera'
@@ -14,7 +16,7 @@ import { Rover } from './world/Rover'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 
-await RAPIER.init()
+const [, rover3d] = await Promise.all([RAPIER.init(), new GLTFLoader().loadAsync(roverModel)])
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
@@ -23,7 +25,7 @@ const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
 const sites = new Stations(stage.scene, physics, planet.radius, stations)
 new Props(stage.scene, physics, planet.radius, [{ direction: spawn, distance: 6.5 }, ...sites.clearings])
-const rover = new Rover(stage.scene, physics, input, spawn)
+const rover = new Rover(stage.scene, physics, input, spawn, rover3d.scene)
 const view = new FollowCamera(stage.camera, rover)
 const lights = new Lights(stage.scene, view)
 
