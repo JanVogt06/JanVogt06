@@ -12,7 +12,10 @@ export function StationTag() {
     let frame = 0
     const follow = () => {
       if (element.current && bar.current) {
-        element.current.style.transform = `translate(${tag.x}px, ${tag.y}px) translate(-50%, -100%)`
+        // On narrow screens the minimap fills the top right, so the tag keeps
+        // below it.
+        const y = window.innerWidth < 520 ? Math.max(tag.y, 200) : tag.y
+        element.current.style.transform = `translate(${tag.x}px, ${y}px) translate(-50%, -100%)`
         element.current.style.visibility = tag.onScreen ? 'visible' : 'hidden'
         bar.current.style.transform = `scaleX(${tag.progress})`
       }

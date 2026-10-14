@@ -47,7 +47,10 @@ export class FollowCamera {
 
     const excess = (this.rover.speed - tuning.topSpeed) / (tuning.boostSpeed - tuning.topSpeed)
     this.rush += (THREE.MathUtils.clamp(excess, 0, 1) - this.rush) * (1 - Math.exp(-this.boostEase * delta))
-    this.camera.fov = THREE.MathUtils.lerp(this.fov, this.boostFov, this.rush)
+    // On a tall, narrow screen the same vertical angle would show little
+    // more than the rover, so the lens widens as the screen narrows.
+    const narrow = Math.pow(Math.min(1, this.camera.aspect), -0.55)
+    this.camera.fov = THREE.MathUtils.lerp(this.fov, this.boostFov, this.rush) * narrow
     this.camera.updateProjectionMatrix()
 
     this.camera.position
