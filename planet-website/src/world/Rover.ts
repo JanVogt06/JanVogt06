@@ -37,6 +37,12 @@ export const tuning = {
   rearGrip: 4.2,
   jump: 8,
   keepUpright: 18,
+  // How far the body leans out of a corner per unit of sideways
+  // acceleration, and how springy it is about it.
+  lean: 0.004,
+  leanMax: 0.16,
+  leanStiffness: 140,
+  leanDamping: 7,
 }
 
 const v = new THREE.Vector3()
@@ -56,6 +62,9 @@ export class Rover {
   private wheels: { steer: THREE.Group; spin: THREE.Object3D }[] = []
   private steering = 0
   private upsideDown = 0
+  private yawRate = 0
+  private shell = new THREE.Group()
+  private lean = { angle: 0, velocity: 0 }
 
   constructor(scene: THREE.Scene, physics: Physics, private input: Input, spawn: THREE.Vector3) {
     up.copy(spawn).normalize()
@@ -122,7 +131,8 @@ export class Rover {
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
   }
 
-  update() {
+  update(delta: number) {
+    this.leanIntoCorners(Math.min(delta, 1 / 30))
     WHEELS.forEach((wheel, i) => {
       const { steer, spin } = this.wheels[i]
       const length = this.controller.wheelSuspensionLength(i) ?? tuning.suspensionRest
@@ -138,6 +148,7 @@ export class Rover {
     this.forward.set(1, 0, 0).applyQuaternion(quaternion)
     this.velocity.copy(this.body.linvel())
     this.speed = this.velocity.dot(this.forward)
+    this.yawRate = v.copy(this.body.angvel()).dot(up.copy(this.body.translation()).normalize())
     up.copy(this.body.translation()).normalize()
 
     this.drive()
@@ -210,6 +221,18 @@ export class Rover {
     }
   }
 
+  // Rapier applies the tyres' side forces close to the centre of mass, so the
+  // chassis hardly rolls by itself. The body shell leans on a spring instead,
+  // outwards from the corner, and wobbles a little as it settles.
+  private leanIntoCorners(delta: number) {
+    const sideways = this.grounded ? this.speed * this.yawRate : 0
+    const target = THREE.MathUtils.clamp(sideways * tuning.lean, -tuning.leanMax, tuning.leanMax)
+    const lean = this.lean
+    lean.velocity += ((target - lean.angle) * tuning.leanStiffness - lean.velocity * tuning.leanDamping) * delta
+    lean.angle += lean.velocity * delta
+    this.shell.rotation.x = lean.angle
+  }
+
   private build() {
     const paint = new THREE.MeshStandardMaterial({ color: '#e8743b', roughness: 0.6 })
     const trim = new THREE.MeshStandardMaterial({ color: '#2b2f3a', roughness: 0.8 })
@@ -219,7 +242,13 @@ export class Rover {
     const chassis = new THREE.Mesh(new THREE.BoxGeometry(CHASSIS.x * 2, CHASSIS.y * 2, CHASSIS.z * 2), paint)
     const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.42, 1.0), trim)
     cabin.position.set(-0.2, CHASSIS.y + 0.21, 0)
-    this.object.add(chassis, cabin)
+    // The shell pivots at the floor pan, so it rolls over on its springs
+    // rather than spinning about its middle.
+    this.shell.position.y = -CHASSIS.y
+    chassis.position.y = CHASSIS.y
+    cabin.position.y += CHASSIS.y
+    this.shell.add(chassis, cabin)
+    this.object.add(this.shell)
 
     const tyre = new THREE.CylinderGeometry(WHEEL_RADIUS, WHEEL_RADIUS, 0.3, 24).rotateX(Math.PI / 2)
     const cap = new THREE.BoxGeometry(0.42, 0.1, 0.32)

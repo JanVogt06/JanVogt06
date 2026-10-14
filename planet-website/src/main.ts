@@ -21,7 +21,7 @@ const lights = new Lights(stage.scene, view)
 
 function frame(delta: number) {
   physics.update(delta)
-  rover.update()
+  rover.update(delta)
   view.update(delta)
   lights.update()
   stage.render()
