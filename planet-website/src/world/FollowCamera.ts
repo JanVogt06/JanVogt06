@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { Rover } from './Rover'
+import { tuning, type Rover } from './Rover'
 
 const up = new THREE.Vector3()
 const along = new THREE.Vector3()
@@ -18,6 +18,14 @@ export class FollowCamera {
   lookAhead = 3
   follow = 10
   swing = 1.4
+  // Past top speed the lens widens and the camera drops back a little, so
+  // the boost reads as a rush of ground rather than a number.
+  fov = 42
+  boostFov = 54
+  boostPullBack = 1.5
+  boostEase = 3
+
+  private rush = 0
 
   constructor(private camera: THREE.PerspectiveCamera, private rover: Rover) {
     this.target.copy(rover.object.position)
@@ -37,10 +45,15 @@ export class FollowCamera {
       this.heading.lerp(along, 1 - Math.exp(-rate * delta)).normalize()
     }
 
+    const excess = (this.rover.speed - tuning.topSpeed) / (tuning.boostSpeed - tuning.topSpeed)
+    this.rush += (THREE.MathUtils.clamp(excess, 0, 1) - this.rush) * (1 - Math.exp(-this.boostEase * delta))
+    this.camera.fov = THREE.MathUtils.lerp(this.fov, this.boostFov, this.rush)
+    this.camera.updateProjectionMatrix()
+
     this.camera.position
       .copy(this.target)
       .addScaledVector(up, this.height)
-      .addScaledVector(this.heading, -this.distance)
+      .addScaledVector(this.heading, -(this.distance + this.rush * this.boostPullBack))
     this.camera.up.copy(up)
     this.camera.lookAt(look.copy(this.target).addScaledVector(this.heading, this.lookAhead))
   }
