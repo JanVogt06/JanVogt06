@@ -1,6 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import type { Station } from '../content/stations'
 import { tag, ui } from '../ui/store'
 import type { Physics } from './Physics'
@@ -8,7 +7,6 @@ import type { Clearing } from './Props'
 import type { Rover } from './Rover'
 import { directionAt, facing } from './surface'
 
-const BUILDING = { size: 5, height: 3.6 }
 // The parking bay lies in front of the building, along its local +z.
 const BAY = { width: 3.6, depth: 4.6, offset: 6.2, wall: 1.8 }
 // How far inside the bay's edges the rover's centre has to be.
@@ -22,6 +20,23 @@ const PARKED_SPEED = 0.8
 const NORTH = new THREE.Vector3(0, 1, 0)
 const local = new THREE.Vector3()
 const screen = new THREE.Vector3()
+const size = new THREE.Vector3()
+const middle = new THREE.Vector3()
+
+// The bounds of a station model in its own frame: the plinth it stands on,
+// which is the root's own mesh, and everything built on top of it.
+function outline(model: THREE.Object3D) {
+  model.updateMatrixWorld(true)
+  const root = model.children[0]
+  const plinth = new THREE.Box3()
+  if (root instanceof THREE.Mesh) {
+    root.geometry.computeBoundingBox()
+    plinth.copy(root.geometry.boundingBox!).applyMatrix4(root.matrixWorld)
+  }
+  const building = new THREE.Box3()
+  for (const child of root.children) building.expandByObject(child)
+  return { plinth, building }
+}
 
 // A point `height` above the ground, `x` across and `z` ahead of a station's
 // foot, in the station's own frame. The ground there is the planet's curve,
@@ -125,8 +140,8 @@ interface Site {
   armed: boolean
 }
 
-// Places every station on the planet: a stand-in building and a glowing
-// bay in front of it. Parking in the bay opens the station's panel.
+// Places every station on the planet: its model, named after the station,
+// and a glowing bay in front of it. Parking in the bay opens the panel.
 export class Stations {
   readonly clearings: Clearing[] = []
   private sites: Site[] = []
@@ -137,8 +152,8 @@ export class Stations {
     physics: Physics,
     private radius: number,
     stations: Station[],
+    models: Record<string, THREE.Object3D>,
   ) {
-    const buildingGeometry = new RoundedBoxGeometry(BUILDING.size, BUILDING.height, BUILDING.size, 3, 0.35)
     const bay = curvedBay(radius)
 
     for (const station of stations) {
@@ -154,22 +169,25 @@ export class Stations {
       group.quaternion.copy(orientation)
       scene.add(group)
 
-      const building = new THREE.Mesh(
-        buildingGeometry,
-        new THREE.MeshStandardMaterial({ color: station.colour, roughness: 0.7 }),
-      )
-      building.position.y = BUILDING.height / 2 - 0.1
-      building.castShadow = building.receiveShadow = true
-      group.add(building)
+      const model = models[station.id]
+      const { plinth, building } = outline(model)
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) child.castShadow = child.receiveShadow = true
+      })
+      group.add(model)
 
-      const centre = at(0, BUILDING.height / 2 - 0.1, 0)
+      // The low plinth can be driven onto; what stands on it cannot.
       const body = physics.world.createRigidBody(
-        RAPIER.RigidBodyDesc.fixed().setTranslation(centre.x, centre.y, centre.z).setRotation(orientation),
+        RAPIER.RigidBodyDesc.fixed().setTranslation(group.position.x, group.position.y, group.position.z).setRotation(orientation),
       )
-      physics.world.createCollider(
-        RAPIER.ColliderDesc.cuboid(BUILDING.size / 2, BUILDING.height / 2, BUILDING.size / 2),
-        body,
-      )
+      for (const box of [plinth, building]) {
+        box.getSize(size).multiplyScalar(0.5)
+        box.getCenter(middle)
+        physics.world.createCollider(
+          RAPIER.ColliderDesc.cuboid(size.x, size.y, size.z).setTranslation(middle.x, middle.y, middle.z),
+          body,
+        )
+      }
 
       const uniforms = {
         uColour: { value: new THREE.Color(BAY_COLOUR) },
@@ -199,7 +217,7 @@ export class Stations {
         station,
         orientation,
         inverse: orientation.clone().invert(),
-        tagPoint: at(0, BUILDING.height + 1.4, 0),
+        tagPoint: at(0, building.max.y + 1.2, 0),
         bayCentre: at(0, 0, BAY.offset),
         uniforms,
         progress: 0,
