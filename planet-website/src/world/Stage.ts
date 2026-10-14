@@ -10,7 +10,7 @@ export class Stage {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
     this.renderer.shadowMap.enabled = true
     this.renderer.shadowMap.type = THREE.PCFShadowMap
-    this.renderer.toneMapping = THREE.AgXToneMapping
+    this.renderer.toneMapping = THREE.NeutralToneMapping
 
     this.scene.background = new THREE.Color('#0b0d14')
     this.scene.add(this.stars())
