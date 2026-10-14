@@ -128,8 +128,12 @@ const wallFragment = /* glsl */ `
   }
 `
 
-interface Site {
+export interface Site {
   station: Station
+  // Unit vector from the planet's centre to the station.
+  direction: THREE.Vector3
+  // Where the rover's camera head looks when it is close.
+  gazePoint: THREE.Vector3
   orientation: THREE.Quaternion
   inverse: THREE.Quaternion
   tagPoint: THREE.Vector3
@@ -138,13 +142,16 @@ interface Site {
   progress: number
   // A bay only opens again once the rover has driven out of it.
   armed: boolean
+  visited: boolean
 }
 
 // Places every station on the planet: its model, named after the station,
 // and a glowing bay in front of it. Parking in the bay opens the panel.
 export class Stations {
   readonly clearings: Clearing[] = []
-  private sites: Site[] = []
+  readonly sites: Site[] = []
+  // The station the rover is closest to, if it is near any.
+  nearest: Site | null = null
   private time = 0
 
   constructor(
@@ -215,6 +222,8 @@ export class Stations {
 
       this.sites.push({
         station,
+        direction: up.clone(),
+        gazePoint: at(0, 1.6, 0),
         orientation,
         inverse: orientation.clone().invert(),
         tagPoint: at(0, building.max.y + 1.2, 0),
@@ -222,6 +231,7 @@ export class Stations {
         uniforms,
         progress: 0,
         armed: true,
+        visited: false,
       })
       this.clearings.push({ direction: at(0, 0, BAY.offset / 2).normalize(), distance: 10 })
     }
@@ -256,10 +266,12 @@ export class Stations {
       if (site.progress >= 1) {
         site.progress = 0
         site.armed = false
+        site.visited = true
         ui.set({ open: site.station })
       }
     }
 
+    this.nearest = nearest
     ui.set({ nearby: nearest?.station ?? null })
     if (nearest) {
       screen.copy(nearest.tagPoint).project(camera)

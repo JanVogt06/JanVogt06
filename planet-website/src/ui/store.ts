@@ -35,3 +35,18 @@ export function useUi() {
 // writes this every frame; the tag reads it on its own animation frame so
 // React never re-renders per frame.
 export const tag = { x: 0, y: 0, onScreen: false, progress: 0 }
+
+export interface MapPoint {
+  id: string
+  title: string
+  colour: string
+  // Position on the map, within the unit disc: the rover sits at the
+  // centre facing up, and the point opposite it on the planet is the rim.
+  x: number
+  y: number
+  visited: boolean
+}
+
+// The minimap's contents, rewritten by the game every frame and drawn by
+// the map on its own animation frame.
+export const minimap = { points: [] as MapPoint[], nearest: null as string | null }
