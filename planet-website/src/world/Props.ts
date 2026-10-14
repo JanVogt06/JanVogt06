@@ -3,11 +3,12 @@ import * as THREE from 'three'
 import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import type { Physics } from './Physics'
+import type { Terrain } from './Terrain'
 import { random, uprightAt } from './surface'
 
 const CRATE = 0.8
 const COLOURS = ['#e9c46a', '#e76f51', '#8ab17d', '#5b7bd5', '#f2efe6']
-const RAMP = { length: 4.5, width: 2.6, height: 1.2, sunk: 0.15 }
+const RAMP = { length: 4.5, width: 2.6, height: 1.2, sunk: 0.35 }
 
 interface Spot {
   direction: THREE.Vector3
@@ -33,9 +34,10 @@ export class Props {
   constructor(
     private scene: THREE.Scene,
     private physics: Physics,
-    private radius: number,
+    private terrain: Terrain,
     keepClear: Clearing[],
   ) {
+    const { radius } = terrain
     // Counts follow the surface area, so the props stay as dense whatever
     // the size of the planet.
     const per = (count: number) => Math.round((count * radius * radius) / 1000)
@@ -48,8 +50,12 @@ export class Props {
     for (let i = 0; i < per(12); i++) this.crate(uprightAt(this.spot(1), this.yaw()), new THREE.Vector3())
   }
 
+  private get radius() {
+    return this.terrain.radius
+  }
+
   // A random direction whose clearance, a distance along the surface,
-  // overlaps nothing placed so far.
+  // overlaps nothing placed so far and keeps off the paths.
   private spot(distance: number) {
     const clearance = distance / this.radius
     const direction = new THREE.Vector3()
@@ -58,7 +64,8 @@ export class Props {
       const phi = this.rng() * Math.PI * 2
       const r = Math.sqrt(1 - z * z)
       direction.set(r * Math.cos(phi), z, r * Math.sin(phi))
-      if (this.taken.every((spot) => spot.direction.angleTo(direction) > spot.clearance + clearance)) break
+      const free = this.taken.every((spot) => spot.direction.angleTo(direction) > spot.clearance + clearance)
+      if (free && this.terrain.pathDistance(direction) > distance + 1.6) break
     }
     this.taken.push({ direction, clearance })
     return direction
@@ -69,9 +76,10 @@ export class Props {
   }
 
   // Where a point given in the upright frame `orientation` ends up, with its
-  // height measured from the surface.
+  // height measured from the ground below the frame's origin.
   private onSurface(orientation: THREE.Quaternion, local: THREE.Vector3) {
-    return new THREE.Vector3(local.x, this.radius + local.y, local.z).applyQuaternion(orientation)
+    const ground = this.radius + this.terrain.heightAt(new THREE.Vector3(0, 1, 0).applyQuaternion(orientation))
+    return new THREE.Vector3(local.x, ground + local.y, local.z).applyQuaternion(orientation)
   }
 
   private crate(orientation: THREE.Quaternion, local: THREE.Vector3) {
@@ -100,7 +108,7 @@ export class Props {
 
   private rock(direction: THREE.Vector3) {
     const size = 0.5 + this.rng() * 1.1
-    const position = direction.clone().multiplyScalar(this.radius + size * 0.25)
+    const position = direction.clone().multiplyScalar(this.radius + this.terrain.heightAt(direction) + size * 0.2)
     const body = this.physics.world.createRigidBody(
       RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y, position.z),
     )

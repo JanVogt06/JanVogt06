@@ -17,16 +17,40 @@ import { Rover } from './world/Rover'
 import { Satellites } from './world/Satellites'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
+import { path, Terrain } from './world/Terrain'
 
 const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', ...stations.map((station) => station.id)])])
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
-const planet = new Planet(stage.scene, physics, 45)
+const RADIUS = 45
+// Paths from the landing spot to the first station, round each ring of
+// stations, and across between the rings.
+const ROUTES = [
+  ['start', 'about'], ['about', 'riptide'], ['about', 'spesen'],
+  ['riptide', 'sattrak'], ['sattrak', 'solarflow'], ['solarflow', 'spesen'], ['spesen', 'riptide'],
+  ['contact', 'engagement'], ['engagement', 'awards'], ['awards', 'pichunter'], ['pichunter', 'cryptborne'], ['cryptborne', 'contact'],
+  ['riptide', 'contact'], ['sattrak', 'engagement'], ['solarflow', 'awards'], ['spesen', 'cryptborne'],
+]
+const sites = new Stations(stage.scene, physics, RADIUS, stations, models)
+// Paths run into each bay; the landing spot is the north pole.
+const pointOf = (id: string) =>
+  id === 'start' ? new THREE.Vector3(0, 1, 0) : sites.sites.find((site) => site.station.id === id)!.bayCentre
+const terrain = new Terrain(
+  RADIUS,
+  [
+    { direction: new THREE.Vector3(0, 1, 0), reach: 4 },
+    ...sites.sites.flatMap((site) => [
+      { direction: site.direction, reach: 6.5 },
+      { direction: site.bayCentre.clone().normalize(), reach: 4 },
+    ]),
+  ],
+  ROUTES.map(([from, to]) => path(pointOf(from), pointOf(to))),
+)
+const planet = new Planet(stage.scene, physics, terrain)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
-const sites = new Stations(stage.scene, physics, planet.radius, stations, models)
-new Props(stage.scene, physics, planet.radius, [{ direction: spawn, distance: 6.5 }, ...sites.clearings])
+new Props(stage.scene, physics, terrain, [{ direction: spawn, distance: 6.5 }, ...sites.clearings])
 const rover = new Rover(stage.scene, physics, input, spawn, models.rover)
 const view = new FollowCamera(stage.camera, rover)
 const lights = new Lights(stage.scene, view)
