@@ -79,6 +79,8 @@ export class Rover {
   private yawRate = 0
   private shell = new THREE.Group()
   private lean = { angle: 0, velocity: 0 }
+  private gaze: THREE.Vector3 | null = null
+  private idle = 0
 
   constructor(
     scene: THREE.Scene,
@@ -151,8 +153,14 @@ export class Rover {
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
   }
 
+  // A point for the camera head to turn to, or null to let it look about.
+  lookAt(point: THREE.Vector3 | null) {
+    this.gaze = point
+  }
+
   update(delta: number) {
     this.leanIntoCorners(Math.min(delta, 1 / 30))
+    this.turnHead(Math.min(delta, 1 / 30))
     WHEELS.forEach((wheel, i) => {
       const { steer, spin } = this.wheels[i]
       const length = this.controller.wheelSuspensionLength(i) ?? tuning.suspensionRest
@@ -256,6 +264,18 @@ export class Rover {
   // Takes the body and the six wheels out of the model. The body rides on the
   // leaning shell; each wheel turns inside a holder that steers and follows
   // its suspension.
+  // The head faces +x and turns about its mast. It follows the gaze point
+  // as far as the mast allows, and otherwise glances slowly to and fro.
+  private turnHead(delta: number) {
+    this.idle += delta
+    let yaw = 0.5 * Math.sin(this.idle * 0.45) + 0.2 * Math.sin(this.idle * 1.3)
+    if (this.gaze && this.head.parent) {
+      const local = this.head.parent.worldToLocal(v.copy(this.gaze)).sub(this.head.position)
+      yaw = THREE.MathUtils.clamp(Math.atan2(-local.z, local.x), -1.9, 1.9)
+    }
+    this.head.rotation.y += (yaw - this.head.rotation.y) * Math.min(1, 4 * delta)
+  }
+
   private build(model: THREE.Object3D) {
     const body = model.getObjectByName('Body')
     if (!body) throw new Error('The rover model has no Body')
