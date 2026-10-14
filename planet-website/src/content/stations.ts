@@ -92,11 +92,11 @@ export const stations: Station[] = [
   {
     id: 'spesen',
     kind: 'project',
-    title: 'TFV Spesen Generator',
+    title: 'Spesenfuchs',
     tagline: 'Spesenabrechnung für Schiedsrichter',
     colour: '#8ab17d',
     place: { lat: 38, lon: 256 },
-    image: { src: spesen, alt: 'Screenshot des TFV Spesen Generators' },
+    image: { src: spesen, alt: 'Screenshot von Spesenfuchs' },
     body: [
       'Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen.',
       'Das System liest die Spielansetzungen aus dem DFBnet aus und erzeugt daraus die Word-Dokumente für die Abrechnung – vollautomatisch und mehrbenutzerfähig.',
