@@ -203,16 +203,18 @@ export class Rover {
     let brake = 0
     let coast = 0
 
-    if (this.input.isHeld('forward')) {
+    const throttle = this.input.throttle
+    if (throttle > 0.05) {
       // Full force until the last third of the speed range, then fading out.
-      const headroom = THREE.MathUtils.clamp((top - this.speed) / (top * 0.3), 0, 1)
+      const headroom = THREE.MathUtils.clamp((top * throttle - this.speed) / (top * 0.3), 0, 1)
       engine = tuning.engine * (boosting ? tuning.boost : 1) * headroom
-    } else if (this.input.isHeld('backward')) {
+    } else if (throttle < -0.05) {
       // Rapier's wheel brake overshoots into reverse, so braking pushes
       // back with the motor instead.
-      if (this.speed > 0.5) brake = tuning.brake
+      if (this.speed > 0.5) brake = tuning.brake * -throttle
       else {
-        const headroom = THREE.MathUtils.clamp((tuning.reverseSpeed + this.speed) / (tuning.reverseSpeed * 0.3), 0, 1)
+        const reverse = tuning.reverseSpeed * -throttle
+        const headroom = THREE.MathUtils.clamp((reverse + this.speed) / (tuning.reverseSpeed * 0.3), 0, 1)
         engine = -tuning.engine * 0.6 * headroom
       }
     } else coast = tuning.coast
@@ -225,7 +227,7 @@ export class Rover {
   }
 
   private steer(dt: number) {
-    const direction = Number(this.input.isHeld('left')) - Number(this.input.isHeld('right'))
+    const direction = this.input.steer
     const target = (direction * tuning.steer) / (1 + Math.abs(this.speed) / tuning.steerHalfSpeed)
     this.steering += (target - this.steering) * Math.min(1, tuning.steerRate * dt)
     WHEELS.forEach((wheel, i) => {

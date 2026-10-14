@@ -50,3 +50,7 @@ export interface MapPoint {
 // The minimap's contents, rewritten by the game every frame and drawn by
 // the map on its own animation frame.
 export const minimap = { points: [] as MapPoint[], nearest: null as string | null }
+
+// What the on-screen controls are doing. The stick is x to the right and
+// y forwards, each in [-1, 1]; taps on jump and reset count up.
+export const touch = { x: 0, y: 0, boost: false, jumps: 0, resets: 0 }

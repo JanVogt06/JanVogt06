@@ -1,3 +1,5 @@
+import { touch } from '../ui/store'
+
 const bindings: Record<string, Action> = {
   KeyW: 'forward',
   ArrowUp: 'forward',
@@ -19,6 +21,8 @@ export class Input {
   private held = new Set<Action>()
   private pressed = new Set<Action>()
   private listening = true
+  // Taps on the touch buttons already acted on.
+  private seen = { jumps: 0, resets: 0 }
 
   constructor() {
     window.addEventListener('keydown', (event) => {
@@ -42,14 +46,40 @@ export class Input {
     this.listening = listening
     this.held.clear()
     this.pressed.clear()
+    this.seen = { jumps: touch.jumps, resets: touch.resets }
+  }
+
+  // Throttle from -1 (full reverse) to 1 (full ahead), from keys or stick.
+  get throttle() {
+    if (!this.listening) return 0
+    const keys = Number(this.held.has('forward')) - Number(this.held.has('backward'))
+    return Math.max(-1, Math.min(1, keys + touch.y))
+  }
+
+  // Steering from -1 (full right) to 1 (full left), from keys or stick.
+  get steer() {
+    if (!this.listening) return 0
+    const keys = Number(this.held.has('left')) - Number(this.held.has('right'))
+    return Math.max(-1, Math.min(1, keys - touch.x))
   }
 
   isHeld(action: Action) {
-    return this.held.has(action)
+    return this.held.has(action) || (action === 'boost' && this.listening && touch.boost)
   }
 
-  // True once per key press, however many physics steps run in between.
+  // True once per key press or tap, however many physics steps run in
+  // between.
   consume(action: Action) {
-    return this.pressed.delete(action)
+    if (this.pressed.delete(action)) return true
+    if (!this.listening) return false
+    if (action === 'jump' && touch.jumps > this.seen.jumps) {
+      this.seen.jumps = touch.jumps
+      return true
+    }
+    if (action === 'reset' && touch.resets > this.seen.resets) {
+      this.seen.resets = touch.resets
+      return true
+    }
+    return false
   }
 }
