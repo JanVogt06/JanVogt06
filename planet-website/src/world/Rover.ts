@@ -17,9 +17,9 @@ const WHEELS = [
 export const tuning = {
   mass: 10,
   engine: 70,
-  boost: 1.7,
-  topSpeed: 14,
-  boostSpeed: 20,
+  boost: 2.2,
+  topSpeed: 10,
+  boostSpeed: 17,
   reverseSpeed: 6,
   brake: 40,
   coast: 0.04,
@@ -39,7 +39,7 @@ export const tuning = {
   keepUpright: 18,
   // How far the body leans out of a corner per unit of sideways
   // acceleration, and how springy it is about it.
-  lean: 0.004,
+  lean: 0.0055,
   leanMax: 0.16,
   leanStiffness: 140,
   leanDamping: 7,
