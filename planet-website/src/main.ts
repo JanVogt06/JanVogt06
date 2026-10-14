@@ -14,7 +14,7 @@ await RAPIER.init()
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
-const planet = new Planet(stage.scene, physics, 32)
+const planet = new Planet(stage.scene, physics, 45)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
 new Props(stage.scene, physics, planet.radius, spawn)

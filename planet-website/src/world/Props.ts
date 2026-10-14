@@ -30,16 +30,20 @@ export class Props {
     private radius: number,
     keepClear: THREE.Vector3,
   ) {
-    this.taken.push({ direction: keepClear.clone().normalize(), clearance: 0.2 })
-    for (let i = 0; i < 6; i++) this.ramp(this.spot(0.12))
-    for (let i = 0; i < 4; i++) this.stack(this.spot(0.08))
-    for (let i = 0; i < 14; i++) this.rock(this.spot(0.05))
-    for (let i = 0; i < 12; i++) this.crate(uprightAt(this.spot(0.03), this.yaw()), new THREE.Vector3())
+    // Counts follow the surface area, so the props stay as dense whatever
+    // the size of the planet.
+    const per = (count: number) => Math.round((count * radius * radius) / 1000)
+    this.taken.push({ direction: keepClear.clone().normalize(), clearance: 6.5 / radius })
+    for (let i = 0; i < per(6); i++) this.ramp(this.spot(3.8))
+    for (let i = 0; i < per(4); i++) this.stack(this.spot(2.6))
+    for (let i = 0; i < per(14); i++) this.rock(this.spot(1.6))
+    for (let i = 0; i < per(12); i++) this.crate(uprightAt(this.spot(1), this.yaw()), new THREE.Vector3())
   }
 
-  // A random direction whose clearance, in radians, overlaps nothing placed
-  // so far.
-  private spot(clearance: number) {
+  // A random direction whose clearance, a distance along the surface,
+  // overlaps nothing placed so far.
+  private spot(distance: number) {
+    const clearance = distance / this.radius
     const direction = new THREE.Vector3()
     for (let attempt = 0; attempt < 200; attempt++) {
       const z = this.rng() * 2 - 1
