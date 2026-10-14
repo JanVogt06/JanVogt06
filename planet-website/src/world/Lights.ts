@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { FollowCamera } from './FollowCamera'
 
 const side = new THREE.Vector3()
+const sun = new THREE.Vector3()
 
 // Studio lighting that travels with the camera: the key light always comes
 // from above and behind on the left, so the rover is lit the same way
@@ -22,6 +23,11 @@ export class Lights {
     frustum.far = 80
 
     scene.add(this.sky, this.key, this.key.target)
+  }
+
+  // Where the key light shines from, as seen from the rover.
+  get sunDirection() {
+    return sun.subVectors(this.key.position, this.key.target.position).normalize()
   }
 
   update() {
