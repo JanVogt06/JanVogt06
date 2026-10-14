@@ -10,8 +10,135 @@
     />
     <meta name="theme-color" content="#0b0d14" />
     <link rel="icon" type="image/png" href="/src/images/favicon.png" />
+    <style>
+      /* The loading screen lives here so it shows before any script arrives. */
+      .loader {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: radial-gradient(circle at 50% 42%, #1b2342, #0b0d14 70%);
+        color: #fff;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+        transition: opacity 0.6s ease;
+      }
+      .loader.done {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .loader-planet {
+        position: relative;
+        width: 92px;
+        height: 92px;
+        margin-bottom: 18px;
+        border-radius: 50%;
+        background:
+          linear-gradient(115deg, transparent 44%, #ecdfc3 45%, #ecdfc3 53%, transparent 54%),
+          radial-gradient(circle at 34% 30%, #cbe8ab, #93c27a 55%, #5d8d4e);
+        box-shadow: 0 0 40px rgb(143 195 255 / 0.25);
+      }
+      .loader-orbit {
+        position: absolute;
+        inset: -24px;
+        border: 1px dashed rgb(255 255 255 / 0.22);
+        border-radius: 50%;
+        animation: loader-spin 3.2s linear infinite;
+      }
+      .loader-orbit span {
+        position: absolute;
+        top: -6px;
+        left: calc(50% - 6px);
+        width: 12px;
+        height: 12px;
+        border-radius: 4px;
+        background: #ef8a6b;
+      }
+      .loader-name {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .loader-text {
+        max-width: 300px;
+        margin: 0;
+        color: rgb(255 255 255 / 0.7);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .loader-text.failed {
+        color: #ffb4a2;
+      }
+      .loader-track {
+        width: 200px;
+        height: 4px;
+        overflow: hidden;
+        border-radius: 2px;
+        background: rgb(255 255 255 / 0.15);
+      }
+      .loader-bar {
+        width: calc(var(--progress, 0) * 100%);
+        height: 100%;
+        border-radius: 2px;
+        background: #ef8a6b;
+        transition: width 0.3s ease;
+      }
+      /* Until the script runs there is nothing to measure, so the bar sweeps. */
+      .loader[data-state='waiting'] .loader-bar {
+        width: 35%;
+        animation: loader-sweep 1.3s ease-in-out infinite;
+      }
+      .loader[data-state='failed'] .loader-track,
+      .loader[data-state='failed'] .loader-orbit {
+        display: none;
+      }
+      @keyframes loader-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes loader-sweep {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(290%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .loader-orbit,
+        .loader[data-state='waiting'] .loader-bar {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
+    <div id="loader" class="loader" data-state="waiting" role="status" aria-live="polite">
+      <div class="loader-planet" aria-hidden="true"><div class="loader-orbit"><span></span></div></div>
+      <p class="loader-name">Jan Vogt</p>
+      <p class="loader-text">Planet wird geladen …</p>
+      <div class="loader-track"><div class="loader-bar"></div></div>
+    </div>
+    <script>
+      // Anything that goes wrong while the planet is being built ends up here,
+      // instead of leaving an empty dark page.
+      function failed() {
+        var loader = document.getElementById('loader')
+        if (!loader) return
+        loader.dataset.state = 'failed'
+        var text = loader.querySelector('.loader-text')
+        text.textContent =
+          'Der Planet konnte nicht geladen werden. Bitte lade die Seite neu – und prüfe, ob dein Browser WebGL unterstützt.'
+        text.classList.add('failed')
+      }
+      addEventListener('error', failed)
+      addEventListener('unhandledrejection', failed)
+    </script>
     <canvas id="world"></canvas>
     <div id="ui"></div>
     <ul class="controls">

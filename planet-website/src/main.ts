@@ -1,6 +1,7 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
 import './style.css'
+import { breathe, finish, progress } from './loader'
 import { stations } from './content/stations'
 import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
@@ -21,7 +22,17 @@ import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 import { path, Terrain } from './world/Terrain'
 
-const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', 'nature', 'ramp', ...stations.map((station) => station.id)])])
+// The script itself took the first part of the bar; the models fill most
+// of the rest, and building the world the last bit.
+progress(0.15)
+const [, models] = await Promise.all([
+  RAPIER.init(),
+  loadModels(['rover', 'satellite', 'nature', 'ramp', ...stations.map((station) => station.id)], (fraction) =>
+    progress(0.15 + 0.75 * fraction),
+  ),
+])
+progress(0.92, 'Stationen werden aufgebaut …')
+await breathe()
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
@@ -91,7 +102,12 @@ function frame(delta: number) {
 if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame } })
 
 const timer = new THREE.Timer()
+let first = true
 stage.renderer.setAnimationLoop((time) => {
   timer.update(time)
   frame(timer.getDelta())
+  if (first) {
+    first = false
+    finish()
+  }
 })
