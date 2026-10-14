@@ -6,6 +6,7 @@ import { Input } from './world/Input'
 import { Lights } from './world/Lights'
 import { Physics } from './world/Physics'
 import { Planet } from './world/Planet'
+import { Props } from './world/Props'
 import { Rover } from './world/Rover'
 import { Stage } from './world/Stage'
 
@@ -15,7 +16,9 @@ const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
 const planet = new Planet(stage.scene, physics, 32)
 const input = new Input()
-const rover = new Rover(stage.scene, physics, input, new THREE.Vector3(0, planet.radius + 0.6, 0))
+const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
+new Props(stage.scene, physics, planet.radius, spawn)
+const rover = new Rover(stage.scene, physics, input, spawn)
 const view = new FollowCamera(stage.camera, rover)
 const lights = new Lights(stage.scene, view)
 
