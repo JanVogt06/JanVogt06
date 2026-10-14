@@ -1,4 +1,5 @@
 import cryptborne from '../images/screenshots/cryptborne.webp'
+import pichunter from '../images/screenshots/pichunter.webp'
 import riptide from '../images/screenshots/riptide.webp'
 import sattrak from '../images/screenshots/sattrak.webp'
 import solarflow from '../images/screenshots/solarflow.webp'
@@ -111,11 +112,13 @@ export const stations: Station[] = [
     id: 'pichunter',
     kind: 'project',
     title: 'PicHunter',
-    tagline: 'Bilder-Download mit Duplikaterkennung',
+    tagline: 'Spielfotos von fupa.net',
     colour: '#e76f51',
     place: { lat: -6, lon: 220 },
+    image: { src: pichunter, alt: 'Screenshot von PicHunter' },
     body: [
-      'Werkzeug, das alle Bilder einer Website herunterlädt – parallel, aus den unterschiedlichsten Quellen der Seite und mit automatischer Erkennung von Duplikaten.',
+      'Holt alle Fotos zu einem Spiel, einer Galerie oder einem Schiedsrichterprofil von fupa.net auf einmal.',
+      'Link einfügen – PicHunter sammelt die Fotos in höchster Auflösung, schreibt Anstoßzeit und Spielort hinein und packt alles in ein ZIP.',
     ],
     tech: ['JavaScript', 'Docker'],
     links: [github('JanVogt06/PicHunter')],
