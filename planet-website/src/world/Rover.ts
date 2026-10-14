@@ -19,20 +19,22 @@ export const tuning = {
   engine: 70,
   boost: 1.7,
   topSpeed: 14,
-  boostSpeed: 22,
+  boostSpeed: 20,
   reverseSpeed: 6,
-  brake: 0.6,
+  brake: 40,
   coast: 0.04,
   steer: 0.55,
-  steerAtSpeed: 0.2,
+  // The lock halves by this speed, so the rover stays nimble when slow
+  // without spinning out when fast.
+  steerHalfSpeed: 8.5,
   steerRate: 7,
   suspensionRest: 0.4,
   suspensionTravel: 0.35,
   stiffness: 40,
   compression: 2.6,
   relaxation: 2.0,
-  frontGrip: 3.2,
-  rearGrip: 2.8,
+  frontGrip: 2.6,
+  rearGrip: 4.2,
   jump: 8,
   keepUpright: 18,
 }
@@ -160,29 +162,33 @@ export class Rover {
     const top = boosting ? tuning.boostSpeed : tuning.topSpeed
     let engine = 0
     let brake = 0
+    let coast = 0
 
     if (this.input.isHeld('forward')) {
       // Full force until the last third of the speed range, then fading out.
       const headroom = THREE.MathUtils.clamp((top - this.speed) / (top * 0.3), 0, 1)
       engine = tuning.engine * (boosting ? tuning.boost : 1) * headroom
     } else if (this.input.isHeld('backward')) {
-      if (this.speed > 1) brake = tuning.brake
+      // Rapier's wheel brake overshoots into reverse, so braking pushes
+      // back with the motor instead.
+      if (this.speed > 0.5) brake = tuning.brake
       else {
         const headroom = THREE.MathUtils.clamp((tuning.reverseSpeed + this.speed) / (tuning.reverseSpeed * 0.3), 0, 1)
         engine = -tuning.engine * 0.6 * headroom
       }
-    } else brake = tuning.coast
+    } else coast = tuning.coast
 
     WHEELS.forEach((wheel, i) => {
-      this.controller.setWheelEngineForce(i, wheel.front ? 0 : engine)
-      this.controller.setWheelBrake(i, brake)
+      // Most of the braking goes through the front wheels, as on a real car,
+      // so the tail stays behind instead of swinging round.
+      this.controller.setWheelEngineForce(i, wheel.front ? -brake * 1.4 : engine - brake * 0.6)
+      this.controller.setWheelBrake(i, coast)
     })
   }
 
   private steer(dt: number) {
     const direction = Number(this.input.isHeld('left')) - Number(this.input.isHeld('right'))
-    const pace = THREE.MathUtils.clamp(Math.abs(this.speed) / tuning.boostSpeed, 0, 1)
-    const target = direction * THREE.MathUtils.lerp(tuning.steer, tuning.steerAtSpeed, pace)
+    const target = (direction * tuning.steer) / (1 + Math.abs(this.speed) / tuning.steerHalfSpeed)
     this.steering += (target - this.steering) * Math.min(1, tuning.steerRate * dt)
     WHEELS.forEach((wheel, i) => {
       if (wheel.front) this.controller.setWheelSteering(i, this.steering)
