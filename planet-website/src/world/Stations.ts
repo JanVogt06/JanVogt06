@@ -1,0 +1,206 @@
+import RAPIER from '@dimforge/rapier3d-compat'
+import * as THREE from 'three'
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
+import type { Station } from '../content/stations'
+import { tag, ui } from '../ui/store'
+import type { Physics } from './Physics'
+import type { Clearing } from './Props'
+import type { Rover } from './Rover'
+import { directionAt, facing } from './surface'
+
+const BUILDING = { size: 5, height: 3.6 }
+// The parking bay lies in front of the building, along its local +z.
+const BAY = { width: 3.6, depth: 4.6, offset: 6.2, wall: 1.1 }
+// How far inside the bay's edges the rover's centre has to be.
+const BAY_MARGIN = { x: 0.5, z: 0.7 }
+const NEAR = 15
+const PARK_TIME = 0.8
+const PARKED_SPEED = 0.8
+
+const NORTH = new THREE.Vector3(0, 1, 0)
+const local = new THREE.Vector3()
+const screen = new THREE.Vector3()
+
+const bayVertex = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`
+
+// The floor glows at its rim and fills in as the rover settles; the walls
+// fade out upwards like a beam of light.
+const floorFragment = /* glsl */ `
+  uniform vec3 uColour;
+  uniform float uTime;
+  uniform float uProgress;
+  uniform vec2 uSize;
+  varying vec2 vUv;
+  void main() {
+    vec2 fromEdge = min(vUv, 1.0 - vUv) * uSize;
+    float edge = min(fromEdge.x, fromEdge.y);
+    float rim = 1.0 - smoothstep(0.0, 0.12, edge);
+    float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
+    float fill = 0.12 + 0.08 * pulse + 0.45 * uProgress;
+    gl_FragColor = vec4(uColour * (rim * (0.9 + 0.6 * uProgress) + fill), 1.0);
+  }
+`
+
+const wallFragment = /* glsl */ `
+  uniform vec3 uColour;
+  uniform float uTime;
+  uniform float uProgress;
+  varying vec2 vUv;
+  void main() {
+    float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
+    float fade = pow(1.0 - vUv.y, 2.0);
+    gl_FragColor = vec4(uColour * fade * (0.35 + 0.15 * pulse + 0.6 * uProgress), 1.0);
+  }
+`
+
+interface Site {
+  station: Station
+  orientation: THREE.Quaternion
+  inverse: THREE.Quaternion
+  tagPoint: THREE.Vector3
+  bayCentre: THREE.Vector3
+  uniforms: { uColour: { value: THREE.Color }; uTime: { value: number }; uProgress: { value: number } }
+  progress: number
+  // A bay only opens again once the rover has driven out of it.
+  armed: boolean
+}
+
+// Places every station on the planet: a stand-in building and a glowing
+// bay in front of it. Parking in the bay opens the station's panel.
+export class Stations {
+  readonly clearings: Clearing[] = []
+  private sites: Site[] = []
+  private time = 0
+
+  constructor(
+    scene: THREE.Scene,
+    physics: Physics,
+    private radius: number,
+    stations: Station[],
+  ) {
+    const buildingGeometry = new RoundedBoxGeometry(BUILDING.size, BUILDING.height, BUILDING.size, 3, 0.35)
+    const floorGeometry = new THREE.PlaneGeometry(BAY.width, BAY.depth).rotateX(-Math.PI / 2)
+    const wallGeometry = new THREE.BoxGeometry(BAY.width, BAY.wall, BAY.depth)
+
+    for (const station of stations) {
+      const up = directionAt(station.place.lat, station.place.lon)
+      const orientation = facing(up, NORTH)
+      if (station.place.turn) {
+        orientation.multiply(new THREE.Quaternion().setFromAxisAngle(NORTH, THREE.MathUtils.degToRad(station.place.turn)))
+      }
+      const at = (x: number, y: number, z: number) => new THREE.Vector3(x, radius + y, z).applyQuaternion(orientation)
+
+      const group = new THREE.Group()
+      group.position.copy(at(0, 0, 0))
+      group.quaternion.copy(orientation)
+      scene.add(group)
+
+      const building = new THREE.Mesh(
+        buildingGeometry,
+        new THREE.MeshStandardMaterial({ color: station.colour, roughness: 0.7 }),
+      )
+      building.position.y = BUILDING.height / 2 - 0.1
+      building.castShadow = building.receiveShadow = true
+      group.add(building)
+
+      const centre = at(0, BUILDING.height / 2 - 0.1, 0)
+      const body = physics.world.createRigidBody(
+        RAPIER.RigidBodyDesc.fixed().setTranslation(centre.x, centre.y, centre.z).setRotation(orientation),
+      )
+      physics.world.createCollider(
+        RAPIER.ColliderDesc.cuboid(BUILDING.size / 2, BUILDING.height / 2, BUILDING.size / 2),
+        body,
+      )
+
+      const uniforms = {
+        uColour: { value: new THREE.Color(station.colour).lerp(new THREE.Color('#ffffff'), 0.25) },
+        uTime: { value: 0 },
+        uProgress: { value: 0 },
+      }
+      const glow = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }
+      const floor = new THREE.Mesh(
+        floorGeometry,
+        new THREE.ShaderMaterial({
+          ...glow,
+          uniforms: { ...uniforms, uSize: { value: new THREE.Vector2(BAY.width, BAY.depth) } },
+          vertexShader: bayVertex,
+          fragmentShader: floorFragment,
+        }),
+      )
+      // Lifted clear of the ground, which curves away under the bay's ends.
+      floor.position.set(0, 0.08, BAY.offset)
+      const hidden = new THREE.MeshBasicMaterial({ visible: false })
+      const wall = new THREE.ShaderMaterial({
+        ...glow,
+        side: THREE.DoubleSide,
+        uniforms,
+        vertexShader: bayVertex,
+        fragmentShader: wallFragment,
+      })
+      const walls = new THREE.Mesh(wallGeometry, [wall, wall, hidden, hidden, wall, wall])
+      walls.position.set(0, BAY.wall / 2 + 0.02, BAY.offset)
+      group.add(floor, walls)
+
+      this.sites.push({
+        station,
+        orientation,
+        inverse: orientation.clone().invert(),
+        tagPoint: at(0, BUILDING.height + 1.4, 0),
+        bayCentre: at(0, 0, BAY.offset),
+        uniforms,
+        progress: 0,
+        armed: true,
+      })
+      this.clearings.push({ direction: at(0, 0, BAY.offset / 2).normalize(), distance: 10 })
+    }
+  }
+
+  update(delta: number, rover: Rover, camera: THREE.Camera) {
+    this.time += delta
+    const position = rover.object.position
+    let nearest: Site | null = null
+    let nearestDistance = NEAR
+
+    for (const site of this.sites) {
+      site.uniforms.uTime.value = this.time
+
+      const distance = position.distanceTo(site.bayCentre)
+      if (distance < nearestDistance) {
+        nearest = site
+        nearestDistance = distance
+      }
+
+      local.copy(position).applyQuaternion(site.inverse)
+      const inside =
+        Math.abs(local.x) < BAY.width / 2 - BAY_MARGIN.x &&
+        Math.abs(local.z - BAY.offset) < BAY.depth / 2 - BAY_MARGIN.z &&
+        local.y < this.radius + 2
+      if (!inside) site.armed = true
+
+      const parking = inside && site.armed && Math.abs(rover.speed) < PARKED_SPEED && rover.grounded
+      site.progress = parking ? site.progress + delta / PARK_TIME : Math.max(0, site.progress - delta * 3)
+      site.uniforms.uProgress.value = Math.min(site.progress, 1)
+
+      if (site.progress >= 1) {
+        site.progress = 0
+        site.armed = false
+        ui.set({ open: site.station })
+      }
+    }
+
+    ui.set({ nearby: nearest?.station ?? null })
+    if (nearest) {
+      screen.copy(nearest.tagPoint).project(camera)
+      tag.onScreen = screen.z < 1 && Math.abs(screen.x) < 1.1 && Math.abs(screen.y) < 1.1
+      tag.x = ((screen.x + 1) / 2) * window.innerWidth
+      tag.y = ((1 - screen.y) / 2) * window.innerHeight
+      tag.progress = Math.min(nearest.progress, 1)
+    }
+  }
+}

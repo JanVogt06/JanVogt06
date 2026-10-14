@@ -14,6 +14,12 @@ interface Spot {
   clearance: number
 }
 
+// A patch of ground, `distance` across in every direction, to leave empty.
+export interface Clearing {
+  direction: THREE.Vector3
+  distance: number
+}
+
 // Grey-box furniture for the test drive: ramps to jump from, rocks to steer
 // round and crates to knock over.
 export class Props {
@@ -28,12 +34,14 @@ export class Props {
     private scene: THREE.Scene,
     private physics: Physics,
     private radius: number,
-    keepClear: THREE.Vector3,
+    keepClear: Clearing[],
   ) {
     // Counts follow the surface area, so the props stay as dense whatever
     // the size of the planet.
     const per = (count: number) => Math.round((count * radius * radius) / 1000)
-    this.taken.push({ direction: keepClear.clone().normalize(), clearance: 6.5 / radius })
+    for (const { direction, distance } of keepClear) {
+      this.taken.push({ direction: direction.clone().normalize(), clearance: distance / radius })
+    }
     for (let i = 0; i < per(6); i++) this.ramp(this.spot(3.8))
     for (let i = 0; i < per(4); i++) this.stack(this.spot(2.6))
     for (let i = 0; i < per(14); i++) this.rock(this.spot(1.6))
