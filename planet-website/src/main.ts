@@ -21,7 +21,7 @@ import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 import { path, Terrain } from './world/Terrain'
 
-const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', 'nature', ...stations.map((station) => station.id)])])
+const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', 'nature', 'ramp', ...stations.map((station) => station.id)])])
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
@@ -53,7 +53,7 @@ const planet = new Planet(stage.scene, physics, terrain)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
 const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings]
-new Props(stage.scene, physics, terrain, clearings)
+new Props(stage.scene, physics, terrain, clearings, models.ramp)
 new Nature(stage.scene, physics, terrain, models.nature, clearings)
 const sky = new Sky(stage.scene, models.nature, planet.radius)
 const rover = new Rover(stage.scene, physics, input, spawn, models.rover)

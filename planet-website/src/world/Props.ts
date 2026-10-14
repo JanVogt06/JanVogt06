@@ -1,6 +1,5 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
-import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import type { Physics } from './Physics'
 import type { Terrain } from './Terrain'
@@ -27,13 +26,14 @@ export class Props {
   private taken: Spot[] = []
   private crateGeometry = new RoundedBoxGeometry(CRATE, CRATE, CRATE, 2, 0.08)
   private crateMaterials = COLOURS.map((color) => new THREE.MeshStandardMaterial({ color, roughness: 0.7 }))
-  private rampMaterial = new THREE.MeshStandardMaterial({ color: '#d8d2c4', roughness: 0.9, flatShading: true })
 
   constructor(
     private scene: THREE.Scene,
     private physics: Physics,
     private terrain: Terrain,
     keepClear: Clearing[],
+    // The toy ramp, built round the same wedge as its collider.
+    private rampModel: THREE.Object3D,
   ) {
     const { radius } = terrain
     // Counts follow the surface area, so the props stay as dense whatever
@@ -121,7 +121,7 @@ export class Props {
     )
     const hull = new Float32Array(points.flatMap((p) => p.toArray()))
     this.physics.world.createCollider(RAPIER.ColliderDesc.convexHull(hull)!.setFriction(1), body)
-    this.add(new THREE.Mesh(new ConvexGeometry(points), this.rampMaterial), body)
+    this.add(this.rampModel.clone(true), body)
   }
 
   private add(object: THREE.Object3D, body: RAPIER.RigidBody) {
