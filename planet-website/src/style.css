@@ -3,6 +3,9 @@ body {
   margin: 0;
   height: 100%;
   overflow: hidden;
+  /* The page is a game: no pinch zoom or scrolling on touch. */
+  touch-action: none;
+  overscroll-behavior: none;
   background: #0b0d14;
 }
 
