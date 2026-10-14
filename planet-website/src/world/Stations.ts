@@ -23,6 +23,58 @@ const NORTH = new THREE.Vector3(0, 1, 0)
 const local = new THREE.Vector3()
 const screen = new THREE.Vector3()
 
+// A point `height` above the ground, `x` across and `z` ahead of a station's
+// foot, in the station's own frame. The ground there is the planet's curve,
+// not the flat plane the station stands on.
+function aboveGround(radius: number, x: number, z: number, height: number) {
+  const point = new THREE.Vector3(x, radius, z).normalize().multiplyScalar(radius + height)
+  point.y -= radius
+  return point
+}
+
+// The bay's floor and walls, bent to follow the planet so they hug the
+// ground instead of lifting off it towards their ends.
+function curvedBay(radius: number) {
+  const floor = new THREE.PlaneGeometry(BAY.width, BAY.depth, 8, 10).rotateX(-Math.PI / 2)
+  const position = floor.attributes.position
+  for (let i = 0; i < position.count; i++) {
+    const point = aboveGround(radius, position.getX(i), position.getZ(i) + BAY.offset, 0.05)
+    position.setXYZ(i, point.x, point.y, point.z)
+  }
+  floor.computeVertexNormals()
+
+  const corners = [
+    [-BAY.width / 2, -BAY.depth / 2],
+    [BAY.width / 2, -BAY.depth / 2],
+    [BAY.width / 2, BAY.depth / 2],
+    [-BAY.width / 2, BAY.depth / 2],
+  ]
+  const segments = 8
+  const vertices: number[] = []
+  const uvs: number[] = []
+  const indices: number[] = []
+  corners.forEach(([ax, az], side) => {
+    const [bx, bz] = corners[(side + 1) % 4]
+    const first = vertices.length / 3
+    for (let i = 0; i <= segments; i++) {
+      const t = i / segments
+      const x = ax + (bx - ax) * t
+      const z = az + (bz - az) * t + BAY.offset
+      vertices.push(...aboveGround(radius, x, z, 0.02).toArray(), ...aboveGround(radius, x, z, BAY.wall).toArray())
+      uvs.push(t, 0, t, 1)
+      if (i < segments) {
+        const a = first + i * 2
+        indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3)
+      }
+    }
+  })
+  const walls = new THREE.BufferGeometry()
+  walls.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  walls.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2))
+  walls.setIndex(indices)
+  return { floor, walls }
+}
+
 const bayVertex = /* glsl */ `
   varying vec2 vUv;
   void main() {
@@ -87,8 +139,7 @@ export class Stations {
     stations: Station[],
   ) {
     const buildingGeometry = new RoundedBoxGeometry(BUILDING.size, BUILDING.height, BUILDING.size, 3, 0.35)
-    const floorGeometry = new THREE.PlaneGeometry(BAY.width, BAY.depth).rotateX(-Math.PI / 2)
-    const wallGeometry = new THREE.BoxGeometry(BAY.width, BAY.wall, BAY.depth)
+    const bay = curvedBay(radius)
 
     for (const station of stations) {
       const up = directionAt(station.place.lat, station.place.lon)
@@ -127,7 +178,7 @@ export class Stations {
       }
       const glow = { transparent: true, depthWrite: false }
       const floor = new THREE.Mesh(
-        floorGeometry,
+        bay.floor,
         new THREE.ShaderMaterial({
           ...glow,
           uniforms: { ...uniforms, uSize: { value: new THREE.Vector2(BAY.width, BAY.depth) } },
@@ -135,9 +186,6 @@ export class Stations {
           fragmentShader: floorFragment,
         }),
       )
-      // Lifted clear of the ground, which curves away under the bay's ends.
-      floor.position.set(0, 0.08, BAY.offset)
-      const hidden = new THREE.MeshBasicMaterial({ visible: false })
       const wall = new THREE.ShaderMaterial({
         ...glow,
         side: THREE.DoubleSide,
@@ -145,9 +193,7 @@ export class Stations {
         vertexShader: bayVertex,
         fragmentShader: wallFragment,
       })
-      const walls = new THREE.Mesh(wallGeometry, [wall, wall, hidden, hidden, wall, wall])
-      walls.position.set(0, BAY.wall / 2 + 0.02, BAY.offset)
-      group.add(floor, walls)
+      group.add(floor, new THREE.Mesh(bay.walls, wall))
 
       this.sites.push({
         station,
