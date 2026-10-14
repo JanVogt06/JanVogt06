@@ -14,19 +14,21 @@ interface Kind {
   fromPath: number
   spacing: number
   shadow: boolean
-  solid?: { trunk: number } | { ball: number }
+  // A trunk is an upright cylinder from the ground; a ball sits `lift`
+  // above it. Sizes are before the random scale.
+  solid?: { trunk: number; height: number } | { ball: number; lift: number }
 }
 
 const KINDS: Kind[] = [
-  { name: 'Tree_Round', count: 26, scale: [0.9, 1.3], fromPath: 3, spacing: 3.2, shadow: true, solid: { trunk: 0.25 } },
-  { name: 'Tree_Blossom', count: 14, scale: [0.9, 1.2], fromPath: 3, spacing: 3, shadow: true, solid: { trunk: 0.22 } },
-  { name: 'Tree_Pine', count: 22, scale: [0.8, 1.35], fromPath: 3, spacing: 3, shadow: true, solid: { trunk: 0.22 } },
-  { name: 'Tree_Tall', count: 14, scale: [0.9, 1.3], fromPath: 3, spacing: 2.6, shadow: true, solid: { trunk: 0.2 } },
-  { name: 'Rock_0', count: 10, scale: [0.7, 1.6], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.75 } },
-  { name: 'Rock_1', count: 10, scale: [0.6, 1.4], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.75 } },
-  { name: 'Rock_2', count: 10, scale: [0.7, 1.5], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.7 } },
-  { name: 'Bush', count: 50, scale: [0.7, 1.4], fromPath: 2, spacing: 1.6, shadow: true },
-  { name: 'Mushroom', count: 36, scale: [0.9, 1.5], fromPath: 1.8, spacing: 1, shadow: true },
+  { name: 'Tree_Round', count: 26, scale: [0.9, 1.3], fromPath: 3, spacing: 3.2, shadow: true, solid: { trunk: 0.25, height: 1.6 } },
+  { name: 'Tree_Blossom', count: 14, scale: [0.9, 1.2], fromPath: 3, spacing: 3, shadow: true, solid: { trunk: 0.22, height: 1.6 } },
+  { name: 'Tree_Pine', count: 22, scale: [0.8, 1.35], fromPath: 3, spacing: 3, shadow: true, solid: { trunk: 0.22, height: 1.6 } },
+  { name: 'Tree_Tall', count: 14, scale: [0.9, 1.3], fromPath: 3, spacing: 2.6, shadow: true, solid: { trunk: 0.2, height: 1.6 } },
+  { name: 'Rock_0', count: 10, scale: [0.7, 1.6], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.75, lift: 0.3 } },
+  { name: 'Rock_1', count: 10, scale: [0.6, 1.4], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.75, lift: 0.3 } },
+  { name: 'Rock_2', count: 10, scale: [0.7, 1.5], fromPath: 2.5, spacing: 2.5, shadow: true, solid: { ball: 0.7, lift: 0.3 } },
+  { name: 'Bush', count: 50, scale: [0.7, 1.4], fromPath: 2, spacing: 1.6, shadow: true, solid: { ball: 0.6, lift: 0.3 } },
+  { name: 'Mushroom', count: 36, scale: [0.9, 1.5], fromPath: 1.8, spacing: 1, shadow: true, solid: { trunk: 0.3, height: 0.8 } },
   { name: 'Grass', count: 320, scale: [0.9, 1.8], fromPath: 1.7, spacing: 0, shadow: false },
 ]
 
@@ -37,7 +39,8 @@ const size = new THREE.Vector3()
 const offset = new THREE.Vector3()
 
 // Trees, bushes, toadstools, boulders and tufts of grass scattered over the
-// meadow, each kind drawn as instances of its parts.
+// meadow, each kind drawn as instances of its parts. Only the grass can be
+// driven through.
 export class Nature {
   private rng = random(23)
   private placed: { direction: THREE.Vector3; spacing: number }[] = []
@@ -111,14 +114,14 @@ export class Nature {
       RAPIER.RigidBodyDesc.fixed().setTranslation(at.x, at.y, at.z).setRotation(turn),
     )
     if ('trunk' in solid) {
-      const height = 1.6 * scale
+      const height = solid.height * scale
       offset.set(0, height / 2, 0)
       this.physics.world.createCollider(
         RAPIER.ColliderDesc.cylinder(height / 2, solid.trunk * scale).setTranslation(offset.x, offset.y, offset.z),
         body,
       )
     } else {
-      this.physics.world.createCollider(RAPIER.ColliderDesc.ball(solid.ball * scale).setTranslation(0, 0.3 * scale, 0), body)
+      this.physics.world.createCollider(RAPIER.ColliderDesc.ball(solid.ball * scale).setTranslation(0, solid.lift * scale, 0), body)
     }
   }
 }
