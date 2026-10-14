@@ -10,10 +10,12 @@ import { directionAt, facing } from './surface'
 
 const BUILDING = { size: 5, height: 3.6 }
 // The parking bay lies in front of the building, along its local +z.
-const BAY = { width: 3.6, depth: 4.6, offset: 6.2, wall: 1.1 }
+const BAY = { width: 3.6, depth: 4.6, offset: 6.2, wall: 1.8 }
 // How far inside the bay's edges the rover's centre has to be.
 const BAY_MARGIN = { x: 0.5, z: 0.7 }
 const NEAR = 15
+// Every bay glows in the same colour, so it reads as the place to stop.
+const BAY_COLOUR = '#3fc8f5'
 const PARK_TIME = 0.8
 const PARKED_SPEED = 0.8
 
@@ -42,8 +44,8 @@ const floorFragment = /* glsl */ `
     float edge = min(fromEdge.x, fromEdge.y);
     float rim = 1.0 - smoothstep(0.0, 0.12, edge);
     float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
-    float fill = 0.12 + 0.08 * pulse + 0.45 * uProgress;
-    gl_FragColor = vec4(uColour * (rim * (0.9 + 0.6 * uProgress) + fill), 1.0);
+    float fill = 0.16 + 0.08 * pulse + 0.45 * uProgress;
+    gl_FragColor = vec4(uColour, max(rim * (0.85 + 0.15 * uProgress), fill));
   }
 `
 
@@ -54,8 +56,8 @@ const wallFragment = /* glsl */ `
   varying vec2 vUv;
   void main() {
     float pulse = 0.5 + 0.5 * sin(uTime * 3.0);
-    float fade = pow(1.0 - vUv.y, 2.0);
-    gl_FragColor = vec4(uColour * fade * (0.35 + 0.15 * pulse + 0.6 * uProgress), 1.0);
+    float fade = pow(1.0 - vUv.y, 1.6);
+    gl_FragColor = vec4(uColour, fade * (0.5 + 0.15 * pulse + 0.35 * uProgress));
   }
 `
 
@@ -119,11 +121,11 @@ export class Stations {
       )
 
       const uniforms = {
-        uColour: { value: new THREE.Color(station.colour).lerp(new THREE.Color('#ffffff'), 0.25) },
+        uColour: { value: new THREE.Color(BAY_COLOUR) },
         uTime: { value: 0 },
         uProgress: { value: 0 },
       }
-      const glow = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }
+      const glow = { transparent: true, depthWrite: false }
       const floor = new THREE.Mesh(
         floorGeometry,
         new THREE.ShaderMaterial({
