@@ -7,9 +7,15 @@ function distance(point: MapPoint) {
   return Math.hypot(point.x, point.y)
 }
 
+// Light station colours get a dark tick, so it shows on every dot.
+function tickColour(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.7 ? '#1f1d1a' : '#fff'
+}
+
 // The whole planet as a disc, centred on the rover and turned with the
 // camera, so up on the map is straight ahead. Stations still to visit
-// pulse; visited ones turn into rings.
+// pulse; visited ones carry a tick.
 export function Minimap() {
   const canvas = useRef<HTMLCanvasElement>(null)
   const count = useRef<HTMLSpanElement>(null)
@@ -66,13 +72,25 @@ export function Minimap() {
         const [x, y] = at(point)
         const highlight = point === labelled || point === near
         const pulse = point.visited ? 0 : 0.8 + 0.8 * Math.sin(time / 300 + point.x * 9)
+        const size = point.visited ? 6.5 : (highlight ? 6 : 4.5) + pulse * 0.6
         context.beginPath()
-        context.arc(x, y, (highlight ? 6 : 4.5) + pulse * 0.6, 0, Math.PI * 2)
-        context.fillStyle = point.visited ? 'rgb(31 29 26 / 0.35)' : point.colour
+        context.arc(x, y, size, 0, Math.PI * 2)
+        context.fillStyle = point.colour
         context.fill()
         context.lineWidth = highlight ? 2.5 : 1.5
-        context.strokeStyle = point.visited ? point.colour : '#fff'
+        context.strokeStyle = '#fff'
         context.stroke()
+        if (point.visited) {
+          context.beginPath()
+          context.moveTo(x - 3, y + 0.2)
+          context.lineTo(x - 0.8, y + 2.6)
+          context.lineTo(x + 3.2, y - 2.4)
+          context.lineWidth = 2
+          context.lineCap = 'round'
+          context.lineJoin = 'round'
+          context.strokeStyle = tickColour(point.colour)
+          context.stroke()
+        }
       }
 
       if (labelled) {
