@@ -11,3 +11,33 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.controls {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 10px 14px;
+  list-style: none;
+  border-radius: 10px;
+  background: rgb(11 13 20 / 0.6);
+  backdrop-filter: blur(6px);
+  font: 13px/1 system-ui, sans-serif;
+  color: rgb(255 255 255 / 0.75);
+  pointer-events: none;
+}
+
+.controls kbd {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-right: 3px;
+  padding: 4px 6px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 5px;
+  font: inherit;
+  text-align: center;
+}
