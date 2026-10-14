@@ -1,3 +1,4 @@
+import cryptborne from '../images/screenshots/cryptborne.webp'
 import riptide from '../images/screenshots/riptide.webp'
 import sattrak from '../images/screenshots/sattrak.webp'
 import solarflow from '../images/screenshots/solarflow.webp'
@@ -50,13 +51,13 @@ export const stations: Station[] = [
     tagline: 'Tsunami-Simulation',
     colour: '#5b9bd5',
     place: { lat: 38, lon: 40 },
-    image: { src: riptide, alt: 'Screenshot von Riptide', focus: '50% 0%' },
+    image: { src: riptide, alt: 'Screenshot von Riptide' },
     body: [
       'Finite-Volumen-Solver zur Simulation von Tsunami-Wellenausbreitung auf Basis der Flachwassergleichungen.',
       'Umfasst Riemann-Löser für Shock-Shock-, Rare-Rare- und Dammbruch-Szenarien sowie Visualisierungen und eine Sphinx-Dokumentation. Entwickelt im Team mit Yannik Köllmann und Mika Brückner.',
     ],
     tech: ['C++', 'Python', 'OpenGL', 'GLSL'],
-    links: [github('SquadCommit/Riptide')],
+    links: [{ label: 'Live ansehen', href: 'https://riptide.jan-vogt.dev' }, github('SquadCommit/Riptide')],
   },
   {
     id: 'sattrak',
@@ -65,7 +66,7 @@ export const stations: Station[] = [
     tagline: '3D-Satellitenvisualisierung',
     colour: '#7b6fd6',
     place: { lat: 38, lon: 112 },
-    image: { src: sattrak, alt: 'Screenshot von SatTrak', focus: '50% 0%' },
+    image: { src: sattrak, alt: 'Screenshot von SatTrak' },
     body: [
       'Echtzeit-Visualisierung von über 12.000 Satelliten auf einem 3D-Globus – mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische und zukünftige Positionen.',
       'Läuft als Unity-WebGL-Build direkt im Browser.',
@@ -80,13 +81,13 @@ export const stations: Station[] = [
     tagline: 'Intelligentes Energie-Management',
     colour: '#e9c46a',
     place: { lat: 38, lon: 184 },
-    image: { src: solarflow, alt: 'Screenshot von SolarFlow', focus: '50% 0%' },
+    image: { src: solarflow, alt: 'Screenshot von SolarFlow' },
     body: [
       'Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius-Wechselrichtern.',
       'Maximiert den Eigenverbrauch durch eine prioritätsbasierte Steuerung, die Verbraucher bei Solarüberschuss automatisch zuschaltet.',
     ],
     tech: ['Python', 'SQLite', 'FastAPI', 'Fronius API'],
-    links: [github('JanVogt06/SolarFlow-SmartEnergyManagement')],
+    links: [{ label: 'Live ansehen', href: 'https://solarflow.jan-vogt.dev' }, github('JanVogt06/SolarFlow_Smart-Energy-Management')],
   },
   {
     id: 'spesen',
@@ -95,13 +96,16 @@ export const stations: Station[] = [
     tagline: 'Spesenabrechnung für Schiedsrichter',
     colour: '#8ab17d',
     place: { lat: 38, lon: 256 },
-    image: { src: spesen, alt: 'Screenshot des TFV Spesen Generators', focus: '50% 0%' },
+    image: { src: spesen, alt: 'Screenshot des TFV Spesen Generators' },
     body: [
       'Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen.',
       'Das System liest die Spielansetzungen aus dem DFBnet aus und erzeugt daraus die Word-Dokumente für die Abrechnung – vollautomatisch und mehrbenutzerfähig.',
     ],
     tech: ['Python', 'FastAPI', 'React', 'TypeScript', 'Playwright', 'Docker'],
-    links: [github('JanVogt06/dfb-spesen-generator')],
+    links: [
+      { label: 'Live ansehen', href: 'https://spesen-generator.jan-vogt.dev' },
+      github('JanVogt06/Spesenfuchs_Schiri-Spesen-Automat'),
+    ],
   },
   {
     id: 'pichunter',
@@ -123,6 +127,7 @@ export const stations: Station[] = [
     tagline: '3D-Dungeon-Crawler',
     colour: '#6b5b73',
     place: { lat: -6, lon: 292 },
+    image: { src: cryptborne, alt: 'Screenshot von Cryptborne' },
     body: [
       'Prozedural generierter Dungeon-Crawler im mittelalterlichen Fantasy-Setting – mit variantenreichem Waffensystem und intelligenter Gegner-KI.',
     ],
