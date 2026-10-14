@@ -17,7 +17,8 @@ export interface Station {
   colour: string
   // Where it stands, in degrees. The parking bay faces north unless turned.
   place: { lat: number; lon: number; turn?: number }
-  image?: { src: string; alt: string }
+  // `focus` is the CSS object-position that keeps the subject in the crop.
+  image?: { src: string; alt: string; focus?: string }
   body: string[]
   facts?: string[]
   tech?: string[]
@@ -34,7 +35,7 @@ export const stations: Station[] = [
     tagline: 'Informatikstudent aus Thüringen',
     colour: '#f2efe6',
     place: { lat: 74, lon: 0 },
-    image: { src: about, alt: 'Jan beim Skifahren im Schnee' },
+    image: { src: about, alt: 'Jan beim Skifahren im Schnee', focus: '50% 20%' },
     body: [
       'Hallo, ich bin Jan – Informatikstudent an der Friedrich-Schiller-Universität Jena mit einer Schwäche für Mathematik und Physik.',
       'Mich reizen Softwareentwicklung, mathematische Anwendungen und wissenschaftliches Rechnen – am liebsten dort, wo alle drei zusammenkommen.',
@@ -49,7 +50,7 @@ export const stations: Station[] = [
     tagline: 'Tsunami-Simulation',
     colour: '#5b9bd5',
     place: { lat: 38, lon: 40 },
-    image: { src: riptide, alt: 'Screenshot von Riptide' },
+    image: { src: riptide, alt: 'Screenshot von Riptide', focus: '50% 0%' },
     body: [
       'Finite-Volumen-Solver zur Simulation von Tsunami-Wellenausbreitung auf Basis der Flachwassergleichungen.',
       'Umfasst Riemann-Löser für Shock-Shock-, Rare-Rare- und Dammbruch-Szenarien sowie Visualisierungen und eine Sphinx-Dokumentation. Entwickelt im Team mit Yannik Köllmann und Mika Brückner.',
@@ -64,7 +65,7 @@ export const stations: Station[] = [
     tagline: '3D-Satellitenvisualisierung',
     colour: '#7b6fd6',
     place: { lat: 38, lon: 112 },
-    image: { src: sattrak, alt: 'Screenshot von SatTrak' },
+    image: { src: sattrak, alt: 'Screenshot von SatTrak', focus: '50% 0%' },
     body: [
       'Echtzeit-Visualisierung von über 12.000 Satelliten auf einem 3D-Globus – mit Heatmap-Darstellung, Tag/Nacht-Zyklus und Zeitsteuerung für historische und zukünftige Positionen.',
       'Läuft als Unity-WebGL-Build direkt im Browser.',
@@ -79,7 +80,7 @@ export const stations: Station[] = [
     tagline: 'Intelligentes Energie-Management',
     colour: '#e9c46a',
     place: { lat: 38, lon: 184 },
-    image: { src: solarflow, alt: 'Screenshot von SolarFlow' },
+    image: { src: solarflow, alt: 'Screenshot von SolarFlow', focus: '50% 0%' },
     body: [
       'Smartes Energie-Management für Photovoltaik-Anlagen mit Fronius-Wechselrichtern.',
       'Maximiert den Eigenverbrauch durch eine prioritätsbasierte Steuerung, die Verbraucher bei Solarüberschuss automatisch zuschaltet.',
@@ -94,7 +95,7 @@ export const stations: Station[] = [
     tagline: 'Spesenabrechnung für Schiedsrichter',
     colour: '#8ab17d',
     place: { lat: 38, lon: 256 },
-    image: { src: spesen, alt: 'Screenshot des TFV Spesen Generators' },
+    image: { src: spesen, alt: 'Screenshot des TFV Spesen Generators', focus: '50% 0%' },
     body: [
       'Web-Anwendung zur automatisierten Spesenabrechnung für Fußballschiedsrichter in Thüringen.',
       'Das System liest die Spielansetzungen aus dem DFBnet aus und erzeugt daraus die Word-Dokumente für die Abrechnung – vollautomatisch und mehrbenutzerfähig.',
@@ -135,7 +136,7 @@ export const stations: Station[] = [
     tagline: 'Neben dem Studium',
     colour: '#f4a261',
     place: { lat: -6, lon: 76 },
-    image: { src: engagement, alt: 'Jan als Schiedsrichter zeigt eine gelbe Karte' },
+    image: { src: engagement, alt: 'Jan als Schiedsrichter zeigt eine gelbe Karte', focus: '50% 30%' },
     body: ['Wenn ich nicht programmiere, stehe ich meistens auf dem Fußballplatz.'],
     facts: [
       'Schiedsrichter in der Oberliga NOFV und der U19-Bundesliga, Assistent in der Regionalliga',
@@ -150,7 +151,7 @@ export const stations: Station[] = [
     tagline: 'Mathematik und Physik',
     colour: '#d4a72c',
     place: { lat: -6, lon: 148 },
-    image: { src: awards, alt: 'Jan bei einer Preisverleihung auf der Bühne' },
+    image: { src: awards, alt: 'Jan bei einer Preisverleihung auf der Bühne', focus: '50% 45%' },
     body: ['Ein paar Stationen auf dem Weg hierher.'],
     facts: [
       'Marie-Curie-Preis (2022)',

@@ -36,7 +36,14 @@ export function StationPanel() {
         style={{ '--accent': station.colour } as React.CSSProperties}
         onClick={(event) => event.stopPropagation()}
       >
-        {station.image && <img className="panel-image" src={station.image.src} alt={station.image.alt} />}
+        {station.image && (
+          <img
+            className="panel-image"
+            src={station.image.src}
+            alt={station.image.alt}
+            style={{ objectPosition: station.image.focus }}
+          />
+        )}
         <div className="panel-content">
           <p className="panel-kind">{KINDS[station.kind]}</p>
           <h2 id="panel-title" className="panel-title">
