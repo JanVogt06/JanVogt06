@@ -9,17 +9,19 @@ import { Chart } from './world/Chart'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Lights } from './world/Lights'
+import { Nature } from './world/Nature'
 import { loadModels } from './world/models'
 import { Physics } from './world/Physics'
 import { Planet } from './world/Planet'
 import { Props } from './world/Props'
 import { Rover } from './world/Rover'
 import { Satellites } from './world/Satellites'
+import { Sky } from './world/Sky'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 import { path, Terrain } from './world/Terrain'
 
-const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', ...stations.map((station) => station.id)])])
+const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', 'nature', ...stations.map((station) => station.id)])])
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
@@ -50,7 +52,10 @@ const terrain = new Terrain(
 const planet = new Planet(stage.scene, physics, terrain)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
-new Props(stage.scene, physics, terrain, [{ direction: spawn, distance: 6.5 }, ...sites.clearings])
+const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings]
+new Props(stage.scene, physics, terrain, clearings)
+new Nature(stage.scene, physics, terrain, models.nature, clearings)
+const sky = new Sky(stage.scene, models.nature, planet.radius)
 const rover = new Rover(stage.scene, physics, input, spawn, models.rover)
 const view = new FollowCamera(stage.camera, rover)
 const lights = new Lights(stage.scene, view)
@@ -75,6 +80,7 @@ function frame(delta: number) {
     rover.lookAt(sites.nearest?.gazePoint ?? null)
     satellites.update(delta)
     ambience.update(delta)
+    sky.update(delta)
   }
   view.update(delta)
   lights.update()

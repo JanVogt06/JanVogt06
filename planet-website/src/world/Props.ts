@@ -21,14 +21,12 @@ export interface Clearing {
   distance: number
 }
 
-// Grey-box furniture for the test drive: ramps to jump from, rocks to steer
-// round and crates to knock over.
+// Things to play with: ramps to jump from and crates to knock over.
 export class Props {
   private rng = random(7)
   private taken: Spot[] = []
   private crateGeometry = new RoundedBoxGeometry(CRATE, CRATE, CRATE, 2, 0.08)
   private crateMaterials = COLOURS.map((color) => new THREE.MeshStandardMaterial({ color, roughness: 0.7 }))
-  private rockMaterial = new THREE.MeshStandardMaterial({ color: '#9c958a', roughness: 1, flatShading: true })
   private rampMaterial = new THREE.MeshStandardMaterial({ color: '#d8d2c4', roughness: 0.9, flatShading: true })
 
   constructor(
@@ -46,7 +44,6 @@ export class Props {
     }
     for (let i = 0; i < per(6); i++) this.ramp(this.spot(3.8))
     for (let i = 0; i < per(4); i++) this.stack(this.spot(2.6))
-    for (let i = 0; i < per(14); i++) this.rock(this.spot(1.6))
     for (let i = 0; i < per(12); i++) this.crate(uprightAt(this.spot(1), this.yaw()), new THREE.Vector3())
   }
 
@@ -104,20 +101,6 @@ export class Props {
         this.crate(orientation.clone(), new THREE.Vector3(x, row * step, 0))
       }
     }
-  }
-
-  private rock(direction: THREE.Vector3) {
-    const size = 0.5 + this.rng() * 1.1
-    const position = direction.clone().multiplyScalar(this.radius + this.terrain.heightAt(direction) + size * 0.2)
-    const body = this.physics.world.createRigidBody(
-      RAPIER.RigidBodyDesc.fixed().setTranslation(position.x, position.y, position.z),
-    )
-    this.physics.world.createCollider(RAPIER.ColliderDesc.ball(size * 0.85), body)
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(size, 0), this.rockMaterial)
-    mesh.rotation.set(this.yaw(), this.yaw(), this.yaw())
-    const holder = new THREE.Group()
-    holder.add(mesh)
-    this.add(holder, body)
   }
 
   private ramp(direction: THREE.Vector3) {
