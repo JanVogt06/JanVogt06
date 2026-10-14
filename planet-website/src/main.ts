@@ -4,6 +4,8 @@ import './style.css'
 import { stations } from './content/stations'
 import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
+import { Ambience } from './world/Ambience'
+import { Chart } from './world/Chart'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Lights } from './world/Lights'
@@ -12,10 +14,11 @@ import { Physics } from './world/Physics'
 import { Planet } from './world/Planet'
 import { Props } from './world/Props'
 import { Rover } from './world/Rover'
+import { Satellites } from './world/Satellites'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 
-const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', ...stations.map((station) => station.id)])])
+const [, models] = await Promise.all([RAPIER.init(), loadModels(['rover', 'satellite', ...stations.map((station) => station.id)])])
 
 const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
@@ -27,6 +30,9 @@ new Props(stage.scene, physics, planet.radius, [{ direction: spawn, distance: 6.
 const rover = new Rover(stage.scene, physics, input, spawn, models.rover)
 const view = new FollowCamera(stage.camera, rover)
 const lights = new Lights(stage.scene, view)
+const satellites = new Satellites(stage.scene, models.satellite, planet.radius)
+const ambience = new Ambience(models, satellites, lights)
+const chart = new Chart(sites, view)
 
 mountUi(document.querySelector<HTMLElement>('#ui')!)
 let paused = false
@@ -42,13 +48,17 @@ function frame(delta: number) {
     physics.update(delta)
     rover.update(delta)
     sites.update(delta, rover, stage.camera)
+    rover.lookAt(sites.nearest?.gazePoint ?? null)
+    satellites.update(delta)
+    ambience.update(delta)
   }
   view.update(delta)
   lights.update()
+  chart.update()
   stage.render()
 }
 
-if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, ui, frame } })
+if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame } })
 
 const timer = new THREE.Timer()
 stage.renderer.setAnimationLoop((time) => {
