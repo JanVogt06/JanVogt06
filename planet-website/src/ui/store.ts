@@ -54,3 +54,7 @@ export const minimap = { points: [] as MapPoint[], nearest: null as string | nul
 // What the on-screen controls are doing. The stick is x to the right and
 // y forwards, each in [-1, 1]; taps on jump and reset count up.
 export const touch = { x: 0, y: 0, boost: false, jumps: 0, resets: 0 }
+
+// A thumb dragged across the screen to point the way: x to the right and y
+// up, in units of the drag radius, so 1 is a full drag and more is a boost.
+export const drag = { active: false, x: 0, y: 0, used: false }
