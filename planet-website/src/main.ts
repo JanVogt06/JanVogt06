@@ -20,6 +20,7 @@ import { Satellites } from './world/Satellites'
 import { Sky } from './world/Sky'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
+import { TouchPilot } from './world/TouchPilot'
 import { path, Terrain } from './world/Terrain'
 
 // The script itself took the first part of the bar; the models fill most
@@ -73,6 +74,7 @@ const lights = new Lights(stage.scene, view)
 const satellites = new Satellites(stage.scene, models.satellite, planet.radius)
 const ambience = new Ambience(models, satellites, lights)
 const chart = new Chart(sites, view)
+const pilot = new TouchPilot(rover, view)
 
 mountUi(document.querySelector<HTMLElement>('#ui')!)
 let paused = false
@@ -85,6 +87,7 @@ ui.subscribe(() => {
 // While a station's panel is open the world holds still behind it.
 function frame(delta: number) {
   if (!ui.get().open) {
+    pilot.update(delta)
     physics.update(delta)
     rover.update(delta)
     sites.update(delta, rover, stage.camera)

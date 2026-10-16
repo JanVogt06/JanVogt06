@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
-import { touch, useUi } from './store'
+import { drag, touch, useUi } from './store'
 
-const REACH = 48
+// How far a full drag reaches, in pixels; the boost starts beyond it.
+const RADIUS = 70
+const BOOST = 1.3
+const DOUBLE_TAP = 300
+const TAP_SLOP = 12
 
 const coarse = () => window.matchMedia('(pointer: coarse)').matches
 
-// A thumb stick on the left for throttle and steering, and buttons on the
-// right for boost, jumping and getting back on the wheels. Shown on touch
-// screens only.
+// Touch screens drive by pointing: put a thumb down anywhere and drag the way
+// to go. A ring marks where the thumb landed and a dot where it is now. Two
+// quick taps jump. A small legend explains it all.
 export function TouchControls() {
   const [shown, setShown] = useState(coarse)
   const { open } = useUi()
-  const knob = useRef<HTMLDivElement>(null)
-  const origin = useRef<{ id: number; x: number; y: number } | null>(null)
+  const ring = useRef<HTMLDivElement>(null)
+  const dot = useRef<HTMLDivElement>(null)
+  const start = useRef<{ id: number; x: number; y: number; at: number } | null>(null)
+  const lastTap = useRef(0)
 
   useEffect(() => {
     const query = window.matchMedia('(pointer: coarse)')
@@ -21,70 +27,89 @@ export function TouchControls() {
     return () => query.removeEventListener('change', change)
   }, [])
 
-  // A panel takes the controls away mid-touch, so let go of everything.
-  useEffect(() => {
-    if (!open) return
-    origin.current = null
-    touch.x = touch.y = 0
-    touch.boost = false
-  }, [open])
-
-  const move = (x: number, y: number) => {
-    const length = Math.hypot(x, y)
-    const scale = length > REACH ? REACH / length : 1
-    x *= scale
-    y *= scale
-    if (knob.current) knob.current.style.transform = `translate(${x}px, ${y}px)`
-    touch.x = x / REACH
-    touch.y = -y / REACH
+  const letGo = () => {
+    start.current = null
+    drag.active = false
+    drag.x = drag.y = 0
+    if (ring.current) ring.current.dataset.visible = 'false'
   }
 
-  const release = () => {
-    origin.current = null
-    move(0, 0)
+  // A panel takes the controls away mid-drag, so let go of everything.
+  useEffect(() => {
+    if (open) letGo()
+  }, [open])
+
+  const follow = (x: number, y: number) => {
+    if (!ring.current || !dot.current || !start.current) return
+    const dx = x - start.current.x
+    const dy = y - start.current.y
+    const reach = Math.hypot(dx, dy) / RADIUS
+    // The dot stops at the ring's edge, a little past it when boosting.
+    const shrink = Math.min(reach, BOOST) / Math.max(reach, 1e-6)
+    ring.current.style.transform = `translate(${start.current.x}px, ${start.current.y}px)`
+    ring.current.dataset.boost = String(reach > BOOST)
+    dot.current.style.transform = `translate(${dx * shrink}px, ${dy * shrink}px)`
+    drag.x = dx / RADIUS
+    drag.y = -dy / RADIUS
   }
 
   if (!shown || open) return null
   return (
-    <div className="touch">
+    <>
       <div
-        className="touch-stick"
+        className="touch-pad"
         onPointerDown={(event) => {
-          // Keeps the stick following a thumb that slides off it; a pointer
-          // the browser no longer tracks cannot be captured, which is fine.
+          if (start.current) return
+          // Keeps following a thumb that slides off the pad; a pointer the
+          // browser no longer tracks cannot be captured, which is fine.
           try {
             event.currentTarget.setPointerCapture(event.pointerId)
           } catch {}
-          const rect = event.currentTarget.getBoundingClientRect()
-          origin.current = { id: event.pointerId, x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-          move(event.clientX - origin.current.x, event.clientY - origin.current.y)
+          start.current = { id: event.pointerId, x: event.clientX, y: event.clientY, at: performance.now() }
+          drag.active = drag.used = true
+          if (ring.current) ring.current.dataset.visible = 'true'
+          follow(event.clientX, event.clientY)
         }}
         onPointerMove={(event) => {
-          if (origin.current?.id === event.pointerId) move(event.clientX - origin.current.x, event.clientY - origin.current.y)
+          if (start.current?.id === event.pointerId) follow(event.clientX, event.clientY)
         }}
-        onPointerUp={release}
-        onPointerCancel={release}
-      >
-        <div ref={knob} className="touch-knob" />
+        onPointerUp={(event) => {
+          const from = start.current
+          if (from?.id !== event.pointerId) return
+          // A short touch that barely moved is a tap; two in a row jump.
+          const quick = performance.now() - from.at < 250
+          const still = Math.hypot(event.clientX - from.x, event.clientY - from.y) < TAP_SLOP
+          if (quick && still) {
+            if (performance.now() - lastTap.current < DOUBLE_TAP) {
+              touch.jumps++
+              lastTap.current = 0
+            } else lastTap.current = performance.now()
+          }
+          letGo()
+        }}
+        onPointerCancel={letGo}
+      />
+      <div ref={ring} className="touch-ring" data-visible="false" aria-hidden="true">
+        <div ref={dot} className="touch-dot" />
       </div>
 
-      <div className="touch-buttons">
-        <button
-          className="touch-button touch-boost"
-          onPointerDown={() => (touch.boost = true)}
-          onPointerUp={() => (touch.boost = false)}
-          onPointerCancel={() => (touch.boost = false)}
-          onPointerLeave={() => (touch.boost = false)}
-        >
-          Boost
-        </button>
-        <button className="touch-button touch-jump" onPointerDown={() => touch.jumps++}>
-          Springen
-        </button>
-        <button className="touch-button touch-reset" aria-label="Aufrichten" onPointerDown={() => touch.resets++}>
-          ↻
-        </button>
-      </div>
-    </div>
+      <ul className="touch-legend">
+        <li>
+          <b>Ziehen</b> dahin fahren
+        </li>
+        <li>
+          <b>Weit ziehen</b> Boost
+        </li>
+        <li>
+          <b>Loslassen</b> anhalten
+        </li>
+        <li>
+          <b>Doppeltippen</b> springen
+        </li>
+      </ul>
+      <button className="touch-reset" aria-label="Aufrichten" onPointerDown={() => touch.resets++}>
+        ↻
+      </button>
+    </>
   )
 }

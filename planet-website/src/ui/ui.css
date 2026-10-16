@@ -265,84 +265,85 @@
 
 /* Touch controls */
 
-.touch {
+.touch-pad {
   position: fixed;
-  inset: auto 0 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  padding: 0 20px max(20px, env(safe-area-inset-bottom));
-  pointer-events: none;
+  inset: 0;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-.touch-stick {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 132px;
-  height: 132px;
-  border-radius: 50%;
-  background: rgb(11 13 20 / 0.35);
-  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.25);
-  backdrop-filter: blur(6px);
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.touch-knob {
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.85);
-  box-shadow: 0 4px 14px rgb(0 0 0 / 0.3);
-  pointer-events: none;
-}
-
-.touch-buttons {
-  display: grid;
-  grid-template-columns: auto auto;
-  grid-template-areas: 'reset boost' 'jump boost';
-  gap: 12px;
-  align-items: end;
-  pointer-events: auto;
-}
-
-.touch-button {
-  border: 0;
-  border-radius: 50%;
-  color: #fff;
-  font: 700 13px/1 system-ui, sans-serif;
-  touch-action: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.touch-button:active {
-  transform: scale(0.94);
+.touch-ring {
+  position: fixed;
+  left: -46px;
+  top: -46px;
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.55);
+  pointer-events: none;
+  transition: opacity 0.15s ease, box-shadow 0.15s ease;
 }
 
-.touch-boost {
-  grid-area: boost;
-  width: 84px;
-  height: 84px;
-  background: rgb(239 138 107 / 0.92);
+.touch-ring[data-visible='false'] {
+  opacity: 0;
 }
 
-.touch-jump {
-  grid-area: jump;
-  width: 64px;
-  height: 64px;
-  background: rgb(63 200 245 / 0.85);
+.touch-ring[data-boost='true'] {
+  box-shadow: inset 0 0 0 3px #ef8a6b, 0 0 24px rgb(239 138 107 / 0.6);
+}
+
+.touch-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 10px rgb(0 0 0 / 0.3);
+}
+
+.touch-ring[data-boost='true'] .touch-dot {
+  background: #ef8a6b;
+}
+
+.touch-legend {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 9px 12px;
+  list-style: none;
+  border-radius: 12px;
+  background: rgb(11 13 20 / 0.6);
+  backdrop-filter: blur(6px);
+  color: rgb(255 255 255 / 0.75);
+  font: 12px/1.25 system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.touch-legend b {
+  color: #fff;
+  font-weight: 650;
 }
 
 .touch-reset {
-  grid-area: reset;
-  justify-self: center;
-  width: 42px;
-  height: 42px;
-  background: rgb(11 13 20 / 0.55);
+  position: fixed;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(11 13 20 / 0.6);
+  color: #fff;
   font-size: 20px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (pointer: coarse) {
