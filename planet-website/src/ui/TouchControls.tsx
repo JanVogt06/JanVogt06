@@ -98,6 +98,9 @@ export function TouchControls() {
           <b>Ziehen</b> dahin fahren
         </li>
         <li>
+          <b>Nach unten</b> rückwärts
+        </li>
+        <li>
           <b>Weit ziehen</b> Boost
         </li>
         <li>

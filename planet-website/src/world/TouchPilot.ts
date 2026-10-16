@@ -11,6 +11,8 @@ const NUDGE = 0.04
 // After this long pressing on without getting anywhere, the rover backs off.
 const STUCK_TIME = 0.8
 const BACK_OFF = 0.9
+// A drag pointing more than about 20° below level backs the rover up.
+const REVERSE = Math.sin(THREE.MathUtils.degToRad(20))
 // Beyond this the goal is roughly behind, and the rover keeps turning the
 // way it started rather than dithering between left and right.
 const BEHIND = 2.4
@@ -18,6 +20,7 @@ const BEHIND = 2.4
 const up = new THREE.Vector3()
 const right = new THREE.Vector3()
 const nose = new THREE.Vector3()
+const tail = new THREE.Vector3()
 const across = new THREE.Vector3()
 const carry = new THREE.Quaternion()
 
@@ -33,6 +36,8 @@ export class TouchPilot {
   private stuck = 0
   private reversing = 0
   private turning = 0
+  // Set when the thumb lifts, until the rover has come to a stop.
+  private stopping = false
 
   constructor(
     private rover: Rover,
@@ -45,13 +50,18 @@ export class TouchPilot {
     up.copy(rover.object.position).normalize()
 
     if (!drag.active) {
+      if (this.holding) this.stopping = true
       this.holding = false
       this.reversing = this.stuck = this.turning = 0
       touch.x = 0
       touch.boost = false
-      touch.y = rover.speed > 0.6 ? -1 : 0
+      // Push against whichever way it is still rolling, then leave the
+      // throttle to the keys again.
+      if (this.stopping && Math.abs(rover.speed) < 0.6) this.stopping = false
+      touch.y = this.stopping ? -Math.sign(rover.speed) : 0
       return
     }
+    this.stopping = false
 
     // Up the screen is into the scene along the camera's heading.
     if (!this.holding || Math.hypot(drag.x - this.aimed.x, drag.y - this.aimed.y) > NUDGE) {
@@ -70,13 +80,27 @@ export class TouchPilot {
     this.goal.normalize()
 
     nose.copy(rover.forward).addScaledVector(up, -rover.forward.dot(up)).normalize()
+    const reach = Math.hypot(drag.x, drag.y)
+    const strength = Math.min(1, reach)
+
+    // Pulling down the screen backs up, and the tail swings round towards
+    // where the thumb points, as when reversing into a space. Going
+    // backwards, the same lock turns the rover the other way.
+    if (drag.y < -REVERSE * reach) {
+      this.turning = this.stuck = this.reversing = 0
+      tail.copy(nose).negate()
+      const swing = Math.atan2(up.dot(across.crossVectors(tail, this.goal)), tail.dot(this.goal))
+      touch.x = THREE.MathUtils.clamp(swing / FULL_LOCK, -1, 1)
+      touch.y = -strength
+      touch.boost = false
+      return
+    }
+
     let angle = Math.atan2(up.dot(across.crossVectors(nose, this.goal)), nose.dot(this.goal))
     if (Math.abs(angle) > BEHIND) {
       if (this.turning === 0) this.turning = Math.sign(angle) || 1
       angle = this.turning * Math.abs(angle)
     } else this.turning = 0
-    const reach = Math.hypot(drag.x, drag.y)
-    const strength = Math.min(1, reach)
     let steer = THREE.MathUtils.clamp(angle / FULL_LOCK, -1, 1)
     let throttle = strength * THREE.MathUtils.lerp(1, 0.5, Math.abs(angle) / Math.PI)
 
