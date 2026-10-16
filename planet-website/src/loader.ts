@@ -21,7 +21,11 @@ export function finish() {
   window.setTimeout(() => loader.remove(), 700)
 }
 
-// Lets the browser paint the screen before a long stretch of work.
+// Lets the browser paint the screen before a long stretch of work. A tab in
+// the background gets no animation frames, so a timer stands in for them.
 export function breathe() {
-  return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve))
+    window.setTimeout(resolve, 100)
+  })
 }
