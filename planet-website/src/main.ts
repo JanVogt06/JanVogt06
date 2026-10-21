@@ -8,6 +8,7 @@ import { ui } from './ui/store'
 import { Ambience } from './world/Ambience'
 import { Chart } from './world/Chart'
 import { DayCycle } from './world/DayCycle'
+import { Dust } from './world/Dust'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Landmarks } from './world/Landmarks'
@@ -93,6 +94,7 @@ soften(stage.scene, [planet.mesh])
 const day = new DayCycle()
 day.lightWindows(stage.scene)
 const weather = new Weather(stage.scene, view)
+const dust = new Dust(stage.scene, rover, stage.renderer)
 
 // Colours the whole scene for the hour and the weather.
 function paint(delta: number) {
@@ -126,6 +128,7 @@ function frame(delta: number) {
     satellites.update(delta)
     ambience.update(delta)
     sights.update(delta)
+    dust.update(delta, day.daylight)
     paint(delta)
     sky.update(delta, lights.sunDirection)
   }
