@@ -1,4 +1,5 @@
 import type * as THREE from 'three'
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
 // Every model exported from art/world.blend, by file name.
@@ -7,7 +8,10 @@ const urls = import.meta.glob<string>('../models/*.glb', { query: '?url', import
 // Loads the named models, reporting the share of their bytes that has
 // arrived so far.
 export async function loadModels(names: string[], onProgress?: (fraction: number) => void) {
-  const loader = new GLTFLoader()
+  // The meshes are Draco-compressed; the decoder in public/draco is the one
+  // that ships with three (examples/jsm/libs/draco/gltf).
+  const draco = new DRACOLoader().setDecoderPath(`${import.meta.env.BASE_URL}draco/`)
+  const loader = new GLTFLoader().setDRACOLoader(draco)
   const received: Record<string, { loaded: number; total: number }> = {}
   const report = () => {
     const parts = Object.values(received)
@@ -27,5 +31,6 @@ export async function loadModels(names: string[], onProgress?: (fraction: number
       return [name, gltf.scene] as const
     }),
   )
+  draco.dispose()
   return Object.fromEntries(scenes) as Record<string, THREE.Group>
 }
