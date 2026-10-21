@@ -11,6 +11,7 @@ import { DayCycle } from './world/DayCycle'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Landmarks } from './world/Landmarks'
+import { Lanterns } from './world/Lanterns'
 import { Lights } from './world/Lights'
 import { Nature } from './world/Nature'
 import { loadModels } from './world/models'
@@ -72,9 +73,10 @@ const terrain = new Terrain(
   ROUTES.map(([from, to]) => path(pointOf(from), pointOf(to))),
 )
 const planet = new Planet(stage.scene, physics, terrain)
+const lanterns = new Lanterns(stage.scene, physics, terrain, models.landmarks, terrain.flats)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
-const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings, ...sights.clearings]
+const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings, ...sights.clearings, ...lanterns.clearings]
 new Props(stage.scene, physics, terrain, clearings, models.ramp)
 new Nature(stage.scene, physics, terrain, models.nature, clearings)
 const sky = new Sky(stage.scene, models.nature, planet.radius)
@@ -97,6 +99,7 @@ function paint(delta: number) {
   lights.paint(day.light)
   stage.paint(day.light)
   rover.headlights(1 - day.daylight)
+  lanterns.glow(1 - day.daylight)
 }
 paint(0)
 
