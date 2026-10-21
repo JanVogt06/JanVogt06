@@ -10,6 +10,7 @@ import { Bots } from './world/Bots'
 import { Chart } from './world/Chart'
 import { DayCycle } from './world/DayCycle'
 import { Dust } from './world/Dust'
+import { Fireflies } from './world/Fireflies'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Landmarks } from './world/Landmarks'
@@ -18,6 +19,7 @@ import { Lights } from './world/Lights'
 import { Nature } from './world/Nature'
 import { loadModels } from './world/models'
 import { Physics } from './world/Physics'
+import { PaperPlanes } from './world/PaperPlanes'
 import { Planet } from './world/Planet'
 import { Props } from './world/Props'
 import { Rover } from './world/Rover'
@@ -91,6 +93,8 @@ const ambience = new Ambience(models, satellites, lights)
 const chart = new Chart(sites, view)
 const pilot = new TouchPilot(rover, view)
 const bots = new Bots(stage.scene, models.critters, terrain, terrain.flats, rover)
+const planes = new PaperPlanes(stage.scene, models.critters, planet.radius)
+const fireflies = new Fireflies(stage.scene, terrain, stage.renderer)
 // The meadow has its own shader; everything standing on it is a toy.
 soften(stage.scene, [planet.mesh])
 const day = new DayCycle()
@@ -132,6 +136,8 @@ function frame(delta: number) {
     sights.update(delta)
     dust.update(delta, day.daylight)
     bots.update(delta)
+    planes.update(delta)
+    fireflies.update(delta, 1 - day.daylight)
     paint(delta)
     sky.update(delta, lights.sunDirection)
   }
