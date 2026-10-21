@@ -24,7 +24,8 @@ const size = new THREE.Vector3()
 const middle = new THREE.Vector3()
 
 // The bounds of a station model in its own frame: the plinth it stands on,
-// which is the root's own mesh, and everything built on top of it.
+// which is the root's own mesh, each part built on top of it, and all of
+// those parts together.
 function outline(model: THREE.Object3D) {
   model.updateMatrixWorld(true)
   const root = model.children[0]
@@ -33,9 +34,9 @@ function outline(model: THREE.Object3D) {
     root.geometry.computeBoundingBox()
     plinth.copy(root.geometry.boundingBox!).applyMatrix4(root.matrixWorld)
   }
-  const building = new THREE.Box3()
-  for (const child of root.children) building.expandByObject(child)
-  return { plinth, building }
+  const parts = root.children.map((child) => new THREE.Box3().setFromObject(child))
+  const building = parts.reduce((all, part) => all.union(part), new THREE.Box3())
+  return { plinth, parts, building }
 }
 
 // A point `height` above the ground, `x` across and `z` ahead of a station's
@@ -177,17 +178,19 @@ export class Stations {
       scene.add(group)
 
       const model = models[station.id]
-      const { plinth, building } = outline(model)
+      const { plinth, parts, building } = outline(model)
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) child.castShadow = child.receiveShadow = true
       })
       group.add(model)
 
-      // The low plinth can be driven onto; what stands on it cannot.
+      // A box round the plinth and one round each part on it, so the rover
+      // bumps into what it sees rather than into one big block.
       const body = physics.world.createRigidBody(
         RAPIER.RigidBodyDesc.fixed().setTranslation(group.position.x, group.position.y, group.position.z).setRotation(orientation),
       )
-      for (const box of [plinth, building]) {
+      for (const box of [plinth, ...parts]) {
+        if (box.isEmpty()) continue
         box.getSize(size).multiplyScalar(0.5)
         box.getCenter(middle)
         physics.world.createCollider(
