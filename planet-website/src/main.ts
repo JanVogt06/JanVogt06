@@ -9,6 +9,7 @@ import { Ambience } from './world/Ambience'
 import { Chart } from './world/Chart'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
+import { Landmarks } from './world/Landmarks'
 import { Lights } from './world/Lights'
 import { Nature } from './world/Nature'
 import { loadModels } from './world/models'
@@ -29,7 +30,7 @@ import { path, Terrain } from './world/Terrain'
 progress(0.15)
 const [, models] = await Promise.all([
   RAPIER.init(),
-  loadModels(['rover', 'satellite', 'nature', 'ramp', ...stations.map((station) => station.id)], (fraction) =>
+  loadModels(['rover', 'satellite', 'nature', 'ramp', 'landmarks', ...stations.map((station) => station.id)], (fraction) =>
     progress(0.15 + 0.75 * fraction),
   ),
 ])
@@ -40,17 +41,23 @@ const stage = new Stage(document.querySelector<HTMLCanvasElement>('#world')!)
 const physics = new Physics(25)
 const RADIUS = 45
 // Paths from the landing spot to the first station, round each ring of
-// stations, and across between the rings.
+// stations, across between the rings, and on down to the sights of the
+// southern half.
 const ROUTES = [
   ['start', 'about'], ['about', 'riptide'], ['about', 'spesen'],
   ['riptide', 'sattrak'], ['sattrak', 'solarflow'], ['solarflow', 'spesen'], ['spesen', 'riptide'],
   ['contact', 'engagement'], ['engagement', 'awards'], ['awards', 'pichunter'], ['pichunter', 'cryptborne'], ['cryptborne', 'contact'],
   ['riptide', 'contact'], ['sattrak', 'engagement'], ['solarflow', 'awards'], ['spesen', 'cryptborne'],
+  ['engagement', 'pendulum'], ['awards', 'pendulum'], ['pichunter', 'rocket'], ['cryptborne', 'rocket'],
+  ['contact', 'weather'], ['weather', 'observatory'], ['pendulum', 'observatory'], ['rocket', 'observatory'],
 ]
 const sites = new Stations(stage.scene, physics, RADIUS, stations, models)
+const sights = new Landmarks(stage.scene, physics, RADIUS, models.landmarks)
 // Paths run into each bay; the landing spot is the north pole.
 const pointOf = (id: string) =>
-  id === 'start' ? new THREE.Vector3(0, 1, 0) : sites.sites.find((site) => site.station.id === id)!.bayCentre
+  id === 'start'
+    ? new THREE.Vector3(0, 1, 0)
+    : (sites.sites.find((site) => site.station.id === id)?.bayCentre ?? sights.pointOf(id)!)
 const terrain = new Terrain(
   RADIUS,
   [
@@ -59,13 +66,14 @@ const terrain = new Terrain(
       { direction: site.direction, reach: 6.5 },
       { direction: site.bayCentre.clone().normalize(), reach: 4 },
     ]),
+    ...sights.flats,
   ],
   ROUTES.map(([from, to]) => path(pointOf(from), pointOf(to))),
 )
 const planet = new Planet(stage.scene, physics, terrain)
 const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
-const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings]
+const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings, ...sights.clearings]
 new Props(stage.scene, physics, terrain, clearings, models.ramp)
 new Nature(stage.scene, physics, terrain, models.nature, clearings)
 const sky = new Sky(stage.scene, models.nature, planet.radius)
@@ -97,6 +105,7 @@ function frame(delta: number) {
     rover.lookAt(sites.nearest?.gazePoint ?? null)
     satellites.update(delta)
     ambience.update(delta)
+    sights.update(delta)
     sky.update(delta, lights.sunDirection)
   }
   view.update(delta)

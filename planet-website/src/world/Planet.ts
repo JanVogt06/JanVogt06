@@ -5,7 +5,7 @@ import type { Physics } from './Physics'
 import type { Terrain } from './Terrain'
 
 const MAX_PATHS = 24
-const MAX_PADS = 24
+const MAX_PADS = 32
 
 const linear = (hex: string) => new THREE.Color(hex)
 
