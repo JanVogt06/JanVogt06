@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { Light } from './DayCycle'
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
 export class Stage {
@@ -6,7 +7,7 @@ export class Stage {
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(42, 1, 0.1, 600)
   // Hidden by day, behind the blue of the sky.
-  readonly stars: THREE.Points
+  private stars: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -24,11 +25,17 @@ export class Stage {
 
     this.scene.background = new THREE.Color('#0b0d14')
     this.stars = this.starfield()
-    this.stars.visible = false
     this.scene.add(this.stars)
 
     this.resize()
     window.addEventListener('resize', () => this.resize())
+  }
+
+  // The reflected room dims and the stars come out as night falls.
+  paint(light: Light) {
+    this.scene.environmentIntensity = light.environment
+    this.stars.material.opacity = light.stars
+    this.stars.visible = light.stars > 0.01
   }
 
   render() {
@@ -52,7 +59,14 @@ export class Stage {
     }
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const material = new THREE.PointsMaterial({ color: '#9aa3c0', size: 1.2, sizeAttenuation: false, fog: false })
+    const material = new THREE.PointsMaterial({
+      color: '#dfe6ff',
+      size: 1.8,
+      sizeAttenuation: false,
+      fog: false,
+      transparent: true,
+      opacity: 0,
+    })
     return new THREE.Points(geometry, material)
   }
 }

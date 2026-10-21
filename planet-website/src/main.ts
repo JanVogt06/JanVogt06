@@ -7,6 +7,7 @@ import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
 import { Ambience } from './world/Ambience'
 import { Chart } from './world/Chart'
+import { DayCycle } from './world/DayCycle'
 import { FollowCamera } from './world/FollowCamera'
 import { Input } from './world/Input'
 import { Landmarks } from './world/Landmarks'
@@ -86,6 +87,18 @@ const chart = new Chart(sites, view)
 const pilot = new TouchPilot(rover, view)
 // The meadow has its own shader; everything standing on it is a toy.
 soften(stage.scene, [planet.mesh])
+const day = new DayCycle()
+day.lightWindows(stage.scene)
+
+// Colours the whole scene for the hour.
+function paint(delta: number) {
+  day.update(delta)
+  sky.paint(day.light)
+  lights.paint(day.light)
+  stage.paint(day.light)
+  rover.headlights(1 - day.daylight)
+}
+paint(0)
 
 mountUi(document.querySelector<HTMLElement>('#ui')!)
 let paused = false
@@ -106,6 +119,7 @@ function frame(delta: number) {
     satellites.update(delta)
     ambience.update(delta)
     sights.update(delta)
+    paint(delta)
     sky.update(delta, lights.sunDirection)
   }
   view.update(delta)
@@ -114,7 +128,7 @@ function frame(delta: number) {
   stage.render()
 }
 
-if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame } })
+if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame, day } })
 
 const timer = new THREE.Timer()
 let first = true

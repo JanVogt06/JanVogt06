@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { Light } from './DayCycle'
 import { random } from './surface'
 
 const CLOUDS = 12
@@ -6,15 +7,17 @@ const CLOUDS = 12
 const axis = new THREE.Vector3()
 const turn = new THREE.Quaternion()
 
-// The colours of the sky by day: a soft blue overhead fading into a warm
-// cream haze at the horizon, which the fog shares.
-export const DAY = { zenith: '#78acdf', horizon: '#fbe6c6', sun: '#ffd7a0' }
+// Where the moon hangs, fixed among the stars, so it rises and sets as the
+// rover drives round the planet.
+const MOON = new THREE.Vector3(0.35, 0.75, -0.55).normalize()
 
 // Puffy clouds drifting round the planet, each on its own slow circle,
-// under a dome of sky.
+// under a dome of sky that the time of day colours, with a moon by night.
 export class Sky {
   private clouds: { object: THREE.Object3D; axis: THREE.Vector3; speed: number }[] = []
   private dome: THREE.Mesh<THREE.SphereGeometry, THREE.ShaderMaterial>
+  private moon: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>
+  private fog: THREE.Fog
 
   constructor(scene: THREE.Scene, model: THREE.Object3D, radius: number) {
     const rng = random(5)
@@ -44,8 +47,25 @@ export class Sky {
     }
 
     this.dome = this.atmosphere(radius)
-    scene.add(this.dome)
-    scene.fog = new THREE.Fog(DAY.horizon, 25, 150)
+    this.moon = new THREE.Mesh(
+      new THREE.SphereGeometry(2.4, 24, 12),
+      new THREE.MeshBasicMaterial({ color: '#fff4d8', transparent: true, opacity: 0, fog: false }),
+    )
+    this.moon.position.copy(MOON).multiplyScalar(radius + 50)
+    this.fog = new THREE.Fog('#fbe6c6', 25, 150)
+    scene.add(this.dome, this.moon)
+    scene.fog = this.fog
+  }
+
+  // Takes on the colours of the hour; the haze and the fog stay one colour.
+  paint(light: Light) {
+    const { uniforms } = this.dome.material
+    uniforms.uZenith.value.copy(light.zenith)
+    uniforms.uHorizon.value.copy(light.horizon)
+    uniforms.uSunColour.value.copy(light.glow)
+    this.fog.color.copy(light.horizon)
+    this.moon.material.opacity = light.stars
+    this.moon.visible = light.stars > 0.01
   }
 
   // `sun` is the direction the sunlight comes from.
@@ -58,9 +78,9 @@ export class Sky {
     }
   }
 
-  // A shell well above the camera, drawn before anything else: blue
-  // overhead, cream towards the local horizon, with a warm glow round the
-  // sun.
+  // A shell well above the camera, drawn before anything else: the zenith's
+  // colour overhead, the horizon's towards the local horizon, with a glow
+  // round the sun.
   private atmosphere(radius: number) {
     const dome = new THREE.Mesh(
       new THREE.SphereGeometry(radius + 60, 64, 32),
@@ -68,9 +88,9 @@ export class Sky {
         side: THREE.BackSide,
         depthWrite: false,
         uniforms: {
-          uZenith: { value: new THREE.Color(DAY.zenith) },
-          uHorizon: { value: new THREE.Color(DAY.horizon) },
-          uSunColour: { value: new THREE.Color(DAY.sun) },
+          uZenith: { value: new THREE.Color() },
+          uHorizon: { value: new THREE.Color() },
+          uSunColour: { value: new THREE.Color() },
           uSun: { value: new THREE.Vector3(0, 1, 0) },
           uRadius: { value: radius },
         },

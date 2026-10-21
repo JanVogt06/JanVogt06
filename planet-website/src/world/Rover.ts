@@ -78,6 +78,10 @@ export class Rover {
   readonly head: THREE.Object3D
   private eyes: THREE.Object3D
   private antenna: THREE.Object3D
+  // Stays on with no strength by day: switching a light on and off would
+  // rebuild every material's shader.
+  private headlight = new THREE.SpotLight('#fff1c8', 0, 28, 0.62, 0.55, 1.2)
+  private lamps: THREE.MeshStandardMaterial
   speed = 0
 
   private controller: RAPIER.DynamicRayCastVehicleController
@@ -141,6 +145,11 @@ export class Rover {
     this.head = this.build(model)
     this.eyes = this.part(model, 'Head_Eyes')
     this.antenna = this.part(model, 'Antenna')
+    this.lamps = (this.part(model, 'Body_Lamps') as THREE.Mesh).material as THREE.MeshStandardMaterial
+    // From the lamps on the nose, aimed at the ground a few lengths ahead.
+    this.headlight.position.set(0.9, CHASSIS.y + 0.05, 0)
+    this.headlight.target.position.set(7, -0.8, 0)
+    this.shell.add(this.headlight, this.headlight.target)
     scene.add(this.object)
     physics.sync(this.body, this.object)
     physics.onBeforeStep((dt) => this.step(dt))
@@ -165,6 +174,12 @@ export class Rover {
     this.body.setRotation(quaternion, true)
     this.body.setLinvel({ x: 0, y: 0, z: 0 }, true)
     this.body.setAngvel({ x: 0, y: 0, z: 0 }, true)
+  }
+
+  // The headlights, from 0 (off) to 1 (full beam at night).
+  headlights(level: number) {
+    this.headlight.intensity = 30 * level
+    this.lamps.emissiveIntensity = 1.5 + 3 * level
   }
 
   // A point for the camera head to turn to, or null to let it look about.

@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { Light } from './DayCycle'
 import type { FollowCamera } from './FollowCamera'
 
 const side = new THREE.Vector3()
@@ -10,6 +11,8 @@ const sun = new THREE.Vector3()
 export class Lights {
   private sky = new THREE.HemisphereLight('#dceaff', '#8a7650', 0.85)
   private key = new THREE.DirectionalLight('#ffe7c9', 2.4)
+  // How high the light stands over the rover, from 0 at the horizon to 1.
+  private height = 1
 
   constructor(scene: THREE.Scene, private view: FollowCamera) {
     this.key.castShadow = true
@@ -32,6 +35,16 @@ export class Lights {
     return sun.subVectors(this.key.position, this.key.target.position).normalize()
   }
 
+  // The sun by day, sinking and reddening towards dusk; the moon by night.
+  paint(light: Light) {
+    this.key.color.copy(light.sun)
+    this.key.intensity = light.sunStrength
+    this.sky.color.copy(light.sky)
+    this.sky.groundColor.copy(light.ground)
+    this.sky.intensity = light.skyStrength
+    this.height = light.sunHeight
+  }
+
   update() {
     const { target, heading, up } = this.view
     side.crossVectors(heading, up)
@@ -42,7 +55,7 @@ export class Lights {
     this.key.target.position.copy(target)
     this.key.position
       .copy(target)
-      .addScaledVector(up, 30)
+      .addScaledVector(up, 8 + 22 * this.height)
       .addScaledVector(side, -18)
       .addScaledVector(heading, -12)
   }
