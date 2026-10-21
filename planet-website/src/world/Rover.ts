@@ -55,6 +55,10 @@ export const tuning = {
   leanMax: 0.16,
   leanStiffness: 140,
   leanDamping: 7,
+  // The antenna is a stiff spring that the rover's acceleration swings.
+  antennaSwing: 0.02,
+  antennaStiffness: 90,
+  antennaDamping: 4.5,
 }
 
 const v = new THREE.Vector3()
@@ -62,14 +66,18 @@ const up = new THREE.Vector3()
 const axis = new THREE.Vector3()
 const quaternion = new THREE.Quaternion()
 const basis = new THREE.Matrix4()
+const acceleration = new THREE.Vector3()
+const inverse = new THREE.Quaternion()
 
 export class Rover {
   readonly object = new THREE.Group()
   readonly body: RAPIER.RigidBody
   readonly forward = new THREE.Vector3(1, 0, 0)
   readonly velocity = new THREE.Vector3()
-  // The camera head on the mast, free to turn towards things.
+  // The head on the spring neck, free to turn towards things.
   readonly head: THREE.Object3D
+  private eyes: THREE.Object3D
+  private antenna: THREE.Object3D
   speed = 0
 
   private controller: RAPIER.DynamicRayCastVehicleController
@@ -81,6 +89,10 @@ export class Rover {
   private lean = { angle: 0, velocity: 0 }
   private gaze: THREE.Vector3 | null = null
   private idle = 0
+  private swing = { pitch: 0, roll: 0, pitchRate: 0, rollRate: 0 }
+  private lastVelocity = new THREE.Vector3()
+  private blink = { next: 2, at: -1 }
+  private openness = 1
 
   constructor(
     scene: THREE.Scene,
@@ -127,6 +139,8 @@ export class Rover {
 
     this.place(spawn, this.forward)
     this.head = this.build(model)
+    this.eyes = this.part(model, 'Head_Eyes')
+    this.antenna = this.part(model, 'Antenna')
     scene.add(this.object)
     physics.sync(this.body, this.object)
     physics.onBeforeStep((dt) => this.step(dt))
@@ -161,6 +175,8 @@ export class Rover {
   update(delta: number) {
     this.leanIntoCorners(Math.min(delta, 1 / 30))
     this.turnHead(Math.min(delta, 1 / 30))
+    this.swingAntenna(Math.min(delta, 1 / 30))
+    this.blinkEyes(delta)
     WHEELS.forEach((wheel, i) => {
       const { steer, spin } = this.wheels[i]
       const length = this.controller.wheelSuspensionLength(i) ?? tuning.suspensionRest
@@ -263,10 +279,7 @@ export class Rover {
     this.shell.rotation.x = lean.angle
   }
 
-  // Takes the body and the six wheels out of the model. The body rides on the
-  // leaning shell; each wheel turns inside a holder that steers and follows
-  // its suspension.
-  // The head faces +x and turns about its mast. It follows the gaze point
+  // The head faces +x and turns about its neck. It follows the gaze point
   // as far as the mast allows, and otherwise glances slowly to and fro.
   private turnHead(delta: number) {
     this.idle += delta
@@ -278,6 +291,47 @@ export class Rover {
     this.head.rotation.y += (yaw - this.head.rotation.y) * Math.min(1, 4 * delta)
   }
 
+  // The antenna's tip lags behind whatever the body does, as a pendulum on
+  // a spring: it rocks back when the rover pulls away and out of a corner.
+  private swingAntenna(delta: number) {
+    if (delta <= 0) return
+    acceleration.subVectors(this.velocity, this.lastVelocity).divideScalar(delta)
+    this.lastVelocity.copy(this.velocity)
+    acceleration.applyQuaternion(inverse.copy(this.object.quaternion).invert())
+    // A landing or a jump can spike the estimate far beyond any real push.
+    acceleration.clampLength(0, 60)
+    const swing = this.swing
+    const { antennaSwing: gain, antennaStiffness: k, antennaDamping: c } = tuning
+    swing.pitchRate += (gain * acceleration.x * k - k * swing.pitch - c * swing.pitchRate) * delta
+    swing.rollRate += (-gain * acceleration.z * k - k * swing.roll - c * swing.rollRate) * delta
+    swing.pitch = THREE.MathUtils.clamp(swing.pitch + swing.pitchRate * delta, -0.7, 0.7)
+    swing.roll = THREE.MathUtils.clamp(swing.roll + swing.rollRate * delta, -0.7, 0.7)
+    this.antenna.rotation.set(swing.roll, 0, swing.pitch)
+  }
+
+  // Blinks every few seconds, now and then twice; squints when boosting
+  // and opens wide in the air.
+  private blinkEyes(delta: number) {
+    const target = !this.grounded ? 1.2 : this.input.isHeld('boost') && this.speed > 3 ? 0.6 : 1
+    this.openness += (target - this.openness) * Math.min(1, 10 * delta)
+    if (this.idle > this.blink.next) {
+      this.blink.at = this.idle
+      this.blink.next = this.idle + (Math.random() < 0.2 ? 0.3 : 2 + Math.random() * 3.5)
+    }
+    const since = (this.idle - this.blink.at) / 0.16
+    const shut = since >= 0 && since < 1 ? Math.sin(since * Math.PI) : 0
+    this.eyes.scale.y = Math.max(0.08, this.openness * (1 - shut))
+  }
+
+  private part(model: THREE.Object3D, name: string) {
+    const node = this.object.getObjectByName(name) ?? model.getObjectByName(name)
+    if (!node) throw new Error(`The rover model has no ${name}`)
+    return node
+  }
+
+  // Takes the body and the six wheels out of the model. The body rides on the
+  // leaning shell; each wheel turns inside a holder that steers and follows
+  // its suspension.
   private build(model: THREE.Object3D) {
     const body = model.getObjectByName('Body')
     if (!body) throw new Error('The rover model has no Body')
