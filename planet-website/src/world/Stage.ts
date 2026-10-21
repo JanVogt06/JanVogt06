@@ -1,9 +1,12 @@
 import * as THREE from 'three'
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js'
 
 export class Stage {
   readonly renderer: THREE.WebGLRenderer
   readonly scene = new THREE.Scene()
   readonly camera = new THREE.PerspectiveCamera(42, 1, 0.1, 600)
+  // Hidden by day, behind the blue of the sky.
+  readonly stars: THREE.Points
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
@@ -12,8 +15,17 @@ export class Stage {
     this.renderer.shadowMap.type = THREE.PCFShadowMap
     this.renderer.toneMapping = THREE.NeutralToneMapping
 
+    // A soft room of light round everything, so the toy materials pick up
+    // gentle highlights and the brass gleams.
+    const pmrem = new THREE.PMREMGenerator(this.renderer)
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+    this.scene.environmentIntensity = 0.35
+    pmrem.dispose()
+
     this.scene.background = new THREE.Color('#0b0d14')
-    this.scene.add(this.stars())
+    this.stars = this.starfield()
+    this.stars.visible = false
+    this.scene.add(this.stars)
 
     this.resize()
     window.addEventListener('resize', () => this.resize())
@@ -30,7 +42,7 @@ export class Stage {
     this.camera.updateProjectionMatrix()
   }
 
-  private stars() {
+  private starfield() {
     const count = 1500
     const positions = new Float32Array(count * 3)
     const direction = new THREE.Vector3()
@@ -40,7 +52,7 @@ export class Stage {
     }
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    const material = new THREE.PointsMaterial({ color: '#9aa3c0', size: 1.2, sizeAttenuation: false })
+    const material = new THREE.PointsMaterial({ color: '#9aa3c0', size: 1.2, sizeAttenuation: false, fog: false })
     return new THREE.Points(geometry, material)
   }
 }

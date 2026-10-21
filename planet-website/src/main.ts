@@ -20,6 +20,7 @@ import { Satellites } from './world/Satellites'
 import { Sky } from './world/Sky'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
+import { soften } from './world/Toy'
 import { TouchPilot } from './world/TouchPilot'
 import { path, Terrain } from './world/Terrain'
 
@@ -75,6 +76,8 @@ const satellites = new Satellites(stage.scene, models.satellite, planet.radius)
 const ambience = new Ambience(models, satellites, lights)
 const chart = new Chart(sites, view)
 const pilot = new TouchPilot(rover, view)
+// The meadow has its own shader; everything standing on it is a toy.
+soften(stage.scene, [planet.mesh])
 
 mountUi(document.querySelector<HTMLElement>('#ui')!)
 let paused = false
@@ -94,7 +97,7 @@ function frame(delta: number) {
     rover.lookAt(sites.nearest?.gazePoint ?? null)
     satellites.update(delta)
     ambience.update(delta)
-    sky.update(delta)
+    sky.update(delta, lights.sunDirection)
   }
   view.update(delta)
   lights.update()

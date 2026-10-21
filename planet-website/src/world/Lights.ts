@@ -8,14 +8,16 @@ const sun = new THREE.Vector3()
 // from above and behind on the left, so the rover is lit the same way
 // wherever it is on the planet.
 export class Lights {
-  private sky = new THREE.HemisphereLight('#dfe6ff', '#5a5048', 1.3)
-  private key = new THREE.DirectionalLight('#fff3e0', 2.6)
+  private sky = new THREE.HemisphereLight('#dceaff', '#8a7650', 0.85)
+  private key = new THREE.DirectionalLight('#ffe7c9', 2.4)
 
   constructor(scene: THREE.Scene, private view: FollowCamera) {
     this.key.castShadow = true
     this.key.shadow.mapSize.set(2048, 2048)
     this.key.shadow.bias = -0.0005
     this.key.shadow.normalBias = 0.03
+    this.key.shadow.radius = 3
+    this.key.shadow.intensity = 0.8
     const frustum = this.key.shadow.camera
     frustum.left = frustum.bottom = -16
     frustum.right = frustum.top = 16

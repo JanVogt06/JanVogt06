@@ -6,7 +6,7 @@ import type { Terrain } from './Terrain'
 import { random, uprightAt } from './surface'
 
 const CRATE = 0.8
-const COLOURS = ['#e9c46a', '#e76f51', '#8ab17d', '#5b7bd5', '#f2efe6']
+const COLOURS = ['#e2b04a', '#c8553d', '#5f9a6a', '#4a6fa5', '#f6ecd8']
 const RAMP = { length: 4.5, width: 2.6, height: 1.2, sunk: 0.35 }
 
 interface Spot {

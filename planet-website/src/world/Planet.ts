@@ -104,11 +104,11 @@ export class Planet {
         uPads: { value: pad(flats.map((f) => new THREE.Vector4(f.direction.x, f.direction.y, f.direction.z, f.reach - 1)), MAX_PADS) },
         uPadCount: { value: Math.min(flats.length, MAX_PADS) },
         uRadius: { value: radius },
-        uGrassDark: { value: linear('#93c27a') },
-        uGrassLight: { value: linear('#b7da96') },
-        uSand: { value: linear('#ecdfc3') },
-        uVerge: { value: linear('#cdbd96') },
-        uFlowers: { value: ['#fffaf0', '#f4a7b9', '#f6d55c', '#b9a7f0'].map(linear) },
+        uGrassDark: { value: linear('#7eaf5b') },
+        uGrassLight: { value: linear('#a9cc74') },
+        uSand: { value: linear('#f2e3c2') },
+        uVerge: { value: linear('#d6bd8a') },
+        uFlowers: { value: ['#fff6e3', '#e0735a', '#f2c14e', '#a99be0'].map(linear) },
       })
       shader.vertexShader = shader.vertexShader
         .replace('#include <common>', '#include <common>\nvarying vec3 vSphere;')

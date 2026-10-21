@@ -6,10 +6,15 @@ const CLOUDS = 12
 const axis = new THREE.Vector3()
 const turn = new THREE.Quaternion()
 
-// Puffy clouds drifting round the planet, each on its own slow circle, and
-// a thin shell of air that glows towards the horizon.
+// The colours of the sky by day: a soft blue overhead fading into a warm
+// cream haze at the horizon, which the fog shares.
+export const DAY = { zenith: '#78acdf', horizon: '#fbe6c6', sun: '#ffd7a0' }
+
+// Puffy clouds drifting round the planet, each on its own slow circle,
+// under a dome of sky.
 export class Sky {
   private clouds: { object: THREE.Object3D; axis: THREE.Vector3; speed: number }[] = []
+  private dome: THREE.Mesh<THREE.SphereGeometry, THREE.ShaderMaterial>
 
   constructor(scene: THREE.Scene, model: THREE.Object3D, radius: number) {
     const rng = random(5)
@@ -38,10 +43,14 @@ export class Sky {
       this.clouds.push({ object, axis: axis.clone(), speed: 0.01 + rng() * 0.012 })
     }
 
-    scene.add(this.atmosphere(radius))
+    this.dome = this.atmosphere(radius)
+    scene.add(this.dome)
+    scene.fog = new THREE.Fog(DAY.horizon, 25, 150)
   }
 
-  update(delta: number) {
+  // `sun` is the direction the sunlight comes from.
+  update(delta: number, sun: THREE.Vector3) {
+    this.dome.material.uniforms.uSun.value.copy(sun)
     for (const cloud of this.clouds) {
       turn.setFromAxisAngle(cloud.axis, cloud.speed * delta)
       cloud.object.position.applyQuaternion(turn)
@@ -49,17 +58,22 @@ export class Sky {
     }
   }
 
-  // A shell well above the camera that glows just over the horizon and
-  // fades into the black of space overhead, so the sky has a little air.
+  // A shell well above the camera, drawn before anything else: blue
+  // overhead, cream towards the local horizon, with a warm glow round the
+  // sun.
   private atmosphere(radius: number) {
-    return new THREE.Mesh(
+    const dome = new THREE.Mesh(
       new THREE.SphereGeometry(radius + 60, 64, 32),
       new THREE.ShaderMaterial({
         side: THREE.BackSide,
-        transparent: true,
         depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        uniforms: { uColour: { value: new THREE.Color('#a9d3ff') } },
+        uniforms: {
+          uZenith: { value: new THREE.Color(DAY.zenith) },
+          uHorizon: { value: new THREE.Color(DAY.horizon) },
+          uSunColour: { value: new THREE.Color(DAY.sun) },
+          uSun: { value: new THREE.Vector3(0, 1, 0) },
+          uRadius: { value: radius },
+        },
         vertexShader: /* glsl */ `
           varying vec3 vView;
           void main() {
@@ -69,16 +83,30 @@ export class Sky {
           }
         `,
         fragmentShader: /* glsl */ `
-          uniform vec3 uColour;
+          uniform vec3 uZenith;
+          uniform vec3 uHorizon;
+          uniform vec3 uSunColour;
+          uniform vec3 uSun;
+          uniform float uRadius;
           varying vec3 vView;
           void main() {
-            // How far above the local horizon the ray looks.
+            // How far the ray looks above the edge of the planet, from 0 there
+            // to 1 straight up. From high above, the edge dips well below
+            // level.
             float elevation = dot(vView, normalize(cameraPosition));
-            float glow = pow(1.0 - clamp(elevation * 2.4 + 0.12, 0.0, 1.0), 3.0);
-            gl_FragColor = vec4(uColour * glow * 0.5, 1.0);
+            float edge = -sqrt(max(0.0, 1.0 - pow(uRadius / length(cameraPosition), 2.0)));
+            float above = (elevation - edge) / (1.0 - edge);
+            vec3 colour = mix(uHorizon, uZenith, pow(smoothstep(0.0, 0.24, above), 0.75));
+            float sun = max(dot(vView, uSun), 0.0);
+            colour += uSunColour * (0.35 * pow(sun, 6.0) + 0.8 * pow(sun, 400.0));
+            gl_FragColor = vec4(colour, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
           }
         `,
       }),
     )
+    dome.renderOrder = -1
+    return dome
   }
 }
