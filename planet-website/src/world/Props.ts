@@ -6,7 +6,14 @@ import type { Terrain } from './Terrain'
 import { random, uprightAt } from './surface'
 
 const CRATE = 0.8
-const COLOURS = ['#e2b04a', '#c8553d', '#5f9a6a', '#4a6fa5', '#f6ecd8']
+// Toy building blocks, each colour with its own symbol on every face.
+const BLOCKS = [
+  { colour: '#e2b04a', symbol: 'π', ink: '#27304a' },
+  { colour: '#c8553d', symbol: 'Σ', ink: '#f6ecd8' },
+  { colour: '#5f9a6a', symbol: '√', ink: '#f6ecd8' },
+  { colour: '#4a6fa5', symbol: '∞', ink: '#f6ecd8' },
+  { colour: '#f6ecd8', symbol: 'λ', ink: '#c8553d' },
+]
 const RAMP = { length: 4.5, width: 2.6, height: 1.2, sunk: 0.35 }
 
 interface Spot {
@@ -20,12 +27,35 @@ export interface Clearing {
   distance: number
 }
 
-// Things to play with: ramps to jump from and crates to knock over.
+// A face of a block: its colour with a lighter border, and the symbol
+// stamped in the middle.
+function face({ colour, symbol, ink }: (typeof BLOCKS)[number]) {
+  const size = 128
+  const canvas = document.createElement('canvas')
+  canvas.width = canvas.height = size
+  const context = canvas.getContext('2d')!
+  context.fillStyle = colour
+  context.fillRect(0, 0, size, size)
+  context.strokeStyle = 'rgb(255 255 255 / 0.35)'
+  context.lineWidth = 8
+  context.strokeRect(14, 14, size - 28, size - 28)
+  context.fillStyle = ink
+  context.font = 'bold 76px Georgia, "Times New Roman", serif'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(symbol, size / 2, size / 2 + 4)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+  return texture
+}
+
+// Things to play with: ramps to jump from and blocks to knock over.
 export class Props {
   private rng = random(7)
   private taken: Spot[] = []
   private crateGeometry = new RoundedBoxGeometry(CRATE, CRATE, CRATE, 2, 0.08)
-  private crateMaterials = COLOURS.map((color) => new THREE.MeshStandardMaterial({ color, roughness: 0.7 }))
+  private crateMaterials = BLOCKS.map((block) => new THREE.MeshStandardMaterial({ map: face(block), roughness: 0.7 }))
 
   constructor(
     private scene: THREE.Scene,

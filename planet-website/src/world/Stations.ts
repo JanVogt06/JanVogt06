@@ -12,8 +12,8 @@ const BAY = { width: 3.6, depth: 4.6, offset: 6.2, wall: 1.8 }
 // How far inside the bay's edges the rover's centre has to be.
 const BAY_MARGIN = { x: 0.5, z: 0.7 }
 const NEAR = 15
-// Every bay glows in the same colour, so it reads as the place to stop.
-const BAY_COLOUR = '#3fc8f5'
+// Every bay glows in the same warm brass, so it reads as the place to stop.
+const BAY_COLOUR = '#ffc84a'
 const PARK_TIME = 0.8
 const PARKED_SPEED = 0.8
 
