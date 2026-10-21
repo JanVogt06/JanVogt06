@@ -6,6 +6,7 @@ import { stations } from './content/stations'
 import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
 import { Ambience } from './world/Ambience'
+import { Bots } from './world/Bots'
 import { Chart } from './world/Chart'
 import { DayCycle } from './world/DayCycle'
 import { Dust } from './world/Dust'
@@ -34,7 +35,7 @@ import { path, Terrain } from './world/Terrain'
 progress(0.15)
 const [, models] = await Promise.all([
   RAPIER.init(),
-  loadModels(['rover', 'satellite', 'nature', 'ramp', 'landmarks', ...stations.map((station) => station.id)], (fraction) =>
+  loadModels(['rover', 'satellite', 'nature', 'ramp', 'landmarks', 'critters', ...stations.map((station) => station.id)], (fraction) =>
     progress(0.15 + 0.75 * fraction),
   ),
 ])
@@ -89,6 +90,7 @@ const satellites = new Satellites(stage.scene, models.satellite, planet.radius)
 const ambience = new Ambience(models, satellites, lights)
 const chart = new Chart(sites, view)
 const pilot = new TouchPilot(rover, view)
+const bots = new Bots(stage.scene, models.critters, terrain, terrain.flats, rover)
 // The meadow has its own shader; everything standing on it is a toy.
 soften(stage.scene, [planet.mesh])
 const day = new DayCycle()
@@ -129,6 +131,7 @@ function frame(delta: number) {
     ambience.update(delta)
     sights.update(delta)
     dust.update(delta, day.daylight)
+    bots.update(delta)
     paint(delta)
     sky.update(delta, lights.sunDirection)
   }
