@@ -45,6 +45,8 @@ const offset = new THREE.Vector3()
 // and the flowers can be driven through.
 export class Nature {
   private rng = random(23)
+  // Where each kind stood, as the matrices its instances were drawn with.
+  readonly placements = new Map<string, THREE.Matrix4[]>()
   private placed: { direction: THREE.Vector3; spacing: number }[] = []
 
   constructor(
@@ -67,6 +69,7 @@ export class Nature {
       })
 
       const placements = this.scatter(kind)
+      this.placements.set(kind.name, placements)
       for (const part of parts) {
         const instances = new THREE.InstancedMesh(part.geometry, part.material, placements.length)
         placements.forEach((placement, i) => instances.setMatrixAt(i, matrix.multiplyMatrices(placement, part.matrixWorld)))

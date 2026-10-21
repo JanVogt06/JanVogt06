@@ -21,35 +21,31 @@ const LANDMARKS = [
   { id: 'formula-5', node: 'Formula_5', place: { lat: -82, lon: 210 }, reach: 1.2 },
 ]
 
-// Parts that move, and so get no collider of their own.
-const MOVING = new Set(['Pendulum_Arm'])
+// Parts that move, and so get no collider here; the rocket and the
+// pendulum's pegs and bob collide in their own ways.
+const MOVING = new Set(['Pendulum_Arm', 'Pendulum_Pegs', 'Pendulum_PegCaps', 'Rocket_Ship'])
 const NORTH = new THREE.Vector3(0, 1, 0)
-// A pendulum this long swings with a period of about five seconds; its
-// plane of swing turns slowly round, as Foucault's did in Paris.
-const PENDULUM = { swing: 0.22, rate: Math.sqrt(9.81 / 6.6), precession: 0.05 }
+// Within this distance the observatory turns its slit to watch the rover.
+const WATCH = 16
 
 const vertex = new THREE.Vector3()
-const axis = new THREE.Vector3()
+const local = new THREE.Vector3()
 
 export class Landmarks {
   readonly flats: Flat[] = []
   readonly clearings: Clearing[] = []
   private points = new Map<string, THREE.Vector3>()
   private time = 0
+  private parts = new Map<string, THREE.Object3D>()
   private dome: THREE.Object3D
-  private arm: THREE.Object3D
   private cups: THREE.Object3D
   private vane: THREE.Object3D
 
   constructor(scene: THREE.Scene, physics: Physics, radius: number, model: THREE.Object3D) {
     // Found before the sights leave the model for their places.
-    const find = (name: string) => {
-      const node = model.getObjectByName(name)
-      if (!node) throw new Error(`The landmarks model has no ${name}`)
-      return node
-    }
+    model.traverse((node) => this.parts.set(node.name, node))
+    const find = (name: string) => this.part(name)
     this.dome = find('Observatory_Dome')
-    this.arm = find('Pendulum_Arm')
     this.cups = find('Weather_Cups')
     this.vane = find('Weather_Vane')
 
@@ -80,13 +76,26 @@ export class Landmarks {
     return this.points.get(id)
   }
 
-  update(delta: number) {
+  // A named part of the sights, wherever it now stands.
+  part(name: string) {
+    const node = this.parts.get(name)
+    if (!node) throw new Error(`The landmarks model has no ${name}`)
+    return node
+  }
+
+  update(delta: number, rover: THREE.Vector3) {
     const t = (this.time += delta)
-    // The dome pans slowly to and fro, as if following a star.
-    this.dome.rotation.y = 0.7 * Math.sin(t * 0.06)
-    const plane = t * PENDULUM.precession
-    axis.set(Math.cos(plane), 0, Math.sin(plane))
-    this.arm.quaternion.setFromAxisAngle(axis, PENDULUM.swing * Math.sin(t * PENDULUM.rate))
+    // The dome pans slowly to and fro, as if following a star, until the
+    // rover comes by; then its slit, on the dome's +z, turns to watch it.
+    const parent = this.dome.parent!
+    local.copy(rover)
+    parent.worldToLocal(local)
+    const near = local.length() < WATCH
+    let target = 0.7 * Math.sin(t * 0.06)
+    if (near) target = Math.atan2(local.x, local.z)
+    let turn = target - this.dome.rotation.y
+    turn = Math.atan2(Math.sin(turn), Math.cos(turn))
+    this.dome.rotation.y += turn * Math.min(1, delta * (near ? 1.5 : 0.5))
     this.cups.rotation.y += delta * (3 + Math.sin(t * 0.4))
     this.vane.rotation.y = 0.5 * Math.sin(t * 0.23) + 0.2 * Math.sin(t * 0.71)
   }

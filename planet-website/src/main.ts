@@ -6,6 +6,7 @@ import { stations } from './content/stations'
 import { mountUi } from './ui/mount'
 import { ui } from './ui/store'
 import { Ambience } from './world/Ambience'
+import { Apples } from './world/Apples'
 import { Bots } from './world/Bots'
 import { Chart } from './world/Chart'
 import { DayCycle } from './world/DayCycle'
@@ -18,10 +19,12 @@ import { Lanterns } from './world/Lanterns'
 import { Lights } from './world/Lights'
 import { Nature } from './world/Nature'
 import { loadModels } from './world/models'
+import { Pendulum } from './world/Pendulum'
 import { Physics } from './world/Physics'
 import { PaperPlanes } from './world/PaperPlanes'
 import { Planet } from './world/Planet'
 import { Props } from './world/Props'
+import { Rocket } from './world/Rocket'
 import { Rover } from './world/Rover'
 import { Satellites } from './world/Satellites'
 import { Sky } from './world/Sky'
@@ -83,7 +86,7 @@ const input = new Input()
 const spawn = new THREE.Vector3(0, planet.radius + 0.6, 0)
 const clearings = [{ direction: spawn, distance: 6.5 }, ...sites.clearings, ...sights.clearings, ...lanterns.clearings]
 new Props(stage.scene, physics, terrain, clearings, models.ramp)
-new Nature(stage.scene, physics, terrain, models.nature, clearings)
+const nature = new Nature(stage.scene, physics, terrain, models.nature, clearings)
 const sky = new Sky(stage.scene, models.nature, planet.radius)
 const rover = new Rover(stage.scene, physics, input, spawn, models.rover)
 const view = new FollowCamera(stage.camera, rover)
@@ -95,6 +98,20 @@ const pilot = new TouchPilot(rover, view)
 const bots = new Bots(stage.scene, models.critters, terrain, terrain.flats, rover)
 const planes = new PaperPlanes(stage.scene, models.critters, planet.radius)
 const fireflies = new Fireflies(stage.scene, terrain, stage.renderer)
+const apples = new Apples(
+  stage.scene,
+  physics,
+  nature.placements.get('Tree_Apple')!,
+  (models.nature.getObjectByName('Tree_Apple_Apples') as THREE.Mesh).material as THREE.Material,
+)
+const rocket = new Rocket(stage.scene, physics, stage.renderer, sights.part('Rocket_Ship'))
+const pendulum = new Pendulum(
+  stage.scene,
+  physics,
+  sights.part('Pendulum_Arm'),
+  sights.part('Pendulum_Pegs') as THREE.Mesh,
+  sights.part('Pendulum_PegCaps') as THREE.Mesh,
+)
 // The meadow has its own shader; everything standing on it is a toy.
 soften(stage.scene, [planet.mesh])
 const day = new DayCycle()
@@ -133,7 +150,10 @@ function frame(delta: number) {
     rover.lookAt(sites.nearest?.gazePoint ?? null)
     satellites.update(delta)
     ambience.update(delta)
-    sights.update(delta)
+    sights.update(delta, rover.object.position)
+    rocket.update(delta, rover.object.position, day.daylight)
+    pendulum.update(delta)
+    apples.update(delta, rover)
     dust.update(delta, day.daylight)
     bots.update(delta)
     planes.update(delta)
