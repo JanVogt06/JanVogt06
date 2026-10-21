@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Light } from './DayCycle'
-import type { FollowCamera } from './FollowCamera'
+import type { Rig } from './Director'
 
 const side = new THREE.Vector3()
 const sun = new THREE.Vector3()
@@ -14,7 +14,7 @@ export class Lights {
   // How high the light stands over the rover, from 0 at the horizon to 1.
   private height = 1
 
-  constructor(scene: THREE.Scene, private view: FollowCamera) {
+  constructor(scene: THREE.Scene, private view: Rig) {
     this.key.castShadow = true
     this.key.shadow.mapSize.set(2048, 2048)
     this.key.shadow.bias = -0.0005

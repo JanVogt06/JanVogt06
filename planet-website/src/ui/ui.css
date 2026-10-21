@@ -1,8 +1,8 @@
 :root {
-  --paper: #f7f3ea;
-  --ink: #1f1d1a;
-  --ink-soft: #5d5850;
-  --line: #e2dccf;
+  --paper: #fbf6ea;
+  --ink: #27304a;
+  --ink-soft: #5b6078;
+  --line: #e4d8c0;
   --night: rgb(11 13 20);
 }
 
@@ -20,7 +20,7 @@
   background: rgb(11 13 20 / 0.72);
   backdrop-filter: blur(8px);
   color: #fff;
-  font: 13px/1.2 system-ui, sans-serif;
+  font: 13px/1.2 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   text-align: center;
   pointer-events: none;
   opacity: 0;
@@ -64,7 +64,7 @@
   place-items: center;
   z-index: 10;
   padding: 24px 16px;
-  background: rgb(11 13 20 / 0.45);
+  background: rgb(39 48 74 / 0.4);
   backdrop-filter: blur(3px);
   animation: fade-in 0.25s ease both;
 }
@@ -78,7 +78,7 @@
   border-radius: 22px;
   background: var(--paper);
   color: var(--ink);
-  font: 15px/1.6 system-ui, sans-serif;
+  font: 15px/1.6 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   box-shadow: 0 30px 80px rgb(0 0 0 / 0.45);
   animation: rise 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
@@ -253,7 +253,7 @@
   background: rgb(11 13 20 / 0.6);
   backdrop-filter: blur(6px);
   color: rgb(255 255 255 / 0.85);
-  font: 600 12px/1.2 system-ui, sans-serif;
+  font: 600 12px/1.2 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
 }
 
 @media (max-width: 520px) {
@@ -311,7 +311,8 @@
 
 .touch-legend {
   position: fixed;
-  top: max(16px, env(safe-area-inset-top));
+  /* Below the menu button. */
+  top: calc(max(16px, env(safe-area-inset-top)) + 52px);
   left: 16px;
   display: grid;
   gap: 5px;
@@ -322,7 +323,7 @@
   background: rgb(11 13 20 / 0.6);
   backdrop-filter: blur(6px);
   color: rgb(255 255 255 / 0.75);
-  font: 12px/1.25 system-ui, sans-serif;
+  font: 12px/1.25 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   pointer-events: none;
 }
 

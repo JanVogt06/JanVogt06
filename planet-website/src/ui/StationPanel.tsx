@@ -1,18 +1,10 @@
 import { useEffect, useRef } from 'react'
-import type { Station } from '../content/stations'
+import { StationDetails } from './StationDetails'
 import { ui, useUi } from './store'
 
-const KINDS: Record<Station['kind'], string> = {
-  about: 'Über mich',
-  project: 'Projekt',
-  engagement: 'Engagement',
-  awards: 'Auszeichnungen',
-  contact: 'Kontakt',
-}
-
-// Everything about a station, laid over the paused game.
+// Everything about a station, laid over the paused world.
 export function StationPanel() {
-  const { open: station } = useUi()
+  const { open: station, mode } = useUi()
   const close = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -32,7 +24,7 @@ export function StationPanel() {
         className="panel"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="panel-title"
+        aria-label={station.title}
         style={{ '--accent': station.colour } as React.CSSProperties}
         onClick={(event) => event.stopPropagation()}
       >
@@ -45,44 +37,11 @@ export function StationPanel() {
           />
         )}
         <div className="panel-content">
-          <p className="panel-kind">{KINDS[station.kind]}</p>
-          <h2 id="panel-title" className="panel-title">
-            {station.title}
-          </h2>
-          <p className="panel-tagline">{station.tagline}</p>
-
-          {station.body.map((paragraph) => (
-            <p key={paragraph} className="panel-text">
-              {paragraph}
-            </p>
-          ))}
-
-          {station.facts && (
-            <ul className="panel-facts">
-              {station.facts.map((fact) => (
-                <li key={fact}>{fact}</li>
-              ))}
-            </ul>
-          )}
-
-          {station.tech && (
-            <ul className="panel-tech" aria-label="Technologien">
-              {station.tech.map((name) => (
-                <li key={name}>{name}</li>
-              ))}
-            </ul>
-          )}
-
-          <div className="panel-actions">
-            {station.links?.map((link) => (
-              <a key={link.href} className="panel-link" href={link.href} target="_blank" rel="noreferrer">
-                {link.label}
-              </a>
-            ))}
+          <StationDetails station={station}>
             <button ref={close} className="panel-close" onClick={() => ui.set({ open: null })}>
-              Weiterfahren <kbd>Esc</kbd>
+              {mode === 'drive' ? 'Weiterfahren' : 'Schließen'} <kbd>Esc</kbd>
             </button>
-          </div>
+          </StationDetails>
         </div>
       </article>
     </div>

@@ -6,7 +6,8 @@ body {
   /* The page is a game: no pinch zoom or scrolling on touch. */
   touch-action: none;
   overscroll-behavior: none;
-  background: #0b0d14;
+  /* What shows before the planet is drawn: its sky by day. */
+  background: linear-gradient(#8fbbe6, #fbe6c6 70%) fixed;
 }
 
 #world {
@@ -29,7 +30,7 @@ body {
   border-radius: 10px;
   background: rgb(11 13 20 / 0.6);
   backdrop-filter: blur(6px);
-  font: 13px/1 system-ui, sans-serif;
+  font: 13px/1 ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
   color: rgb(255 255 255 / 0.75);
   pointer-events: none;
 }

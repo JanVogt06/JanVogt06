@@ -1,14 +1,23 @@
 import { useSyncExternalStore } from 'react'
 import type { Station } from '../content/stations'
 
+// How the planet is shown: the start menu over it, driving the rover, a
+// flight from station to station as the page scrolls, the whole planet to
+// turn about, or plain text without any 3D.
+export type Mode = 'menu' | 'drive' | 'tour' | 'planet' | 'text'
+
 export interface UiState {
+  mode: Mode
+  // Whether the 3D world has loaded, and how far it has got.
+  world: 'idle' | 'loading' | 'ready' | 'failed'
+  progress: number
   // The station the rover is close to, whose name tag is showing.
   nearby: Station | null
-  // The station whose panel is open. The game holds still while it is.
+  // The station whose panel is open. The world holds still while it is.
   open: Station | null
 }
 
-let state: UiState = { nearby: null, open: null }
+let state: UiState = { mode: 'menu', world: 'idle', progress: 0, nearby: null, open: null }
 const listeners = new Set<() => void>()
 
 export const ui = {
@@ -58,3 +67,11 @@ export const touch = { x: 0, y: 0, boost: false, jumps: 0, resets: 0 }
 // A thumb dragged across the screen to point the way: x to the right and y
 // up, in units of the drag radius, so 1 is a full drag and more is a boost.
 export const drag = { active: false, x: 0, y: 0, used: false }
+
+// How far down the tour the page has scrolled, in stops: 0 at the first,
+// 1 at the second and so on. The tour's camera reads it every frame.
+export const tour = { position: 0 }
+
+// Where each station's label sits on screen in the planet view, written by
+// the world every frame and drawn by the labels on their own frame.
+export const labels = { points: [] as { id: string; x: number; y: number; shown: boolean }[] }

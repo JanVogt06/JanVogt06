@@ -6,12 +6,13 @@
     <title>Jan Vogt – Informatikstudent</title>
     <meta
       name="description"
-      content="Jan Vogt, Informatikstudent in Jena. Fahr mit einem Spielzeug-Rover über einen kleinen Planeten und entdecke meine Projekte."
+      content="Jan Vogt, Informatikstudent in Jena. Fahr mit einem Spielzeug-Rover über einen kleinen Forscher-Planeten, flieg von Station zu Station oder lies alles als Text."
     />
-    <meta name="theme-color" content="#0b0d14" />
+    <meta name="theme-color" content="#8fbbe6" />
     <link rel="icon" type="image/png" href="/src/images/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <style>
-      /* The loading screen lives here so it shows before any script arrives. */
+      /* The splash lives here so it shows before any script arrives. */
       .loader {
         position: fixed;
         inset: 0;
@@ -20,10 +21,10 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        background: radial-gradient(circle at 50% 42%, #1b2342, #0b0d14 70%);
-        color: #fff;
-        font-family: system-ui, sans-serif;
+        gap: 12px;
+        background: linear-gradient(#8fbbe6, #fbe6c6 70%);
+        color: #27304a;
+        font-family: ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
         text-align: center;
         transition: opacity 0.6s ease;
       }
@@ -31,109 +32,53 @@
         opacity: 0;
         pointer-events: none;
       }
-      .loader-planet {
-        position: relative;
-        width: 92px;
-        height: 92px;
-        margin-bottom: 18px;
-        border-radius: 50%;
-        background:
-          linear-gradient(115deg, transparent 44%, #ecdfc3 45%, #ecdfc3 53%, transparent 54%),
-          radial-gradient(circle at 34% 30%, #cbe8ab, #93c27a 55%, #5d8d4e);
-        box-shadow: 0 0 40px rgb(143 195 255 / 0.25);
-      }
-      .loader-orbit {
-        position: absolute;
-        inset: -24px;
-        border: 1px dashed rgb(255 255 255 / 0.22);
-        border-radius: 50%;
-        animation: loader-spin 3.2s linear infinite;
-      }
-      .loader-orbit span {
-        position: absolute;
-        top: -6px;
-        left: calc(50% - 6px);
-        width: 12px;
-        height: 12px;
-        border-radius: 4px;
-        background: #ef8a6b;
+      .loader-rover {
+        width: 150px;
+        height: auto;
+        animation: loader-bob 1.6s ease-in-out infinite;
       }
       .loader-name {
         margin: 0;
-        font-size: 22px;
-        font-weight: 700;
+        font-size: 24px;
+        font-weight: 800;
       }
       .loader-text {
         max-width: 300px;
         margin: 0;
-        color: rgb(255 255 255 / 0.7);
+        color: rgb(39 48 74 / 0.75);
         font-size: 14px;
         line-height: 1.5;
       }
       .loader-text.failed {
-        color: #ffb4a2;
+        color: #a3392a;
       }
-      .loader-track {
-        width: 200px;
-        height: 4px;
-        overflow: hidden;
-        border-radius: 2px;
-        background: rgb(255 255 255 / 0.15);
-      }
-      .loader-bar {
-        width: calc(var(--progress, 0) * 100%);
-        height: 100%;
-        border-radius: 2px;
-        background: #ef8a6b;
-        transition: width 0.3s ease;
-      }
-      /* Until the script runs there is nothing to measure, so the bar sweeps. */
-      .loader[data-state='waiting'] .loader-bar {
-        width: 35%;
-        animation: loader-sweep 1.3s ease-in-out infinite;
-      }
-      .loader[data-state='failed'] .loader-track,
-      .loader[data-state='failed'] .loader-orbit {
-        display: none;
-      }
-      @keyframes loader-spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-      @keyframes loader-sweep {
-        from {
-          transform: translateX(-100%);
-        }
-        to {
-          transform: translateX(290%);
+      @keyframes loader-bob {
+        50% {
+          transform: translateY(-8px) rotate(-2deg);
         }
       }
       @media (prefers-reduced-motion: reduce) {
-        .loader-orbit,
-        .loader[data-state='waiting'] .loader-bar {
+        .loader-rover {
           animation: none;
         }
       }
     </style>
   </head>
   <body>
-    <div id="loader" class="loader" data-state="waiting" role="status" aria-live="polite">
-      <div class="loader-planet" aria-hidden="true"><div class="loader-orbit"><span></span></div></div>
+    <div id="loader" class="loader" role="status" aria-live="polite">
+      <img class="loader-rover" src="/src/images/rover.webp" alt="" width="150" height="142" />
       <p class="loader-name">Jan Vogt</p>
-      <p class="loader-text">Planet wird geladen …</p>
-      <div class="loader-track"><div class="loader-bar"></div></div>
+      <p class="loader-text">Einen Moment …</p>
     </div>
     <script>
-      // Anything that goes wrong while the planet is being built ends up here,
-      // instead of leaving an empty dark page.
+      // Anything that goes wrong before the page's own screens are up ends
+      // up here, instead of leaving an empty page.
       function failed() {
         var loader = document.getElementById('loader')
         if (!loader) return
-        loader.dataset.state = 'failed'
         var text = loader.querySelector('.loader-text')
         text.textContent =
-          'Der Planet konnte nicht geladen werden. Bitte lade die Seite neu – und prüfe, ob dein Browser WebGL unterstützt.'
+          'Die Seite konnte nicht geladen werden. Bitte lade sie neu.'
         text.classList.add('failed')
       }
       addEventListener('error', failed)
@@ -141,12 +86,6 @@
     </script>
     <canvas id="world"></canvas>
     <div id="ui"></div>
-    <ul class="controls">
-      <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Fahren</li>
-      <li><kbd>Shift</kbd> Boost</li>
-      <li><kbd>Leertaste</kbd> Springen</li>
-      <li><kbd>R</kbd> Aufrichten</li>
-    </ul>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

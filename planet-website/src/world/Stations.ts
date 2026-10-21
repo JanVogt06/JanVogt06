@@ -131,6 +131,8 @@ const wallFragment = /* glsl */ `
 
 export interface Site {
   station: Station
+  // Holds the model and the bay, in the station's own frame.
+  group: THREE.Group
   // Unit vector from the planet's centre to the station.
   direction: THREE.Vector3
   // Where the rover's camera head looks when it is close.
@@ -225,6 +227,7 @@ export class Stations {
 
       this.sites.push({
         station,
+        group,
         direction: up.clone(),
         gazePoint: at(0, 1.6, 0),
         orientation,

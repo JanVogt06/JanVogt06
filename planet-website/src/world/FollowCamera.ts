@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { Rig } from './Director'
 import { tuning, type Rover } from './Rover'
 
 const up = new THREE.Vector3()
@@ -8,7 +9,7 @@ const look = new THREE.Vector3()
 // A raised three-quarter view that trails the rover. Its heading is carried
 // along the surface and only slowly swings round behind the rover, so a turn
 // reads as the rover turning rather than the world spinning.
-export class FollowCamera {
+export class FollowCamera implements Rig {
   readonly target = new THREE.Vector3()
   readonly heading = new THREE.Vector3()
   readonly up = new THREE.Vector3()
@@ -31,6 +32,13 @@ export class FollowCamera {
     this.target.copy(rover.object.position)
     this.heading.copy(rover.forward)
     this.update(0)
+  }
+
+  // Starts right behind the rover, wherever the last view left it.
+  enter() {
+    this.target.copy(this.rover.object.position)
+    this.heading.copy(this.rover.forward)
+    this.rush = 0
   }
 
   update(delta: number) {

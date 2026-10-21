@@ -7,6 +7,10 @@ const CLOUDS = 12
 const axis = new THREE.Vector3()
 const turn = new THREE.Quaternion()
 
+// How far from the camera the haze begins and where it hides everything,
+// beyond the height the camera stands above the ground.
+const FOG = { near: 15, far: 140 }
+
 // Where the moon hangs, fixed among the stars, so it rises and sets as the
 // rover drives round the planet.
 const MOON = new THREE.Vector3(0.35, 0.75, -0.55).normalize()
@@ -52,7 +56,7 @@ export class Sky {
       new THREE.MeshBasicMaterial({ color: '#fff4d8', transparent: true, opacity: 0, fog: false }),
     )
     this.moon.position.copy(MOON).multiplyScalar(radius + 50)
-    this.fog = new THREE.Fog('#fbe6c6', 25, 150)
+    this.fog = new THREE.Fog('#fbe6c6', FOG.near, FOG.far)
     scene.add(this.dome, this.moon)
     scene.fog = this.fog
   }
@@ -66,6 +70,13 @@ export class Sky {
     this.fog.color.copy(light.horizon)
     this.moon.material.opacity = light.stars
     this.moon.visible = light.stars > 0.01
+  }
+
+  // Pushes the haze back as the camera climbs, so the planet seen from on
+  // high is clear with only its rim in haze.
+  reach(altitude: number) {
+    this.fog.near = altitude + FOG.near
+    this.fog.far = altitude + FOG.far
   }
 
   // `sun` is the direction the sunlight comes from.
@@ -83,7 +94,8 @@ export class Sky {
   // round the sun.
   private atmosphere(radius: number) {
     const dome = new THREE.Mesh(
-      new THREE.SphereGeometry(radius + 60, 64, 32),
+      // Wide enough for the planet view to stay inside it.
+      new THREE.SphereGeometry(radius + 255, 64, 32),
       new THREE.ShaderMaterial({
         side: THREE.BackSide,
         depthWrite: false,
@@ -116,7 +128,9 @@ export class Sky {
             float elevation = dot(vView, normalize(cameraPosition));
             float edge = -sqrt(max(0.0, 1.0 - pow(uRadius / length(cameraPosition), 2.0)));
             float above = (elevation - edge) / (1.0 - edge);
-            vec3 colour = mix(uHorizon, uZenith, pow(smoothstep(0.0, 0.24, above), 0.75));
+            // Seen from far off, the haze thins to a rim round the planet.
+            float band = max(0.24 * (1.0 + edge) / 0.43, 0.02);
+            vec3 colour = mix(uHorizon, uZenith, pow(smoothstep(0.0, band, above), 0.75));
             float sun = max(dot(vView, uSun), 0.0);
             colour += uSunColour * (0.35 * pow(sun, 6.0) + 0.8 * pow(sun, 400.0));
             gl_FragColor = vec4(colour, 1.0);

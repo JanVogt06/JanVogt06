@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import type { Light } from './DayCycle'
-import type { FollowCamera } from './FollowCamera'
+import type { Rig } from './Director'
 import { random } from './surface'
 
 // The box of air round the rover that the drops fall through.
@@ -51,7 +51,7 @@ export class Weather {
   private rain: THREE.LineSegments<THREE.BufferGeometry, THREE.LineBasicMaterial>
   private snow: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>
 
-  constructor(scene: THREE.Scene, private view: FollowCamera) {
+  constructor(scene: THREE.Scene, private view: Rig) {
     // Positions in the box's own frame: across, up, along.
     this.drops = Float32Array.from({ length: DROPS * 3 }, (_, i) => this.inBox(i % 3))
     this.flakes = Float32Array.from({ length: FLAKES * 3 }, (_, i) => this.inBox(i % 3))
