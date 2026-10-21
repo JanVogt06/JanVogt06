@@ -25,6 +25,7 @@ import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
 import { soften } from './world/Toy'
 import { TouchPilot } from './world/TouchPilot'
+import { Weather } from './world/Weather'
 import { path, Terrain } from './world/Terrain'
 
 // The script itself took the first part of the bar; the models fill most
@@ -91,10 +92,13 @@ const pilot = new TouchPilot(rover, view)
 soften(stage.scene, [planet.mesh])
 const day = new DayCycle()
 day.lightWindows(stage.scene)
+const weather = new Weather(stage.scene, view)
 
-// Colours the whole scene for the hour.
+// Colours the whole scene for the hour and the weather.
 function paint(delta: number) {
   day.update(delta)
+  weather.update(delta, day.daylight)
+  weather.tint(day.light)
   sky.paint(day.light)
   lights.paint(day.light)
   stage.paint(day.light)
@@ -131,7 +135,7 @@ function frame(delta: number) {
   stage.render()
 }
 
-if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame, day } })
+if (import.meta.env.DEV) Object.assign(window, { planet: { stage, physics, rover, view, lights, input, sites, satellites, ui, frame, day, weather } })
 
 const timer = new THREE.Timer()
 let first = true
