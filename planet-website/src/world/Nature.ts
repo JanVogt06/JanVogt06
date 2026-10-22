@@ -4,6 +4,7 @@ import type { Physics } from './Physics'
 import type { Clearing } from './Props'
 import { random, uprightAt } from './surface'
 import type { Terrain } from './Terrain'
+import { seeThrough } from './Toy'
 
 // How many of each plant or stone to scatter, how big they may be, how far
 // they keep from paths and from each other, and what the rover bumps into.
@@ -57,6 +58,17 @@ export class Nature {
     keepClear: Clearing[],
   ) {
     for (const { direction, distance } of keepClear) this.placed.push({ direction: direction.clone().normalize(), spacing: distance })
+    // Trees thin out in front of the rover. They get their own copies of
+    // the materials they share with grass and bushes, which stay solid.
+    const treeMaterials = new Map<THREE.Material, THREE.Material>()
+    const forTrees = (material: THREE.Material) => {
+      if (!treeMaterials.has(material)) {
+        const copy = material.clone()
+        seeThrough(copy)
+        treeMaterials.set(material, copy)
+      }
+      return treeMaterials.get(material)!
+    }
 
     for (const kind of KINDS) {
       const root = model.getObjectByName(kind.name)
@@ -71,7 +83,8 @@ export class Nature {
       const placements = this.scatter(kind)
       this.placements.set(kind.name, placements)
       for (const part of parts) {
-        const instances = new THREE.InstancedMesh(part.geometry, part.material, placements.length)
+        const material = kind.name.startsWith('Tree_') ? forTrees(part.material as THREE.Material) : part.material
+        const instances = new THREE.InstancedMesh(part.geometry, material, placements.length)
         placements.forEach((placement, i) => instances.setMatrixAt(i, matrix.multiplyMatrices(placement, part.matrixWorld)))
         instances.castShadow = kind.shadow
         instances.receiveShadow = true

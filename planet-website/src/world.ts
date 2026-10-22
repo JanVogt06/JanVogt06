@@ -30,7 +30,7 @@ import { Satellites } from './world/Satellites'
 import { Sky } from './world/Sky'
 import { Stage } from './world/Stage'
 import { Stations } from './world/Stations'
-import { soften } from './world/Toy'
+import { clear, soften } from './world/Toy'
 import { TouchPilot } from './world/TouchPilot'
 import { TourCamera } from './world/TourCamera'
 import { Weather } from './world/Weather'
@@ -52,6 +52,7 @@ const ROUTES = [
 const TAP = 6
 
 const screen = new THREE.Vector3()
+const above = new THREE.Vector3()
 const toCamera = new THREE.Vector3()
 
 // Lets the browser paint before a long stretch of work. A tab in the
@@ -238,6 +239,11 @@ export async function createWorld(report: (fraction: number) => void) {
       sky.update(delta, lights.sunDirection)
     }
     director.update(delta)
+    // Trees between the camera and the rover thin out, while the rover is
+    // what the camera is looking at.
+    above.copy(rover.object.position).normalize()
+    clear.focus.value.copy(rover.object.position).addScaledVector(above, 0.6)
+    clear.radius.value = driving || mode === 'menu' ? 2.4 : 0
     sky.reach(stage.camera.position.length() - planet.radius)
     lights.update()
     if (driving) chart.update()
