@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../content/lang'
 import { StationDetails } from './StationDetails'
 import { ui, useUi } from './store'
 
@@ -39,7 +40,7 @@ export function StationPanel() {
         <div className="panel-content">
           <StationDetails station={station}>
             <button ref={close} className="panel-close" onClick={() => ui.set({ open: null })}>
-              {mode === 'drive' ? 'Weiterfahren' : 'Schließen'} <kbd>Esc</kbd>
+              {mode === 'drive' ? t.panel.drive : t.panel.close} <kbd>Esc</kbd>
             </button>
           </StationDetails>
         </div>

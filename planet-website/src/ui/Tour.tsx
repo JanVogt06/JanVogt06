@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../content/lang'
 import { stations } from '../content/stations'
 import { TOUR } from '../content/tour'
 import { go } from './route'
@@ -28,13 +29,11 @@ export function Tour() {
     <div ref={scroller} className="tour" tabIndex={-1} onScroll={onScroll}>
       <section className="tour-stop tour-intro">
         <div className="tour-card tour-card-left">
-          <p className="panel-kind">Rundflug</p>
-          <h2 className="panel-title">Hallo, ich bin Jan.</h2>
-          <p className="panel-text">
-            Das hier ist mein kleiner Forscher-Planet. Scroll los – die Kamera fliegt dich von Station zu Station.
-          </p>
+          <p className="panel-kind">{t.tour.kind}</p>
+          <h2 className="panel-title">{t.tour.title}</h2>
+          <p className="panel-text">{t.tour.text}</p>
           <p className="tour-hint" aria-hidden="true">
-            Scrollen <span>↓</span>
+            {t.tour.hint} <span>↓</span>
           </p>
         </div>
       </section>
@@ -57,7 +56,7 @@ export function Tour() {
             <StationDetails station={station} brief>
               {(station.body.length > 1 || station.image) && (
                 <button className="panel-close" onClick={() => ui.set({ open: station })}>
-                  Mehr
+                  {t.panel.more}
                 </button>
               )}
             </StationDetails>
@@ -67,15 +66,15 @@ export function Tour() {
 
       <section className="tour-stop tour-outro">
         <div className="tour-card tour-card-center">
-          <p className="panel-kind">Ende des Rundflugs</p>
-          <h2 className="panel-title">Danke fürs Mitfliegen!</h2>
-          <p className="panel-text">Lust, den Planeten selbst zu erkunden? Auf ihm gibt es noch mehr zu entdecken.</p>
+          <p className="panel-kind">{t.tour.endKind}</p>
+          <h2 className="panel-title">{t.tour.endTitle}</h2>
+          <p className="panel-text">{t.tour.endText}</p>
           <div className="panel-actions">
             <button className="panel-link" onClick={() => go('drive')}>
-              Selbst fahren
+              {t.tour.drive}
             </button>
             <button className="panel-close" onClick={() => go('text')}>
-              Alles als Text
+              {t.tour.read}
             </button>
           </div>
         </div>

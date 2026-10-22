@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../content/lang'
 import { minimap, type MapPoint } from './store'
 
 const SIZE = 180
@@ -125,7 +126,7 @@ export function Minimap() {
       context.restore()
 
       const visited = points.filter((point) => point.visited).length
-      const text = `${visited} / ${points.length} entdeckt`
+      const text = `${visited} / ${points.length} ${t.map.found}`
       if (count.current && text !== shown) count.current.textContent = shown = text
     }
     frame = requestAnimationFrame(draw)
@@ -133,7 +134,7 @@ export function Minimap() {
   }, [])
 
   return (
-    <aside className="minimap" aria-label="Karte des Planeten">
+    <aside className="minimap" aria-label={t.map.label}>
       <canvas ref={canvas} style={{ width: SIZE, height: SIZE }} />
       <span ref={count} className="minimap-count" />
     </aside>

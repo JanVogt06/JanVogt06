@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../content/lang'
 import { stations } from '../content/stations'
 import { labels, ui } from './store'
 
@@ -39,7 +40,7 @@ export function PlanetView() {
           {station.title}
         </button>
       ))}
-      <p className="planet-hint">Ziehen zum Drehen · Zoomen mit Rad oder zwei Fingern · Station antippen</p>
+      <p className="planet-hint">{t.planet.hint}</p>
     </>
   )
 }

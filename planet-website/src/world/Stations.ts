@@ -129,6 +129,52 @@ const wallFragment = /* glsl */ `
   }
 `
 
+// Paints a station's name for its brass plate, in the page's language: the
+// lettering baked into the model is German only.
+function nameplate(model: THREE.Object3D, title: string) {
+  let letters: THREE.Mesh | undefined
+  let plate: THREE.Mesh | undefined
+  model.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return
+    if (child.name.endsWith('_PlaqueText')) letters = child
+    else if (child.name.endsWith('_Plaque')) plate = child
+  })
+  if (!letters || !plate) return
+  letters.visible = false
+  model.updateMatrixWorld(true)
+  const bounds = new THREE.Box3().setFromObject(plate)
+  const size = bounds.getSize(new THREE.Vector3())
+  const width = size.x * 0.9
+  const height = size.y * 0.75
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 512
+  canvas.height = Math.round((512 * height) / width)
+  const context = canvas.getContext('2d')!
+  let font = canvas.height * 0.72
+  const face = () => `800 ${font}px ui-rounded, 'SF Pro Rounded', system-ui, sans-serif`
+  context.font = face()
+  while (context.measureText(title).width > canvas.width * 0.92 && font > 10) {
+    font -= 2
+    context.font = face()
+  }
+  context.fillStyle = '#27304a'
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillText(title, canvas.width / 2, canvas.height / 2 + font * 0.05)
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+  texture.anisotropy = 4
+
+  const label = new THREE.Mesh(
+    new THREE.PlaneGeometry(width, height),
+    new THREE.MeshStandardMaterial({ map: texture, transparent: true, roughness: 0.6 }),
+  )
+  bounds.getCenter(label.position)
+  label.position.z = bounds.max.z + 0.003
+  model.add(label)
+}
+
 export interface Site {
   station: Station
   // Holds the model and the bay, in the station's own frame.
@@ -181,6 +227,8 @@ export class Stations {
 
       const model = models[station.id]
       const { plinth, parts, building } = outline(model)
+      // Measured in the model's own frame, before it joins the group.
+      nameplate(model, station.title)
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) child.castShadow = child.receiveShadow = true
       })

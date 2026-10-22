@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { t } from '../content/lang'
 import { tag, useUi } from './store'
 
 // The station's name, floating above it while the rover is close, with a bar
@@ -31,7 +32,7 @@ export function StationTag() {
       {nearby && (
         <>
           <span className="tag-title">{nearby.title}</span>
-          <span className="tag-hint">In der Zone parken</span>
+          <span className="tag-hint">{t.tag.park}</span>
           <div className="tag-track">
             <div ref={bar} className="tag-bar" style={{ background: nearby.colour }} />
           </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { t } from '../content/lang'
 import { drag, touch, useUi } from './store'
 
 // How far a full drag reaches, in pixels; the boost starts beyond it.
@@ -94,23 +95,13 @@ export function TouchControls() {
       </div>
 
       <ul className="touch-legend">
-        <li>
-          <b>Ziehen</b> dahin fahren
-        </li>
-        <li>
-          <b>Nach unten</b> rückwärts
-        </li>
-        <li>
-          <b>Weit ziehen</b> Boost
-        </li>
-        <li>
-          <b>Loslassen</b> anhalten
-        </li>
-        <li>
-          <b>Doppeltippen</b> springen
-        </li>
+        {t.touch.map(([gesture, action]) => (
+          <li key={gesture}>
+            <b>{gesture}</b> {action}
+          </li>
+        ))}
       </ul>
-      <button className="touch-reset" aria-label="Aufrichten" onPointerDown={() => touch.resets++}>
+      <button className="touch-reset" aria-label={t.chrome.keys.reset} onPointerDown={() => touch.resets++}>
         ↻
       </button>
     </>

@@ -23,6 +23,7 @@
 }
 
 .menu-card {
+  position: relative;
   width: min(440px, 100%);
   padding: 28px;
   border: 1px solid rgb(255 255 255 / 0.6);
@@ -38,6 +39,8 @@
 
 .menu-eyebrow {
   margin: 0;
+  /* Clear of the language switch. */
+  padding-right: 48px;
   color: var(--brass);
   font-size: 12px;
   font-weight: 800;
@@ -203,6 +206,33 @@
     margin-top: 4px;
     font-size: 12px;
   }
+}
+
+/* The switch to the other language, top right of the menu card and of
+   the text page. */
+.language {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.6);
+  color: var(--ink);
+  font: 800 12px/1.2 var(--round);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+
+.language:hover,
+.language:focus-visible {
+  border-color: var(--brass);
+  background: #fff;
+}
+
+.text-column > .language {
+  top: clamp(28px, 6vw, 64px);
+  right: 16px;
 }
 
 /* The way back, and loading */
@@ -416,6 +446,7 @@
 }
 
 .text-column {
+  position: relative;
   max-width: 860px;
   margin: 0 auto;
   padding: clamp(28px, 6vw, 64px) 16px 80px;
@@ -465,7 +496,7 @@
   cursor: pointer;
 }
 
-.text-nav button {
+.text-nav .text-home {
   border-color: var(--brick);
   background: var(--brick);
   color: var(--cream);

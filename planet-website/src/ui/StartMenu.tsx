@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { otherLanguage, t } from '../content/lang'
 import { go } from './route'
 import { type Mode, useUi } from './store'
 
@@ -34,12 +35,7 @@ const ICONS: Record<Exclude<Mode, 'menu'>, React.ReactNode> = {
   ),
 }
 
-const CHOICES: { mode: Exclude<Mode, 'menu'>; title: string; text: string; needs3d: boolean }[] = [
-  { mode: 'drive', title: 'Losfahren', text: 'Steuere den Rover über den Planeten und entdecke die Stationen.', needs3d: true },
-  { mode: 'tour', title: 'Rundflug', text: 'Scrolle entspannt von Station zu Station.', needs3d: true },
-  { mode: 'planet', title: 'Planet betrachten', text: 'Dreh den ganzen Planeten und tippe Stationen an.', needs3d: true },
-  { mode: 'text', title: 'Nur Text', text: 'Lebenslauf und Projekte als schlichte Seite.', needs3d: false },
-]
+const CHOICES = (['drive', 'tour', 'planet', 'text'] as const).map((mode) => ({ mode, ...t.menu.choices[mode], needs3d: mode !== 'text' }))
 
 // The way in: who this is and four ways to look round, over the rover
 // waiting on its planet. Until the planet has loaded, its three ways show
@@ -56,11 +52,12 @@ export function StartMenu() {
   return (
     <main className="menu">
       <div className="menu-card">
-        <p className="menu-eyebrow">Willkommen auf dem Forscher-Planeten</p>
+        <a className="language" href={otherLanguage()} hrefLang={t.other.lang} lang={t.other.lang} aria-label={t.other.name}>
+          {t.other.label}
+        </a>
+        <p className="menu-eyebrow">{t.menu.eyebrow}</p>
         <h1 className="menu-title">Jan Vogt</h1>
-        <p className="menu-lead">
-          Informatikstudent in Jena mit einer Schwäche für Mathe und Physik. Wie möchtest du dich umsehen?
-        </p>
+        <p className="menu-lead">{t.menu.lead}</p>
         <ul className="menu-choices">
           {CHOICES.map((choice, i) => {
             const waiting = choice.needs3d && !ready
@@ -78,9 +75,9 @@ export function StartMenu() {
                   <span className="menu-choice-title">{choice.title}</span>
                   <span className="menu-choice-text">
                     {waiting && world === 'failed'
-                      ? '3D lässt sich in diesem Browser nicht laden.'
+                      ? t.menu.failed
                       : waiting
-                        ? `Planet lädt …${progress > 0.02 ? ` ${Math.round(progress * 100)} %` : ''}`
+                        ? `${t.menu.loading}${progress > 0.02 ? ` ${Math.round(progress * 100)} %` : ''}`
                         : choice.text}
                   </span>
                 </button>

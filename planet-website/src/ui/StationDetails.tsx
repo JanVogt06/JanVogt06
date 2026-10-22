@@ -1,12 +1,5 @@
+import { t } from '../content/lang'
 import type { Station } from '../content/stations'
-
-export const KINDS: Record<Station['kind'], string> = {
-  about: 'Über mich',
-  project: 'Projekt',
-  engagement: 'Engagement',
-  awards: 'Auszeichnungen',
-  contact: 'Kontakt',
-}
 
 // What there is to say about a station: its kind, name and tagline, the
 // text, any facts and technologies, and its links. `brief` keeps to the
@@ -15,7 +8,7 @@ export function StationDetails({ station, brief = false, children }: { station: 
   const body = brief ? station.body.slice(0, 1) : station.body
   return (
     <>
-      <p className="panel-kind">{KINDS[station.kind]}</p>
+      <p className="panel-kind">{t.kinds[station.kind]}</p>
       <h2 className="panel-title">{station.title}</h2>
       <p className="panel-tagline">{station.tagline}</p>
 
@@ -34,7 +27,7 @@ export function StationDetails({ station, brief = false, children }: { station: 
       )}
 
       {station.tech && (
-        <ul className="panel-tech" aria-label="Technologien">
+        <ul className="panel-tech" aria-label={t.text.tech}>
           {station.tech.map((name) => (
             <li key={name}>{name}</li>
           ))}

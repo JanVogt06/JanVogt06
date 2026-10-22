@@ -1,3 +1,4 @@
+import { t } from '../content/lang'
 import { go } from './route'
 import { useUi } from './store'
 
@@ -5,7 +6,7 @@ import { useUi } from './store'
 export function MenuButton() {
   return (
     <button className="menu-back" onClick={() => go('menu')}>
-      <span aria-hidden="true">‹</span> Menü
+      <span aria-hidden="true">‹</span> {t.chrome.menu}
     </button>
   )
 }
@@ -19,14 +20,17 @@ export function Loading() {
     <div className="loading" role="status" aria-live="polite">
       {world === 'failed' ? (
         <>
-          <p>Der Planet lässt sich in diesem Browser leider nicht laden.</p>
+          <p>{t.chrome.failed}</p>
           <button className="panel-link" onClick={() => go('text')}>
-            Zur Textfassung
+            {t.chrome.toText}
           </button>
         </>
       ) : (
         <>
-          <p>Planet wird geladen …{progress > 0.02 ? ` ${Math.round(progress * 100)} %` : ''}</p>
+          <p>
+            {t.chrome.loading}
+            {progress > 0.02 ? ` ${Math.round(progress * 100)} %` : ''}
+          </p>
           <div className="loading-track">
             <div className="loading-bar" style={{ transform: `scaleX(${progress})` }} />
           </div>
@@ -44,16 +48,16 @@ export function DriveKeys() {
         <kbd>W</kbd>
         <kbd>A</kbd>
         <kbd>S</kbd>
-        <kbd>D</kbd> Fahren
+        <kbd>D</kbd> {t.chrome.keys.drive}
       </li>
       <li>
-        <kbd>Shift</kbd> Boost
+        <kbd>Shift</kbd> {t.chrome.keys.boost}
       </li>
       <li>
-        <kbd>Leertaste</kbd> Springen
+        <kbd>{t.chrome.keys.space}</kbd> {t.chrome.keys.jump}
       </li>
       <li>
-        <kbd>R</kbd> Aufrichten
+        <kbd>R</kbd> {t.chrome.keys.reset}
       </li>
     </ul>
   )
