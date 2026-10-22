@@ -3,11 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jan Vogt – Informatikstudent</title>
-    <meta
-      name="description"
-      content="Jan Vogt, Informatikstudent in Jena. Fahr mit einem Spielzeug-Rover über einen kleinen Forscher-Planeten, flieg von Station zu Station oder lies alles als Text."
-    />
+    <!-- Title, description, preview image and languages, filled in by the
+         site plugin in vite.config.ts for each language. -->
+    <!--site:head-->
     <meta name="theme-color" content="#8fbbe6" />
     <link rel="icon" type="image/png" href="/src/images/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -68,7 +66,7 @@
     <div id="loader" class="loader" role="status" aria-live="polite">
       <img class="loader-rover" src="/src/images/rover.webp" alt="" width="150" height="142" />
       <p class="loader-name">Jan Vogt</p>
-      <p class="loader-text">Einen Moment …</p>
+      <p class="loader-text"><!--site:loading--></p>
     </div>
     <script>
       // Anything that goes wrong before the page's own screens are up ends
@@ -85,7 +83,9 @@
       addEventListener('unhandledrejection', failed)
     </script>
     <canvas id="world"></canvas>
-    <div id="ui"></div>
+    <!-- The text page, written in by the build for search engines and for
+         readers without JavaScript; the page replaces it on start. -->
+    <div id="ui"><!--site:text--></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
