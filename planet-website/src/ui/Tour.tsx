@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { t } from '../content/lang'
 import { stations } from '../content/stations'
 import { TOUR } from '../content/tour'
-import { go } from './route'
+import { go, point } from './route'
 import { StationDetails } from './StationDetails'
 import { tour, ui } from './store'
 
@@ -14,15 +14,22 @@ const stops = TOUR.map((id) => stations.find((station) => station.id === id)!)
 export function Tour() {
   const scroller = useRef<HTMLDivElement>(null)
 
+  // Starts at the station the address names, if any, else where the tour
+  // was left.
   useEffect(() => {
     const element = scroller.current!
+    const { focus } = ui.get()
+    const stop = focus ? TOUR.indexOf(focus) + 1 : 0
+    if (stop > 0) tour.position = stop
     element.scrollTop = tour.position * element.clientHeight
     element.focus({ preventScroll: true })
   }, [])
 
+  // The address follows the station in view, so it can be shared as is.
   const onScroll = () => {
     const element = scroller.current!
     tour.position = element.scrollTop / element.clientHeight
+    point('tour', TOUR[Math.round(tour.position) - 1] ?? null)
   }
 
   return (

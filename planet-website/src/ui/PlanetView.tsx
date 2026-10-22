@@ -1,12 +1,22 @@
 import { useEffect, useRef } from 'react'
 import { t } from '../content/lang'
 import { stations } from '../content/stations'
-import { labels, ui } from './store'
+import { point } from './route'
+import { labels, ui, useUi } from './store'
 
 // Name labels over the stations facing the camera in the planet view, each
 // a button that opens the station, and a hint on how to turn the planet.
 export function PlanetView() {
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
+  const { open } = useUi()
+
+  // Opens the station the address names, and keeps the address on the
+  // station that is open.
+  useEffect(() => {
+    const station = stations.find((station) => station.id === ui.get().focus)
+    if (station) ui.set({ open: station })
+  }, [])
+  useEffect(() => point('planet', open?.id ?? null), [open])
 
   useEffect(() => {
     let frame = 0

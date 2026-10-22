@@ -160,12 +160,18 @@ export async function createWorld(report: (fraction: number) => void) {
 
   // Only driving takes the keys; the planet view takes the pointer.
   function apply() {
-    const { mode, open } = ui.get()
-    if (mode !== 'text') director.use(rigs[mode])
+    const { mode, open, focus } = ui.get()
+    const focused = sites.sites.find((site) => site.station.id === focus)
+    if (mode === 'planet' && focused && rigs.planet !== lastRig) planetView.face(focused.direction)
+    if (mode !== 'text') {
+      lastRig = rigs[mode]
+      director.use(rigs[mode])
+    }
     input.enabled = mode === 'drive' && !open
     planetView.enabled = mode === 'planet' && !open
     if (mode !== 'drive') ui.set({ nearby: null })
   }
+  let lastRig: Rig | null = null
   ui.subscribe(apply)
   apply()
 

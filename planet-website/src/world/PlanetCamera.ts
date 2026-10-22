@@ -14,6 +14,8 @@ export class PlanetCamera implements Rig {
   readonly up = new THREE.Vector3()
   private stand = new THREE.PerspectiveCamera()
   private controls: OrbitControls
+  // A direction to start out over, instead of over the last view.
+  private aim: THREE.Vector3 | null = null
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -39,9 +41,16 @@ export class PlanetCamera implements Rig {
     this.controls.enabled = on
   }
 
-  // Starts above wherever the camera was, pulled well back.
+  // The next time the planet view opens, it starts over `direction`.
+  face(direction: THREE.Vector3) {
+    this.aim = direction.clone()
+  }
+
+  // Starts above wherever the camera was, or the direction asked for,
+  // pulled well back.
   enter() {
-    this.stand.position.copy(this.camera.position).normalize().multiplyScalar(this.radius * 3.2)
+    this.stand.position.copy(this.aim ?? this.camera.position).normalize().multiplyScalar(this.radius * 3.2)
+    this.aim = null
     this.stand.up.set(0, 1, 0)
     this.controls.target.set(0, 0, 0)
     this.controls.update()

@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { TOUR } from '../content/tour'
-import { tour } from '../ui/store'
+import { tour, ui } from '../ui/store'
 import { lens, type Rig, sideBySide } from './Director'
 import type { Rover } from './Rover'
 import type { Site } from './Stations'
@@ -37,7 +37,11 @@ export class TourCamera implements Rig {
     this.stations = TOUR.map((id) => sites.find((site) => site.station.id === id)!)
   }
 
+  // Starts at the station the address names, if any, else where the tour
+  // was left.
   enter() {
+    const stop = TOUR.indexOf(ui.get().focus ?? '') + 1
+    if (stop > 0) tour.position = stop
     this.position = tour.position
   }
 

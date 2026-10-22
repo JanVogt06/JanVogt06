@@ -8,6 +8,8 @@ export type Mode = 'menu' | 'drive' | 'tour' | 'planet' | 'text'
 
 export interface UiState {
   mode: Mode
+  // A station the address points at, to open the view at.
+  focus: string | null
   // Whether the 3D world has loaded, and how far it has got.
   world: 'idle' | 'loading' | 'ready' | 'failed'
   progress: number
@@ -17,7 +19,7 @@ export interface UiState {
   open: Station | null
 }
 
-let state: UiState = { mode: 'menu', world: 'idle', progress: 0, nearby: null, open: null }
+let state: UiState = { mode: 'menu', focus: null, world: 'idle', progress: 0, nearby: null, open: null }
 const listeners = new Set<() => void>()
 
 export const ui = {

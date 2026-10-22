@@ -182,6 +182,14 @@
   color: var(--paper);
 }
 
+.panel-share {
+  margin-left: auto;
+}
+
+.panel-share + .panel-close {
+  margin-left: 0;
+}
+
 .panel-close {
   margin-left: auto;
   border: 1px solid var(--line);
