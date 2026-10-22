@@ -392,6 +392,57 @@
   }
 }
 
+/* One dot per stop down the right edge, or across the top on a small
+   screen; the current one is longer. */
+.tour-dots {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  z-index: 3;
+  display: grid;
+  gap: 8px;
+  transform: translateY(-50%);
+}
+
+.tour-dots button {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 2px solid rgb(39 48 74 / 0.55);
+  border-radius: 999px;
+  background: rgb(251 246 234 / 0.8);
+  cursor: pointer;
+  transition:
+    height 0.2s ease,
+    background 0.2s ease;
+}
+
+.tour-dots button[aria-current='step'] {
+  height: 24px;
+  border-color: var(--brick);
+  background: var(--brick);
+}
+
+@media (max-aspect-ratio: 1/1), (max-width: 760px) {
+  .tour-dots {
+    top: max(24px, env(safe-area-inset-top));
+    right: 16px;
+    grid-auto-flow: column;
+    gap: 5px;
+    transform: none;
+  }
+
+  .tour-dots button {
+    width: 8px;
+    height: 8px;
+  }
+
+  .tour-dots button[aria-current='step'] {
+    width: 20px;
+    height: 8px;
+  }
+}
+
 /* Planet view */
 
 .planet-label {
@@ -593,5 +644,24 @@
   .text-footer,
   .text-project img {
     display: none;
+  }
+}
+
+/* Less motion when asked for: no rising cards, nudging arrows or lifting
+   buttons. */
+@media (prefers-reduced-motion: reduce) {
+  .menu-card,
+  .tour-hint span {
+    animation: none;
+  }
+
+  .menu-choice,
+  .tour-dots button {
+    transition: none;
+  }
+
+  .menu-choice:hover,
+  .menu-choice:focus-visible {
+    transform: none;
   }
 }

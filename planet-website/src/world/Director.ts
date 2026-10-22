@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { calm } from '../ui/motion'
 
 // A way of placing the camera. Each frame it sets the camera, and says what
 // it is looking at, which way is ahead there and which way is up, so the
@@ -56,7 +57,7 @@ export class Director implements Rig {
     this.fromUp.copy(this.camera.up)
     this.fromFov = this.camera.fov
     rig.enter?.()
-    this.blend = first ? 1 : 0
+    this.blend = first || calm() ? 1 : 0
   }
 
   update(delta: number) {

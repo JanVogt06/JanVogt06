@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { calm } from '../ui/motion'
 import { lens, type Rig, sideBySide } from './Director'
 import type { Rover } from './Rover'
 
@@ -33,7 +34,7 @@ export class MenuCamera implements Rig {
     this.up.copy(at).normalize()
     forward.copy(this.rover.forward).addScaledVector(this.up, -this.rover.forward.dot(this.up)).normalize()
     side.crossVectors(forward, this.up)
-    const angle = 0.45 + 0.4 * Math.sin(this.time * 0.15)
+    const angle = 0.45 + (calm() ? 0 : 0.4 * Math.sin(this.time * 0.15))
     around.copy(forward).multiplyScalar(Math.cos(angle)).addScaledVector(side, Math.sin(angle))
 
     const width = innerWidth

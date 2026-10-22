@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import { calm } from '../ui/motion'
 import { lens, type Rig } from './Director'
 
 const forward = new THREE.Vector3()
@@ -57,6 +58,7 @@ export class PlanetCamera implements Rig {
   }
 
   update(delta: number) {
+    this.controls.autoRotate = !calm()
     this.controls.update(delta)
     this.camera.position.copy(this.stand.position)
     this.camera.quaternion.copy(this.stand.quaternion)

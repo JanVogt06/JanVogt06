@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { TOUR } from '../content/tour'
+import { calm } from '../ui/motion'
 import { tour, ui } from '../ui/store'
 import { lens, type Rig, sideBySide } from './Director'
 import type { Rover } from './Rover'
@@ -47,7 +48,7 @@ export class TourCamera implements Rig {
 
   update(delta: number) {
     const { camera } = this
-    this.position += (tour.position - this.position) * Math.min(1, delta * 5)
+    this.position += (tour.position - this.position) * (calm() ? 1 : Math.min(1, delta * 5))
     const stops = this.stations.length + 2
     const position = THREE.MathUtils.clamp(this.position, 0, stops - 1)
     const index = Math.min(Math.floor(position), stops - 2)
@@ -63,7 +64,7 @@ export class TourCamera implements Rig {
     turn.setFromUnitVectors(from.normalize(), to.normalize())
     const direction = from.applyQuaternion(new THREE.Quaternion().slerp(turn, t))
     // The longer the leg, the higher the arc.
-    const hop = Math.sin(Math.PI * t) * Math.min(apart * this.radius * 0.35, 22)
+    const hop = calm() ? 0 : Math.sin(Math.PI * t) * Math.min(apart * this.radius * 0.35, 22)
     camera.position.copy(direction).multiplyScalar(height + hop)
     this.up.copy(direction)
     camera.up.copy(this.up)

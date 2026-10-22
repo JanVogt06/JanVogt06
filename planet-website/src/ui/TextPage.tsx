@@ -3,6 +3,7 @@ import { lang, otherLanguage, t } from '../content/lang'
 import { stations } from '../content/stations'
 import { textPage } from '../content/textPage'
 import rover from '../images/rover.webp'
+import { calm } from './motion'
 import { go } from './route'
 
 // Everything from the planet as one plain page to read, print or save as a
@@ -33,7 +34,7 @@ export function TextPage() {
     const element = (event.target as HTMLElement).closest<HTMLElement>('[data-jump], [data-go], [data-pdf]')
     if (!element) return
     event.preventDefault()
-    if (element.dataset.jump) document.getElementById(element.dataset.jump)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (element.dataset.jump) document.getElementById(element.dataset.jump)?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' })
     else if (element.dataset.go) go('menu')
   }
 
