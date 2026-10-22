@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 import { catalogue } from './src/content/catalogue'
 import { copies, type Lang } from './src/content/copy'
-import { person } from './src/content/person'
+import { githubUrl, person } from './src/content/person'
 import { textPage } from './src/content/textPage'
 
 const SITE = person.site
@@ -10,6 +10,52 @@ const HOME: Record<Lang, string> = { de: '/', en: '/en/' }
 const ROVER = 'src/images/rover.webp'
 
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+
+// Who the page is about, in the form search engines read for the box
+// beside their results: name, work, study, home town and profiles.
+function profile(lang: Lang, image: string) {
+  const t = copies[lang]
+  const job = t.career.steps.find((step) => step.where === person.employer.name)
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    url: SITE + HOME[lang],
+    inLanguage: lang,
+    name: t.meta.title,
+    mainEntity: {
+      '@type': 'Person',
+      name: person.name,
+      url: SITE + HOME[lang],
+      email: `mailto:${person.email}`,
+      image,
+      description: t.stations.about.tagline,
+      jobTitle: job?.what,
+      worksFor: { '@type': 'Organization', ...person.employer },
+      alumniOf: { '@type': 'CollegeOrUniversity', ...person.university },
+      address: { '@type': 'PostalAddress', addressLocality: person.home, addressCountry: 'DE' },
+      knowsLanguage: t.languages.spoken.map((spoken) => spoken.name),
+      sameAs: [githubUrl(), `https://instagram.com/${person.instagram}`],
+    },
+  }
+  // Kept from closing the script tag early.
+  return `<script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`
+}
+
+// Both pages for search engines to find, each pointing at the other.
+function sitemap() {
+  const today = new Date().toISOString().slice(0, 10)
+  const alternates = (Object.keys(HOME) as Lang[])
+    .map((lang) => `<xhtml:link rel="alternate" hreflang="${lang}" href="${SITE + HOME[lang]}"/>`)
+    .join('')
+  const urls = Object.values(HOME)
+    .map((path) => `<url><loc>${SITE + path}</loc><lastmod>${today}</lastmod>${alternates}</url>`)
+    .join('\n  ')
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  ${urls}
+</urlset>
+`
+}
 
 // Fills index.html in for one language: its title, description, preview
 // image and links to the other language, the loading line, and the text
@@ -33,6 +79,7 @@ function localise(html: string, lang: Lang, asset: (source: string) => string | 
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="${lang === 'en' ? 'en_GB' : 'de_DE'}" />
     <meta name="twitter:card" content="summary_large_image" />
+    ${profile(lang, image)}
     <noscript><style>.loader { display: none }</style></noscript>`
   const images = Object.fromEntries(catalogue.filter((entry) => entry.image).map((entry) => [entry.id, asset(`src/images/${entry.image}`)]))
   const page = textPage(t, { rover: asset(ROVER), images, home: HOME[lang], other: HOME[t.other.lang] + '#text' })
@@ -70,6 +117,8 @@ function site(): Plugin {
     },
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'en/index.html', source: localise(template, 'en', (source) => assets[source]) })
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemap() })
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n` })
     },
   }
 }
