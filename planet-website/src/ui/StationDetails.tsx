@@ -1,6 +1,40 @@
 import { t } from '../content/lang'
 import type { Station } from '../content/stations'
 
+// The way so far, newest first, and the languages spoken: shown with the
+// About station, in the same markup as on the text page.
+function Career({ languages }: { languages: boolean }) {
+  return (
+    <>
+      <h3 className="panel-subtitle">{t.career.title}</h3>
+      <ol className="timeline">
+        {t.career.steps.map((step) => (
+          <li key={step.when}>
+            <span className="timeline-when">{step.when}</span>
+            <span className="timeline-what">
+              <b>{step.what}</b>
+              {step.where && <span>{step.where}</span>}
+            </span>
+          </li>
+        ))}
+      </ol>
+      {languages && (
+        <>
+          <h3 className="panel-subtitle">{t.languages.title}</h3>
+          <dl className="languages">
+            {t.languages.spoken.map((spoken) => (
+              <div key={spoken.name}>
+                <dt>{spoken.name}</dt>
+                <dd>{spoken.level}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
+    </>
+  )
+}
+
 // What there is to say about a station: its kind, name and tagline, the
 // text, any facts and technologies, and its links. `brief` keeps to the
 // first paragraph, for the tour's cards.
@@ -17,6 +51,8 @@ export function StationDetails({ station, brief = false, children }: { station: 
           {paragraph}
         </p>
       ))}
+
+      {station.kind === 'about' && <Career languages={!brief} />}
 
       {station.facts && (
         <ul className="panel-facts">

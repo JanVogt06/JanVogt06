@@ -36,6 +36,16 @@ export function textPage(t: Copy, assets: PageAssets) {
       : ''
   const paragraphs = (id: StationId) => words(id).body.map((paragraph) => `<p>${escape(paragraph)}</p>`).join('')
   const entry = (id: StationId) => catalogue.find((item) => item.id === id)!
+  const career = `<ol class="timeline">${t.career.steps
+    .map(
+      (step) => `<li><span class="timeline-when">${escape(step.when)}</span><span class="timeline-what"><b>${escape(step.what)}</b>${
+        step.where ? `<span>${escape(step.where)}</span>` : ''
+      }</span></li>`,
+    )
+    .join('')}</ol>`
+  const languages = `<dl class="languages">${t.languages.spoken
+    .map((spoken) => `<div><dt>${escape(spoken.name)}</dt><dd>${escape(spoken.level)}</dd></div>`)
+    .join('')}</dl>`
 
   const projects = catalogue
     .filter((item) => item.kind === 'project')
@@ -82,7 +92,12 @@ export function textPage(t: Copy, assets: PageAssets) {
 
     <section class="text-section" aria-labelledby="ueber-mich">
       <h2 id="ueber-mich">${escape(t.text.sections.about)}</h2>
-      ${paragraphs('about')}${list(about.facts)}${tech(entry('about'))}
+      ${paragraphs('about')}
+    </section>
+
+    <section class="text-section" aria-labelledby="werdegang">
+      <h2 id="werdegang">${escape(t.career.title)}</h2>
+      ${career}
     </section>
 
     <section class="text-section" aria-labelledby="${SECTIONS.projects}">
@@ -91,6 +106,11 @@ export function textPage(t: Copy, assets: PageAssets) {
     </section>
 
     ${side}
+
+    <section class="text-section" aria-labelledby="sprachen">
+      <h2 id="sprachen">${escape(t.languages.title)}</h2>
+      ${languages}
+    </section>
 
     <section class="text-section" aria-labelledby="${SECTIONS.contact}">
       <h2 id="${SECTIONS.contact}">${escape(t.text.sections.contact)}</h2>

@@ -74,6 +74,16 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
     }
     y += height
   }
+  // Two columns: a narrow one for the date or name, the rest for the text.
+  const row = (left: string, title: string, detail?: string, style = 'bold') => {
+    room(detail ? 10 : 6)
+    const top = y
+    write(left, 10, BRICK, 'bold')
+    y = top
+    write(title, 10, INK, style, 32)
+    if (detail) write(detail, 10, SOFT, 'normal', 32)
+    gap(1.6)
+  }
   const gap = (size: number) => (y += size)
   const heading = (text: string) => {
     gap(5)
@@ -118,7 +128,9 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
     write(paragraph, 10.5)
     gap(2)
   }
-  bullets(t.stations.about.facts)
+
+  heading(t.career.title)
+  for (const step of t.career.steps) row(step.when, step.what, step.where)
 
   heading(t.text.sections.projects)
   for (const entry of catalogue.filter((item) => item.kind === 'project')) {
@@ -143,8 +155,8 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
     bullets(t.stations[id].facts)
   }
 
-  heading(t.text.tech)
-  write(catalogue.find((entry) => entry.id === 'about')!.tech!.join(' · '), 10)
+  heading(t.languages.title)
+  for (const spoken of t.languages.spoken) row(spoken.name, spoken.level, undefined, 'normal')
 
   return doc
 }

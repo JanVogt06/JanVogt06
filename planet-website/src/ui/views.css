@@ -483,6 +483,74 @@
   pointer-events: none;
 }
 
+/* The way so far and the languages, in the About panel and on the text
+   page. */
+.panel-subtitle {
+  margin: 18px 0 8px;
+  color: var(--brass);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timeline {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 12px;
+}
+
+.timeline-when {
+  color: var(--brick);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timeline-what {
+  display: grid;
+}
+
+.timeline-what span {
+  color: var(--ink-soft);
+}
+
+.languages {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.languages div {
+  display: grid;
+  grid-template-columns: 7.5em 1fr;
+  gap: 12px;
+}
+
+.languages dt {
+  font-weight: 700;
+}
+
+.languages dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 420px) {
+  .timeline li,
+  .languages div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
 /* Text page */
 
 .text-page {

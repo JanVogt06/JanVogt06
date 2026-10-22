@@ -25,6 +25,13 @@ export interface StationCopy {
 
 type Views = 'drive' | 'tour' | 'planet' | 'text'
 
+// A step along the way: when, what, and where or with what result.
+export interface Step {
+  when: string
+  what: string
+  where?: string
+}
+
 export interface Copy {
   meta: { title: string; textTitle: string; description: string; loading: string }
   // The other language, for the switch.
@@ -40,6 +47,8 @@ export interface Copy {
   map: { label: string; found: string }
   text: { sections: { about: string; projects: string; contact: string }; nav: string; toPlanet: string; footer: string; rover: string; pdf: string; tech: string }
   links: { live: string; github: string; play: string; instagram: string }
+  career: { title: string; steps: Step[] }
+  languages: { title: string; spoken: { name: string; level: string }[] }
   stations: Record<StationId, StationCopy>
 }
 
@@ -48,13 +57,13 @@ const de: Copy = {
     title: 'Jan Vogt – Informatik in Jena',
     textTitle: 'Jan Vogt – Lebenslauf und Projekte',
     description:
-      'Jan Vogt studiert Informatik in Jena und pfeift am Wochenende Fußball. Fahr mit einem kleinen Rover über seinen Planeten und schau dir seine Projekte an – oder lies alles als Text.',
+      'Jan Vogt studiert Informatik in Jena, ist Werkstudent bei ZEISS und pfeift am Wochenende Fußball. Fahr mit einem kleinen Rover über seinen Planeten und schau dir seine Projekte an – oder lies alles als Text.',
     loading: 'Einen Moment …',
   },
   other: { lang: 'en', label: 'EN', name: 'English' },
   menu: {
     eyebrow: 'Willkommen auf meinem kleinen Planeten',
-    lead: 'Ich studiere Informatik in Jena, pfeife am Wochenende Fußballspiele und baue nebenbei Software – oft für genau die Dinge, die mich im Alltag nerven.',
+    lead: 'Ich studiere Informatik in Jena, arbeite als Werkstudent bei ZEISS und pfeife am Wochenende Fußballspiele. Hier findest du, woran ich nebenbei baue.',
     choices: {
       drive: { title: 'Losfahren', text: 'Mit dem Rover über den Planeten fahren und die Stationen abklappern.' },
       tour: { title: 'Rundflug', text: 'Zurücklehnen und von Station zu Station scrollen.' },
@@ -105,16 +114,32 @@ const de: Copy = {
     tech: 'Technologien',
   },
   links: { live: 'Live ansehen', github: 'GitHub', play: 'Spielen', instagram: 'Instagram' },
+  career: {
+    title: 'Werdegang',
+    steps: [
+      { when: 'seit 02/2026', what: 'Werkstudent Softwareentwicklung', where: 'Carl Zeiss Meditec AG' },
+      { when: 'seit 10/2024', what: 'Studium Informatik (B.Sc.)', where: 'Friedrich-Schiller-Universität Jena' },
+      { when: '2016–2024', what: 'Marie-Curie-Gymnasium Bad Berka', where: 'Allgemeine Hochschulreife, Durchschnittsnote 1,1' },
+      { when: '2012–2016', what: 'Grundschule „Am Hexenberg“', where: 'Bad Berka' },
+    ],
+  },
+  languages: {
+    title: 'Sprachen',
+    spoken: [
+      { name: 'Deutsch', level: 'Muttersprache' },
+      { name: 'Englisch', level: 'B2/C1' },
+      { name: 'Latein', level: 'Großes Latinum' },
+    ],
+  },
   stations: {
     about: {
       title: 'Über mich',
-      tagline: 'Informatik in Jena, Fußball am Wochenende',
+      tagline: 'Informatik in Jena, Werkstudent bei ZEISS',
       alt: 'Jan beim Skifahren im Schnee',
       body: [
-        'Ich bin Jan, studiere seit 2024 Informatik an der Friedrich-Schiller-Universität Jena und wohne in Bad Berka.',
-        'Am liebsten baue ich Dinge, die man gleich ausprobieren kann: eine Tsunami-Simulation, einen Satelliten-Globus im Browser oder ein Tool, das mir als Schiedsrichter die Spesenabrechnung abnimmt. Diese Seite ist auch so ein Ding.',
+        'Ich bin Jan, komme aus Bad Berka und studiere seit 2024 Informatik an der Friedrich-Schiller-Universität Jena. Seit Februar 2026 arbeite ich nebenher als Werkstudent in der Softwareentwicklung bei Carl Zeiss Meditec.',
+        'Viele meiner Projekte haben einen ganz konkreten Anlass – Spesenfuchs und PicHunter zum Beispiel sind aus meinem Alltag als Schiedsrichter entstanden. Auf diesem Planeten findest du eine Auswahl davon.',
       ],
-      facts: ['B.Sc. Informatik in Jena, seit Oktober 2024', 'Zuhause in Bad Berka, Thüringen'],
     },
     riptide: {
       title: 'Riptide',
@@ -187,8 +212,8 @@ const de: Copy = {
         'Marie-Curie-Preis (2022)',
         'DMV-Abiturpreis Mathematik (2024)',
         'DPG-Abiturpreis Physik (2024)',
-        '2. Platz Thüringer Physikolympiade (Klasse 10)',
-        '3. Platz Thüringer Physikolympiade (Klasse 12)',
+        '2. Platz Endrunde Thüringer Physikolympiade (Klasse 10)',
+        '3. Platz Endrunde Thüringer Physikolympiade (Klasse 12)',
       ],
     },
     contact: {
@@ -204,13 +229,13 @@ const en: Copy = {
     title: 'Jan Vogt – Computer science in Jena',
     textTitle: 'Jan Vogt – CV and projects',
     description:
-      'Jan Vogt studies computer science in Jena and referees football at the weekend. Drive a little rover across his planet and look at his projects – or just read it all as text.',
+      'Jan Vogt studies computer science in Jena, works as a student developer at ZEISS and referees football at the weekend. Drive a little rover across his planet and look at his projects – or just read it all as text.',
     loading: 'Just a moment …',
   },
   other: { lang: 'de', label: 'DE', name: 'Deutsch' },
   menu: {
     eyebrow: 'Welcome to my little planet',
-    lead: 'I study computer science in Jena, referee football matches at the weekend and build software on the side – often for exactly the things that bug me day to day.',
+    lead: 'I study computer science in Jena, work as a student software developer at ZEISS and referee football matches at the weekend. Here’s what I build on the side.',
     choices: {
       drive: { title: 'Drive', text: 'Take the rover across the planet and visit the stations.' },
       tour: { title: 'Fly-through', text: 'Sit back and scroll from station to station.' },
@@ -261,16 +286,32 @@ const en: Copy = {
     tech: 'Technologies',
   },
   links: { live: 'See it live', github: 'GitHub', play: 'Play', instagram: 'Instagram' },
+  career: {
+    title: 'Education and work',
+    steps: [
+      { when: 'since 02/2026', what: 'Working student, software development', where: 'Carl Zeiss Meditec AG' },
+      { when: 'since 10/2024', what: 'B.Sc. Computer Science', where: 'Friedrich Schiller University Jena' },
+      { when: '2016–2024', what: 'Marie-Curie-Gymnasium Bad Berka', where: 'Abitur (university entrance qualification), grade 1.1' },
+      { when: '2012–2016', what: 'Primary school “Am Hexenberg”', where: 'Bad Berka' },
+    ],
+  },
+  languages: {
+    title: 'Languages',
+    spoken: [
+      { name: 'German', level: 'native' },
+      { name: 'English', level: 'B2/C1' },
+      { name: 'Latin', level: 'Großes Latinum (advanced Latin certificate)' },
+    ],
+  },
   stations: {
     about: {
       title: 'About me',
-      tagline: 'Computer science in Jena, football at the weekend',
+      tagline: 'Computer science in Jena, working student at ZEISS',
       alt: 'Jan skiing in the snow',
       body: [
-        'I’m Jan. I’ve been studying computer science at Friedrich Schiller University Jena since 2024 and live in Bad Berka, Thuringia.',
-        'I like building things you can try out straight away: a tsunami simulation, a satellite globe in the browser, or a tool that does my expense claims as a referee for me. This site is one of those things too.',
+        'I’m Jan, from Bad Berka in Thuringia, and I’ve been studying computer science at Friedrich Schiller University Jena since 2024. Since February 2026 I’ve also been working as a student software developer at Carl Zeiss Meditec.',
+        'Most of my projects start with a concrete reason – Spesenfuchs and PicHunter, for example, came out of my weekends as a referee. You’ll find a selection of them on this planet.',
       ],
-      facts: ['B.Sc. Computer Science in Jena, since October 2024', 'Home in Bad Berka, Thuringia'],
     },
     riptide: {
       title: 'Riptide',
@@ -343,8 +384,8 @@ const en: Copy = {
         'Marie Curie Prize (2022)',
         'DMV Abitur Prize in Mathematics (2024)',
         'DPG Abitur Prize in Physics (2024)',
-        '2nd place, Thuringian Physics Olympiad (year 10)',
-        '3rd place, Thuringian Physics Olympiad (year 12)',
+        '2nd place, final round of the Thuringian Physics Olympiad (year 10)',
+        '3rd place, final round of the Thuringian Physics Olympiad (year 12)',
       ],
     },
     contact: {
