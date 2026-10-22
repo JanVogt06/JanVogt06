@@ -28,7 +28,6 @@ export const catalogue: Entry[] = [
     colour: '#f2efe6',
     place: { lat: 74, lon: 0 },
     focus: '50% 20%',
-    tech: ['C', 'C++', 'C#', 'Java', 'Python', 'JavaScript', 'TypeScript', 'Unity', 'React', 'FastAPI', 'Django', 'OpenGL', 'Docker', 'Git'],
   },
   {
     id: 'riptide',
