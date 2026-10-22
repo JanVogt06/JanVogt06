@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf'
 import { catalogue, linkLabel } from '../content/catalogue'
 import { lang, t } from '../content/lang'
+import { githubUrl, person } from '../content/person'
 import rover from '../images/rover.webp'
 
 // A4 in millimetres, with the colours of the site.
@@ -107,7 +108,7 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
   // Name, line and contact, with the rover beside them.
   const { data, ratio } = picture ?? (await roverImage())
   doc.addImage(data, 'JPEG', PAGE.width - PAGE.margin - 34, y - 2, 34, 34 * ratio)
-  write('Jan Vogt', 26, INK, 'bold')
+  write(person.name, 26, INK, 'bold')
   gap(1)
   write(t.stations.about.tagline, 12, SOFT)
   gap(2)
@@ -115,8 +116,8 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
   linkRow(
     [
       { text: linkLabel(mail, t.links), url: mail.href },
-      { text: 'jan-vogt.dev', url: 'https://jan-vogt.dev' + (lang === 'en' ? '/en/' : '/') },
-      { text: 'github.com/JanVogt06', url: 'https://github.com/JanVogt06' },
+      { text: person.site.replace('https://', ''), url: person.site + (lang === 'en' ? '/en/' : '/') },
+      { text: githubUrl().replace('https://', ''), url: githubUrl() },
     ],
     9.5,
     'bold',
@@ -163,5 +164,5 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
 
 export async function downloadCv() {
   const doc = await writeCv()
-  doc.save(lang === 'en' ? 'Jan_Vogt_CV.pdf' : 'Jan_Vogt_Lebenslauf.pdf')
+  doc.save(`${person.name.replace(/ /g, '_')}_${lang === 'en' ? 'CV' : 'Lebenslauf'}.pdf`)
 }

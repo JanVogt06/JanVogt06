@@ -1,23 +1,12 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
-import { copies, type Lang, type StationId } from './src/content/copy'
+import { catalogue } from './src/content/catalogue'
+import { copies, type Lang } from './src/content/copy'
+import { person } from './src/content/person'
 import { textPage } from './src/content/textPage'
 
-const SITE = 'https://jan-vogt.dev'
+const SITE = person.site
 const HOME: Record<Lang, string> = { de: '/', en: '/en/' }
-
-// Where each station's picture comes from, to find its built address.
-const IMAGES: Partial<Record<StationId, string>> = {
-  about: 'src/images/station_01_mein_weg.webp',
-  riptide: 'src/images/screenshots/riptide.webp',
-  sattrak: 'src/images/screenshots/sattrak.webp',
-  solarflow: 'src/images/screenshots/solarflow.webp',
-  spesen: 'src/images/screenshots/spesen-generator.webp',
-  pichunter: 'src/images/screenshots/pichunter.webp',
-  cryptborne: 'src/images/screenshots/cryptborne.webp',
-  engagement: 'src/images/station_02_neben_dem_studium.webp',
-  awards: 'src/images/station_03_meine_auszeichnungen.webp',
-}
 const ROVER = 'src/images/rover.webp'
 
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
@@ -45,12 +34,13 @@ function localise(html: string, lang: Lang, asset: (source: string) => string | 
     <meta property="og:locale" content="${lang === 'en' ? 'en_GB' : 'de_DE'}" />
     <meta name="twitter:card" content="summary_large_image" />
     <noscript><style>.loader { display: none }</style></noscript>`
-  const images = Object.fromEntries(Object.entries(IMAGES).map(([id, source]) => [id, asset(source)]))
+  const images = Object.fromEntries(catalogue.filter((entry) => entry.image).map((entry) => [entry.id, asset(`src/images/${entry.image}`)]))
   const page = textPage(t, { rover: asset(ROVER), images, home: HOME[lang], other: HOME[t.other.lang] + '#text' })
   return html
     .replace('<html lang="de">', `<html lang="${lang}">`)
     .replace('<!--site:head-->', head)
     .replace('<!--site:loading-->', escape(t.meta.loading))
+    .replace('<!--site:name-->', escape(person.name))
     .replace('<!--site:text-->', `<div class="text-page">${page}</div>`)
 }
 

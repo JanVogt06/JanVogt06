@@ -1,5 +1,6 @@
 import { catalogue, linkLabel, type Entry } from './catalogue'
 import type { Copy, StationId } from './copy'
+import { person } from './person'
 
 // Where the pictures are, which differs between the page and the build,
 // and which address leads back to the planet.
@@ -78,7 +79,7 @@ export function textPage(t: Copy, assets: PageAssets) {
     <header class="text-header">
       ${assets.rover ? `<img class="text-rover" src="${assets.rover}" alt="${escape(t.text.rover)}" width="160" height="151">` : ''}
       <div>
-        <h1 class="text-name">Jan Vogt</h1>
+        <h1 class="text-name">${escape(person.name)}</h1>
         <p class="text-role">${escape(about.tagline)}</p>
         <nav class="text-nav" aria-label="${escape(t.text.nav)}">
           <a href="#${SECTIONS.projects}" data-jump="${SECTIONS.projects}">${escape(t.text.sections.projects)}</a>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { lang, t } from '../content/lang'
+import { person } from '../content/person'
 import type { Station } from '../content/stations'
 import { hashFor } from './route'
 import { StationDetails } from './StationDetails'
@@ -12,7 +13,7 @@ function Share({ station }: { station: Station }) {
   const share = async () => {
     const url = `${location.origin}${lang === 'en' ? '/en/' : '/'}${hashFor('tour', station.id)}`
     if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-      await navigator.share({ title: `${station.title} – Jan Vogt`, url }).catch(() => {})
+      await navigator.share({ title: `${station.title} – ${person.name}`, url }).catch(() => {})
       return
     }
     await navigator.clipboard.writeText(url)

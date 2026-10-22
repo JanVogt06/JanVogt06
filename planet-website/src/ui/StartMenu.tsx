@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { otherLanguage, t } from '../content/lang'
+import { person } from '../content/person'
 import { go } from './route'
 import { type Mode, useUi } from './store'
 
@@ -56,7 +57,7 @@ export function StartMenu() {
           {t.other.label}
         </a>
         <p className="menu-eyebrow">{t.menu.eyebrow}</p>
-        <h1 className="menu-title">Jan Vogt</h1>
+        <h1 className="menu-title">{person.name}</h1>
         <p className="menu-lead">{t.menu.lead}</p>
         <ul className="menu-choices">
           {CHOICES.map((choice, i) => {

@@ -1,5 +1,7 @@
-// Every word on the site, in German and English. Plain data with no
-// imports, so the build can read it too when it writes the static page.
+// Every word on the site, in German and English. Plain data, so the build
+// can read it too when it writes the static page.
+
+import { person } from './person'
 
 export type Lang = 'de' | 'en'
 export type StationId =
@@ -54,10 +56,10 @@ export interface Copy {
 
 const de: Copy = {
   meta: {
-    title: 'Jan Vogt – Informatik in Jena',
-    textTitle: 'Jan Vogt – Lebenslauf und Projekte',
+    title: `${person.name} – Informatik in Jena`,
+    textTitle: `${person.name} – Lebenslauf und Projekte`,
     description:
-      'Jan Vogt studiert Informatik in Jena, ist Werkstudent bei ZEISS und pfeift am Wochenende Fußball. Fahr mit einem kleinen Rover über seinen Planeten und schau dir seine Projekte an – oder lies alles als Text.',
+      `${person.name} studiert Informatik in Jena, ist Werkstudent bei ZEISS und pfeift am Wochenende Fußball. Fahr mit einem kleinen Rover über seinen Planeten und schau dir seine Projekte an – oder lies alles als Text.`,
     loading: 'Einen Moment …',
   },
   other: { lang: 'en', label: 'EN', name: 'English' },
@@ -229,10 +231,10 @@ const de: Copy = {
 
 const en: Copy = {
   meta: {
-    title: 'Jan Vogt – Computer science in Jena',
-    textTitle: 'Jan Vogt – CV and projects',
+    title: `${person.name} – Computer science in Jena`,
+    textTitle: `${person.name} – CV and projects`,
     description:
-      'Jan Vogt studies computer science in Jena, works as a student developer at ZEISS and referees football at the weekend. Drive a little rover across his planet and look at his projects – or just read it all as text.',
+      `${person.name} studies computer science in Jena, works as a student developer at ZEISS and referees football at the weekend. Drive a little rover across his planet and look at his projects – or just read it all as text.`,
     loading: 'Just a moment …',
   },
   other: { lang: 'de', label: 'DE', name: 'Deutsch' },
