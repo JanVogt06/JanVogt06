@@ -40,6 +40,7 @@ export interface Copy {
   other: { lang: Lang; label: string; name: string }
   menu: { eyebrow: string; lead: string; choices: Record<Views, { title: string; text: string }>; loading: string; failed: string }
   kinds: { about: string; project: string; engagement: string; awards: string; contact: string }
+  made: { team: string; solo: string; uni: string; learning: string }
   panel: { close: string; drive: string; more: string; share: string; copied: string }
   tour: { kind: string; title: string; text: string; hint: string; endKind: string; endTitle: string; endText: string; drive: string; read: string; stops: string }
   planet: { hint: string }
@@ -76,6 +77,7 @@ const de: Copy = {
     failed: '3D lässt sich in diesem Browser nicht laden.',
   },
   kinds: { about: 'Über mich', project: 'Projekt', engagement: 'Engagement', awards: 'Auszeichnungen', contact: 'Kontakt' },
+  made: { team: 'Im Team', solo: 'Allein entwickelt', uni: 'Uni-Projekt', learning: 'Lernprojekt' },
   panel: { close: 'Schließen', drive: 'Weiterfahren', more: 'Mehr', share: 'Link teilen', copied: 'Link kopiert' },
   tour: {
     kind: 'Rundflug',
@@ -252,6 +254,7 @@ const en: Copy = {
     failed: '3D won’t load in this browser.',
   },
   kinds: { about: 'About me', project: 'Project', engagement: 'Off the screen', awards: 'Awards', contact: 'Contact' },
+  made: { team: 'With a team', solo: 'Solo', uni: 'University project', learning: 'Learning project' },
   panel: { close: 'Close', drive: 'Drive on', more: 'More', share: 'Share link', copied: 'Link copied' },
   tour: {
     kind: 'Fly-through',

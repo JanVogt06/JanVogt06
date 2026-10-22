@@ -19,6 +19,8 @@ export interface Entry {
   image?: string
   focus?: string
   tech?: string[]
+  // Who made a project, and what for if it was not just for fun.
+  made?: { with: 'team' | 'solo'; for?: 'uni' | 'learning' }
   links?: { kind: LinkKind; href: string }[]
 }
 
@@ -36,6 +38,7 @@ export const catalogue: Entry[] = [
   {
     id: 'riptide',
     kind: 'project',
+    made: { with: 'team', for: 'uni' },
     colour: '#5b9bd5',
     place: { lat: 38, lon: 40 },
     image: 'screenshots/riptide.webp',
@@ -45,6 +48,7 @@ export const catalogue: Entry[] = [
   {
     id: 'sattrak',
     kind: 'project',
+    made: { with: 'team', for: 'uni' },
     colour: '#7b6fd6',
     place: { lat: 38, lon: 112 },
     image: 'screenshots/sattrak.webp',
@@ -54,6 +58,7 @@ export const catalogue: Entry[] = [
   {
     id: 'solarflow',
     kind: 'project',
+    made: { with: 'solo' },
     colour: '#e9c46a',
     place: { lat: 38, lon: 184 },
     image: 'screenshots/solarflow.webp',
@@ -63,6 +68,7 @@ export const catalogue: Entry[] = [
   {
     id: 'spesen',
     kind: 'project',
+    made: { with: 'solo' },
     colour: '#8ab17d',
     place: { lat: 38, lon: 256 },
     image: 'screenshots/spesen-generator.webp',
@@ -72,6 +78,7 @@ export const catalogue: Entry[] = [
   {
     id: 'pichunter',
     kind: 'project',
+    made: { with: 'solo' },
     colour: '#e76f51',
     place: { lat: -6, lon: 220 },
     image: 'screenshots/pichunter.webp',
@@ -81,6 +88,7 @@ export const catalogue: Entry[] = [
   {
     id: 'cryptborne',
     kind: 'project',
+    made: { with: 'team', for: 'learning' },
     colour: '#6b5b73',
     place: { lat: -6, lon: 292 },
     image: 'screenshots/cryptborne.webp',
@@ -115,6 +123,13 @@ export const catalogue: Entry[] = [
     ],
   },
 ]
+
+// The line above a station's name: its kind, or for a project what it was
+// made for and with whom.
+export function madeLabel(entry: Pick<Entry, 'kind' | 'made'>, kinds: Record<StationKind, string>, made: Record<'team' | 'solo' | 'uni' | 'learning', string>) {
+  if (!entry.made) return kinds[entry.kind]
+  return `${entry.made.for ? made[entry.made.for] : kinds[entry.kind]} · ${made[entry.made.with]}`
+}
 
 // The label to show for a link.
 export function linkLabel(link: { kind: LinkKind; href: string }, labels: Record<Exclude<LinkKind, 'mail'>, string>) {

@@ -687,6 +687,15 @@
   padding: 16px 18px 18px;
 }
 
+.text-made {
+  margin: 0 0 2px !important;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .text-project h3 {
   margin: 0;
   font-size: 20px;

@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf'
-import { catalogue, linkLabel } from '../content/catalogue'
+import { catalogue, linkLabel, madeLabel } from '../content/catalogue'
 import { lang, t } from '../content/lang'
 import { githubUrl, person } from '../content/person'
 import rover from '../images/rover.webp'
@@ -138,6 +138,8 @@ export async function writeCv(picture?: { data: string; ratio: number }) {
     const words = t.stations[entry.id]
     room(22)
     write(`${words.title}  –  ${words.tagline}`, 11.5, INK, 'bold')
+    gap(0.4)
+    write(madeLabel(entry, t.kinds, t.made), 9, BRICK, 'bold')
     gap(0.8)
     write(words.body.join(' '), 10, INK)
     if (entry.tech) {

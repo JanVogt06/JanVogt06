@@ -1,4 +1,4 @@
-import { catalogue, linkLabel, type Entry } from './catalogue'
+import { catalogue, linkLabel, madeLabel, type Entry } from './catalogue'
 import type { Copy, StationId } from './copy'
 import { person } from './person'
 
@@ -56,6 +56,7 @@ export function textPage(t: Copy, assets: PageAssets) {
       return `<article class="text-project" style="--accent: ${item.colour}">
         ${image ? `<img src="${image}" alt="${escape(w.alt ?? '')}" loading="lazy">` : ''}
         <div>
+          <p class="text-made">${escape(madeLabel(item, t.kinds, t.made))}</p>
           <h3>${escape(w.title)}</h3>
           <p class="text-tagline">${escape(w.tagline)}</p>
           ${paragraphs(item.id)}${tech(item)}${links(item)}

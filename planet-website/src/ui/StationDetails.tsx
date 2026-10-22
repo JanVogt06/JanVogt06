@@ -1,3 +1,4 @@
+import { madeLabel } from '../content/catalogue'
 import { t } from '../content/lang'
 import type { Station } from '../content/stations'
 
@@ -42,7 +43,7 @@ export function StationDetails({ station, brief = false, children }: { station: 
   const body = brief ? station.body.slice(0, 1) : station.body
   return (
     <>
-      <p className="panel-kind">{t.kinds[station.kind]}</p>
+      <p className="panel-kind">{madeLabel(station, t.kinds, t.made)}</p>
       <h2 className="panel-title">{station.title}</h2>
       <p className="panel-tagline">{station.tagline}</p>
 
