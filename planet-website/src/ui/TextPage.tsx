@@ -36,6 +36,8 @@ export function TextPage() {
     event.preventDefault()
     if (element.dataset.jump) document.getElementById(element.dataset.jump)?.scrollIntoView({ behavior: calm() ? 'auto' : 'smooth', block: 'start' })
     else if (element.dataset.go) go('menu')
+    // Drawn on demand, so the PDF library only loads for those who ask.
+    else import('./cv').then(({ downloadCv }) => downloadCv())
   }
 
   return <div className="text-page" onClick={onClick} dangerouslySetInnerHTML={{ __html: html }} />
