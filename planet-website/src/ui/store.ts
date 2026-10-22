@@ -17,9 +17,11 @@ export interface UiState {
   nearby: Station | null
   // The station whose panel is open. The world holds still while it is.
   open: Station | null
+  // Whether it is night on the planet.
+  night: boolean
 }
 
-let state: UiState = { mode: 'menu', focus: null, world: 'idle', progress: 0, nearby: null, open: null }
+let state: UiState = { mode: 'menu', focus: null, world: 'idle', progress: 0, nearby: null, open: null, night: false }
 const listeners = new Set<() => void>()
 
 export const ui = {
@@ -73,6 +75,9 @@ export const drag = { active: false, x: 0, y: 0, used: false }
 // How far down the tour the page has scrolled, in stops: 0 at the first,
 // 1 at the second and so on. The tour's camera reads it every frame.
 export const tour = { position: 0 }
+
+// A time of day the visitor picked, for the world to hurry on to.
+export const clock = { wish: null as 'day' | 'night' | null }
 
 // Where each station's label sits on screen in the planet view, written by
 // the world every frame and drawn by the labels on their own frame.

@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client'
-import { DriveKeys, Loading, MenuButton } from './Chrome'
+import { Corner, DriveKeys, Loading } from './Chrome'
 import { Minimap } from './Minimap'
 import { PlanetView } from './PlanetView'
 import { StartMenu } from './StartMenu'
@@ -31,7 +31,7 @@ function App() {
       {mode === 'text' && <TextPage />}
       {mode !== 'menu' && mode !== 'text' && (
         <>
-          <MenuButton />
+          <Corner />
           <Loading />
         </>
       )}

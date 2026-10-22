@@ -237,19 +237,42 @@
 
 /* The way back, and loading */
 
-.menu-back {
+.corner {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
   left: 16px;
   z-index: 5;
-  padding: 8px 16px 8px 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.menu-back,
+.sky-button {
   border: 0;
   border-radius: 999px;
   background: rgb(251 246 234 / 0.92);
   box-shadow: 0 6px 20px rgb(39 48 74 / 0.2);
+  cursor: pointer;
+}
+
+.sky-button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  transition: transform 0.2s ease;
+}
+
+.sky-button:hover,
+.sky-button:focus-visible {
+  transform: rotate(-12deg) scale(1.06);
+}
+
+.menu-back {
+  padding: 8px 16px 8px 12px;
   color: var(--ink);
   font: 700 14px/1.2 var(--round);
-  cursor: pointer;
 }
 
 .menu-back span {
@@ -724,12 +747,15 @@
   }
 
   .menu-choice,
-  .tour-dots button {
+  .tour-dots button,
+  .sky-button {
     transition: none;
   }
 
   .menu-choice:hover,
-  .menu-choice:focus-visible {
+  .menu-choice:focus-visible,
+  .sky-button:hover,
+  .sky-button:focus-visible {
     transform: none;
   }
 }

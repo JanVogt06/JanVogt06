@@ -73,6 +73,26 @@ export class DayCycle {
   // Where in the day it is, from 0 at noon round to 1.
   phase = 0.9
   private windows: THREE.MeshStandardMaterial[] = []
+  // A time the visitor asked for, which the day hurries on to.
+  private hurry: { from: number; ahead: number; time: number } | null = null
+  private static readonly HURRY = 3
+
+  // Noon and midnight, for the visitor to pick.
+  static readonly NOON = 0
+  static readonly MIDNIGHT = 0.5
+
+  // Whether it is night, or is about to be after a hurry.
+  get night() {
+    if (this.hurry) return Math.abs(((this.hurry.from + this.hurry.ahead) % 1) - DayCycle.MIDNIGHT) < 0.25
+    return this.daylight < 0.5
+  }
+
+  // Hurries on through the day to `phase` over a few seconds, or jumps
+  // there at once if `now`.
+  skipTo(phase: number, now = false) {
+    this.hurry = now ? null : { from: this.phase, ahead: (phase - this.phase + 1) % 1, time: 0 }
+    if (now) this.phase = phase
+  }
 
   // Has every pane of glass under `root` light up from inside after dark.
   lightWindows(root: THREE.Object3D) {
@@ -87,7 +107,15 @@ export class DayCycle {
   }
 
   update(delta: number) {
-    this.phase = (this.phase + delta / this.length) % 1
+    if (this.hurry) {
+      const hurry = this.hurry
+      hurry.time += delta
+      const done = Math.min(hurry.time / DayCycle.HURRY, 1)
+      this.phase = (hurry.from + hurry.ahead * THREE.MathUtils.smootherstep(done, 0, 1)) % 1
+      if (done === 1) this.hurry = null
+    } else {
+      this.phase = (this.phase + delta / this.length) % 1
+    }
     // Above zero the sun is up; the offset makes the day the longer half.
     const sun = Math.cos(this.phase * Math.PI * 2) + 0.25
     this.daylight = THREE.MathUtils.smoothstep(sun, -0.3, 0.3)

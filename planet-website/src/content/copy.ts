@@ -43,7 +43,7 @@ export interface Copy {
   panel: { close: string; drive: string; more: string; share: string; copied: string }
   tour: { kind: string; title: string; text: string; hint: string; endKind: string; endTitle: string; endText: string; drive: string; read: string; stops: string }
   planet: { hint: string }
-  chrome: { menu: string; loading: string; failed: string; toText: string; keys: { drive: string; boost: string; jump: string; space: string; reset: string } }
+  chrome: { menu: string; loading: string; failed: string; toText: string; sky: { day: string; night: string }; keys: { drive: string; boost: string; jump: string; space: string; reset: string } }
   touch: [string, string][]
   tag: { park: string }
   map: { label: string; found: string }
@@ -95,6 +95,7 @@ const de: Copy = {
     loading: 'Planet wird geladen …',
     failed: 'Der Planet lässt sich in diesem Browser leider nicht laden.',
     toText: 'Zur Textfassung',
+    sky: { day: 'Tag werden lassen', night: 'Nacht werden lassen' },
     keys: { drive: 'Fahren', boost: 'Boost', jump: 'Springen', space: 'Leertaste', reset: 'Aufrichten' },
   },
   touch: [
@@ -270,6 +271,7 @@ const en: Copy = {
     loading: 'Loading the planet …',
     failed: 'Sorry, the planet won’t load in this browser.',
     toText: 'Read the text version',
+    sky: { day: 'Bring on the day', night: 'Bring on the night' },
     keys: { drive: 'Drive', boost: 'Boost', jump: 'Jump', space: 'Space', reset: 'Flip back' },
   },
   touch: [

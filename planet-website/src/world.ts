@@ -1,7 +1,8 @@
 import RAPIER from '@dimforge/rapier3d-compat'
 import * as THREE from 'three'
 import { stations } from './content/stations'
-import { labels, ui, type Mode } from './ui/store'
+import { calm } from './ui/motion'
+import { clock, labels, ui, type Mode } from './ui/store'
 import { Ambience } from './world/Ambience'
 import { Apples } from './world/Apples'
 import { Bots } from './world/Bots'
@@ -148,7 +149,12 @@ export async function createWorld(report: (fraction: number) => void) {
 
   // Colours the whole scene for the hour and the weather.
   function paint(delta: number) {
+    if (clock.wish) {
+      day.skipTo(clock.wish === 'night' ? DayCycle.MIDNIGHT : DayCycle.NOON, calm())
+      clock.wish = null
+    }
     day.update(delta)
+    ui.set({ night: day.night })
     weather.update(delta, day.daylight)
     weather.tint(day.light)
     sky.paint(day.light)
