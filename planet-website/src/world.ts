@@ -108,7 +108,7 @@ export async function createWorld(report: (fraction: number) => void) {
   const sky = new Sky(stage.scene, models.nature, planet.radius)
   const rover = new Rover(stage.scene, physics, input, spawn, models.rover)
   const view = new FollowCamera(stage.camera, rover)
-  const director = new Director(stage.camera)
+  const director = new Director(stage.camera, planet.radius)
   const planetView = new PlanetCamera(stage.camera, canvas, planet.radius)
   const rigs: Record<Exclude<Mode, 'text'>, Rig> = {
     menu: new MenuCamera(stage.camera, rover),
